@@ -845,10 +845,7 @@ impl Parser {
                 } else { Err(Error::WrongArgs("atanh: expected one arg".to_string())) }
             }
             "sigma_squared" => {
-                let scale = match args.pop() {
-                    Some(xi) => xi,
-                    None => return Err(Error::Unreachable),
-                };
+                let scale = args.pop().unwrap();
                 let decay = args.pop();
                 if args.len() == 0 {
                     Ok(ESigmaSquared{scale, decay})
@@ -858,26 +855,14 @@ impl Parser {
                 }
             }
             "gauss" => {
-                let x = match args.pop() {
-                    Some(xi) => xi,
-                    None => return Err(Error::Unreachable),
-                };
-                let origin = match args.pop() {
-                    Some(xi) => xi,
-                    None => return Err(Error::Unreachable),
-                };
-                let offset = match args.pop() {
-                    Some(xi) => xi,
-                    None => return Err(Error::Unreachable),
-                };
-                let sigma_squared = match args.pop() {
-                    Some(xi) => xi,
-                    None => return Err(Error::Unreachable),
-                };
-                if args.len() == 0 {
-                    Ok(EGauss{x, origin, offset, sigma_squared})
-                } else {
+                if args.len() != 4 {
                     Err(Error::WrongArgs("gauss: expected from 3 to 4 args".to_string()))
+                } else {
+                    let x = args.pop().unwrap();
+                    let origin = args.pop().unwrap();
+                    let offset = args.pop().unwrap();
+                    let sigma_squared = args.pop().unwrap();
+                    Ok(EGauss{x, origin, offset, sigma_squared})
                 }
             }
 
