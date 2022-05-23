@@ -123,6 +123,8 @@ pub enum Instruction {
     IFuncSign(InstructionI),
     IFuncLog{base:IC, of:IC},
     IFuncRound{modulus:IC, of:IC},
+    ISigmaSquared{scale:IC, decay:IC},
+    IGauss{x:IC, origin:IC, offset:IC, sigma_squared:IC},
     IFuncMin(InstructionI, IC),
     IFuncMax(InstructionI, IC),
 
@@ -145,6 +147,8 @@ use Instruction::{IConst, INeg, INot, IInv, IAdd, IMul, IMod, IExp, ILT, ILTE, I
 #[cfg(feature="unsafe-vars")]
 use Instruction::IUnsafeVar;
 use crate::{eval_var, EvalNamespace};
+use crate::Instruction::{IGauss, ISigmaSquared};
+use crate::parser::StdFunc::{EGauss, ESigmaSquared};
 
 impl Default for Instruction {
     fn default() -> Self { IConst(std::f64::NAN) }
@@ -970,6 +974,31 @@ impl Compiler for StdFunc {
                     IConst(c.atanh())
                 } else {
                     IFuncATanH(cslab.push_instr(instr))
+                }
+            }
+            ESigmaSquared{scale, decay} => {
+                let scale = get_expr!(pslab,scale).compile(pslab,cslab,ns);
+                let decay = match decay {
+                    Some(decay) => get_expr!(pslab,decay).compile(pslab,cslab,ns),
+                    None => IConst(0.5),
+                };
+                if let IConst(scale) = scale {
+                    if let IConst(decay) = decay {
+                        return IConst((-scale * scale) / (2.0 * decay.ln()))
+                    }
+                }
+                ISigmaSquared{scale:instr_to_ic!(cslab,scale), decay:instr_to_ic!(cslab,decay)}
+            }
+            EGauss{x, origin, offset, sigma_squared} => {
+                let x = get_expr!(pslab,x).compile(pslab,cslab,ns);
+                let origin = get_expr!(pslab,origin).compile(pslab,cslab,ns);
+                let offset = get_expr!(pslab,offset).compile(pslab,cslab,ns);
+                let sigma_squared = get_expr!(pslab,sigma_squared).compile(pslab,cslab,ns);
+                IGauss {
+                    x: instr_to_ic!(cslab,x),
+                    origin: instr_to_ic!(cslab,origin),
+                    offset: instr_to_ic!(cslab,offset),
+                    sigma_squared: instr_to_ic!(cslab,sigma_squared),
                 }
             }
         }

@@ -134,6 +134,9 @@ pub enum StdFunc {
     EFuncASinH(ExpressionI),
     EFuncACosH(ExpressionI),
     EFuncATanH(ExpressionI),
+
+    ESigmaSquared{scale:ExpressionI, decay:Option<ExpressionI>},
+    EGauss{x:ExpressionI, origin:ExpressionI, offset:ExpressionI, sigma_squared:ExpressionI},
 }
 use StdFunc::{EVar, EFunc, EFuncInt, EFuncCeil, EFuncFloor, EFuncAbs, EFuncSign, EFuncLog, EFuncRound, EFuncMin, EFuncMax, EFuncE, EFuncPi, EFuncSin, EFuncCos, EFuncTan, EFuncASin, EFuncACos, EFuncATan, EFuncSinH, EFuncCosH, EFuncTanH, EFuncASinH, EFuncACosH, EFuncATanH};
 #[cfg(feature="unsafe-vars")]
@@ -173,6 +176,7 @@ enum Token<T> {
     Bite(T),
 }
 use Token::{Pass, Bite};
+use crate::parser::StdFunc::{EGauss, ESigmaSquared};
 
 macro_rules! peek {
     ($bs:ident) =>  {
@@ -839,6 +843,42 @@ impl Parser {
                                                      None => return Err(Error::Unreachable),
                                                  }))
                 } else { Err(Error::WrongArgs("atanh: expected one arg".to_string())) }
+            }
+            "sigma_squared" => {
+                let scale = match args.pop() {
+                    Some(xi) => xi,
+                    None => return Err(Error::Unreachable),
+                };
+                let decay = args.pop();
+                if args.len() == 0 {
+                    Ok(ESigmaSquared{scale, decay})
+                } else {
+                    Err(Error::WrongArgs("sigma_squared: expected from 1 or 2 args".to_string()))
+
+                }
+            }
+            "gauss" => {
+                let x = match args.pop() {
+                    Some(xi) => xi,
+                    None => return Err(Error::Unreachable),
+                };
+                let origin = match args.pop() {
+                    Some(xi) => xi,
+                    None => return Err(Error::Unreachable),
+                };
+                let offset = match args.pop() {
+                    Some(xi) => xi,
+                    None => return Err(Error::Unreachable),
+                };
+                let sigma_squared = match args.pop() {
+                    Some(xi) => xi,
+                    None => return Err(Error::Unreachable),
+                };
+                if args.len() == 0 {
+                    Ok(EGauss{x, origin, offset, sigma_squared})
+                } else {
+                    Err(Error::WrongArgs("gauss: expected from 3 to 4 args".to_string()))
+                }
             }
 
             _ => {
