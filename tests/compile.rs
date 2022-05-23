@@ -32,7 +32,7 @@ fn basics() {
 
     let expr_i = Parser::new().parse("3*3-3/3+1", &mut slab.ps).unwrap();
     let expr_ref = slab.ps.get_expr(expr_i);
-    let instr = expr_ref.compile(&slab.ps, &mut slab.cs);
+    let instr = expr_ref.compile(&slab.ps, &mut slab.cs, &mut ns);
     assert_eq!(instr, IConst(9.0));
     assert_eq!(format!("{:?}", slab),
 "Slab{ exprs:{ 0:Expression { first: EConstant(3.0), pairs: [ExprPair(EMul, EConstant(3.0)), ExprPair(ESub, EConstant(3.0)), ExprPair(EDiv, EConstant(3.0)), ExprPair(EAdd, EConstant(1.0))] } }, vals:{}, instrs:{} }");
@@ -47,17 +47,12 @@ fn basics() {
 
 fn comp(expr_str:&str) -> (Slab, Instruction) {
     let mut slab = Slab::new();
-    let instr = Parser::new().parse(expr_str, &mut slab.ps).unwrap().from(&slab.ps).compile(&slab.ps, &mut slab.cs);
+    let instr = Parser::new().parse(expr_str, &mut slab.ps).unwrap().from(&slab.ps).compile(&slab.ps, &mut slab.cs, &mut EmptyNamespace);
     (slab, instr)
 }
 
 fn comp_chk(expr_str:&str, expect_instr:Instruction, expect_fmt:&str, expect_eval:f64) {
     let mut slab = Slab::new();
-    let expr = Parser::new().parse(expr_str, &mut slab.ps).unwrap().from(&slab.ps);
-    let instr = expr.compile(&slab.ps, &mut slab.cs);
-
-    assert_eq!(instr, expect_instr);
-    assert_eq!(format!("{:?}",slab.cs), expect_fmt);
 
     let mut ns = CachedCallbackNamespace::new(|name,args| {
         match name {
@@ -71,6 +66,12 @@ fn comp_chk(expr_str:&str, expect_instr:Instruction, expect_fmt:&str, expect_eva
             _ => None,
         }
     });
+
+    let expr = Parser::new().parse(expr_str, &mut slab.ps).unwrap().from(&slab.ps);
+    let instr = expr.compile(&slab.ps, &mut slab.cs, &mut ns);
+
+    assert_eq!(instr, expect_instr);
+    assert_eq!(format!("{:?}",slab.cs), expect_fmt);
 
     (|| -> Result<(),Error> {
         assert_eq!(eval_compiled_ref!(&instr, &slab, &mut ns), expect_eval);
@@ -126,7 +127,7 @@ fn unsafe_comp_chk(expr_str:&str, expect_fmt:&str, expect_eval:f64) {
     }
 
     let expr = Parser::new().parse(expr_str, &mut slab.ps).unwrap().from(&slab.ps);
-    let instr = expr.compile(&slab.ps, &mut slab.cs);
+    let instr = expr.compile(&slab.ps, &mut slab.cs, &mut EmptyNamespace);
 
     assert_eq!(replace_addrs(format!("{:?}",slab.cs)), expect_fmt);
 
@@ -144,7 +145,7 @@ fn unsafe_comp_chk(expr_str:&str, expect_fmt:&str, expect_eval:f64) {
 fn comp_chk_str(expr_str:&str, expect_instr:&str, expect_fmt:&str, expect_eval:f64) {
     let mut slab = Slab::new();
     let expr = Parser::new().parse(expr_str, &mut slab.ps).unwrap().from(&slab.ps);
-    let instr = expr.compile(&slab.ps, &mut slab.cs);
+    let instr = expr.compile(&slab.ps, &mut slab.cs, &mut EmptyNamespace);
 
     assert_eq!(format!("{:?}",instr), expect_instr);
     assert_eq!(format!("{:?}",slab.cs), expect_fmt);
@@ -217,8 +218,8 @@ fn all_instrs() {
 
     // IVar:
     comp_chk("x", IVar("x".to_string()), "CompileSlab{ instrs:{} }", 1.0);
-    comp_chk("x()", IFunc { name:"x".to_string(), args:vec![] }, "CompileSlab{ instrs:{} }", 1.0);
-    comp_chk("x[]", IFunc { name:"x".to_string(), args:vec![] }, "CompileSlab{ instrs:{} }", 1.0);
+    comp_chk("x()", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0);
+    comp_chk("x[]", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0);
 
     // INeg:
     comp_chk("-x", INeg(InstructionI(0)), "CompileSlab{ instrs:{ 0:IVar(\"x\") } }", -1.0);
@@ -392,8 +393,8 @@ fn all_instrs() {
     }
 
     // IFunc
-    comp_chk("foo(2.7)", IFunc { name: "foo".to_string(), args:vec![IC::C(2.7)] }, "CompileSlab{ instrs:{} }", 27.0);
-    comp_chk("foo(2.7, 3.4)", IFunc { name: "foo".to_string(), args:vec![IC::C(2.7), IC::C(3.4)] }, "CompileSlab{ instrs:{} }", 27.0);
+    comp_chk("foo(2.7)", IConst(27.0), "CompileSlab{ instrs:{} }", 27.0);
+    comp_chk("foo(2.7, 3.4)", IConst(27.0), "CompileSlab{ instrs:{} }", 27.0);
 
     // IFuncInt
     comp_chk("int(2.7)", IConst(2.0), "CompileSlab{ instrs:{} }", 2.0);
@@ -528,11 +529,11 @@ fn all_instrs() {
 fn custom_func() {
     comp_chk("x + 1", IAdd(InstructionI(0), IC::C(1.0)), "CompileSlab{ instrs:{ 0:IVar(\"x\") } }", 2.0);
 
-    comp_chk("x() + 1", IAdd(InstructionI(0), IC::C(1.0)), "CompileSlab{ instrs:{ 0:IFunc { name: \"x\", args: [] } } }", 2.0);
+    comp_chk("x() + 1", IConst(2.0), "CompileSlab{ instrs:{} }", 2.0);
 
-    comp_chk("x(1,2,3) + 1", IAdd(InstructionI(0), IC::C(1.0)), "CompileSlab{ instrs:{ 0:IFunc { name: \"x\", args: [C(1.0), C(2.0), C(3.0)] } } }", 2.0);
+    comp_chk("x(1,2,3) + 1", IConst(2.0), "CompileSlab{ instrs:{} }", 2.0);
 
-    comp_chk("x(1, 1+1, 1+1+1) + 1", IAdd(InstructionI(0), IC::C(1.0)), "CompileSlab{ instrs:{ 0:IFunc { name: \"x\", args: [C(1.0), C(2.0), C(3.0)] } } }", 2.0);
+    comp_chk("x(1, 1+1, 1+1+1) + 1", IConst(2.0), "CompileSlab{ instrs:{} }", 2.0);
 }
 
 #[test]
@@ -542,7 +543,7 @@ fn eval_macro() {
         let mut slab = Slab::new();
 
         let expr = Parser::new().parse("5", &mut slab.ps).unwrap().from(&slab.ps);
-        let instr = expr.compile(&slab.ps, &mut slab.cs);
+        let instr = expr.compile(&slab.ps, &mut slab.cs, &mut ns);
         assert_eq!(eval_compiled_ref!(&instr, &slab, &mut ns), 5.0);
         (|| -> Result<(),Error> {
             assert_eq!(eval_compiled_ref!(&instr, &slab, &mut ns), 5.0);
@@ -555,7 +556,7 @@ fn eval_macro() {
             let x = 1.0;
             unsafe { slab.ps.add_unsafe_var("x".to_string(), &x) }
             let expr = Parser::new().parse("x", &mut slab.ps).unwrap().from(&slab.ps);
-            let instr = expr.compile(&slab.ps, &mut slab.cs);
+            let instr = expr.compile(&slab.ps, &mut slab.cs, &mut ns);
             assert_eq!(eval_compiled_ref!(&instr, &slab, &mut ns), 1.0);
             (|| -> Result<(),Error> {
                 assert_eq!(eval_compiled_ref!(&instr, &slab, &mut ns), 1.0);

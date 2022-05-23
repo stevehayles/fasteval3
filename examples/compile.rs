@@ -1,7 +1,7 @@
 // usage:  cargo run --release --example compile
 
 use std::collections::BTreeMap;
-use fasteval::Evaler;    // use this trait so we can call eval().
+use fasteval::{EmptyNamespace, Evaler};    // use this trait so we can call eval().
 use fasteval::Compiler;  // use this trait so we can call compile().
 fn main() -> Result<(), fasteval::Error> {
     let parser = fasteval::Parser::new();
@@ -9,7 +9,7 @@ fn main() -> Result<(), fasteval::Error> {
     let mut map = BTreeMap::new();
 
     let expr_str = "sin(deg/360 * 2*pi())";
-    let compiled = parser.parse(expr_str, &mut slab.ps)?.from(&slab.ps).compile(&slab.ps, &mut slab.cs);
+    let compiled = parser.parse(expr_str, &mut slab.ps)?.from(&slab.ps).compile(&slab.ps, &mut slab.cs, &mut EmptyNamespace);
     for deg in 0..360 {
         map.insert("deg".to_string(), deg as f64);
         // When working with compiled constant expressions, you can use the

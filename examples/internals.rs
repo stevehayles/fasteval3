@@ -1,6 +1,6 @@
 // usage:  cargo run --release --example internals
 
-use fasteval::Compiler;  // use this trait so we can call compile().
+use fasteval::{Compiler, EmptyNamespace};  // use this trait so we can call compile().
 fn main() -> Result<(), fasteval::Error> {
     let parser = fasteval::Parser::new();
     let mut slab = fasteval::Slab::new();
@@ -27,7 +27,7 @@ fn main() -> Result<(), fasteval::Error> {
                //     vals:{}
                // }
 
-    let compiled = expr_ref.compile(&slab.ps, &mut slab.cs);
+    let compiled = expr_ref.compile(&slab.ps, &mut slab.cs, &mut EmptyNamespace);
 
     // Let's take a look at the compilation results and the AST inside the Slab:
     // Notice that compilation has performed constant-folding: 1/360 * 2*pi = 0.017453292519943295

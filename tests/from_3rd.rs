@@ -1,4 +1,4 @@
-use fasteval::{Parser, Compiler, Evaler, Error, Slab, CachedCallbackNamespace, eval_compiled_ref};
+use fasteval::{Parser, Compiler, Evaler, Error, Slab, CachedCallbackNamespace, eval_compiled_ref, EmptyNamespace};
 
 use std::str::from_utf8;
 
@@ -18,7 +18,7 @@ fn evalns_cb(name:&str, args:Vec<f64>) -> Option<f64> {
 fn chk_ok(expr_str:&str, expect_compile_str:&str, expect_slab_str:&str, expect_eval:f64) {
     let mut slab = Slab::new();
     let expr = Parser::new().parse(expr_str, &mut slab.ps).unwrap().from(&slab.ps);
-    let instr = expr.compile(&slab.ps, &mut slab.cs);
+    let instr = expr.compile(&slab.ps, &mut slab.cs, &mut EmptyNamespace);
 
     assert_eq!(format!("{:?}",instr), expect_compile_str);
     assert_eq!(format!("{:?}",slab), expect_slab_str);
@@ -43,7 +43,7 @@ fn chk_perr(expr_str:&str, expect_err:Error) {
 fn chk_eerr(expr_str:&str, expect_err:Error) {
     let mut slab = Slab::new();
     let expr = Parser::new().parse(expr_str, &mut slab.ps).unwrap().from(&slab.ps);
-    let instr = expr.compile(&slab.ps, &mut slab.cs);
+    let instr = expr.compile(&slab.ps, &mut slab.cs, &mut EmptyNamespace);
     let mut ns = CachedCallbackNamespace::new(evalns_cb);
     assert_eq!(instr.eval(&slab, &mut ns), Err(expect_err));
 }

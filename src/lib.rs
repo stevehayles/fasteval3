@@ -272,12 +272,13 @@
 //! use fasteval::Evaler;    // use this trait so we can call eval().
 //! use fasteval::Compiler;  // use this trait so we can call compile().
 //! fn main() -> Result<(), fasteval::Error> {
-//!     let parser = fasteval::Parser::new();
+//!     use fasteval::EmptyNamespace;
+//! let parser = fasteval::Parser::new();
 //!     let mut slab = fasteval::Slab::new();
 //!     let mut map = BTreeMap::new();
 //!
 //!     let expr_str = "sin(deg/360 * 2*pi())";
-//!     let compiled = parser.parse(expr_str, &mut slab.ps)?.from(&slab.ps).compile(&slab.ps, &mut slab.cs);
+//!     let compiled = parser.parse(expr_str, &mut slab.ps)?.from(&slab.ps).compile(&slab.ps, &mut slab.cs, &mut EmptyNamespace);
 //!     for deg in 0..360 {
 //!         map.insert("deg".to_string(), deg as f64);
 //!         // When working with compiled constant expressions, you can use the
@@ -312,12 +313,10 @@
 //!     // Unsafe Variables must be registered before 'parse()'.
 //!     // (Normal Variables only need definitions during the 'eval' phase.)
 //!     unsafe { slab.ps.add_unsafe_var("deg".to_string(), &deg); } // `add_unsafe_var()` only exists if the `unsafe-vars` feature is enabled: `cargo test --features unsafe-vars`
-//!
-//!     let expr_str = "sin(deg/360 * 2*pi())";
-//!     let compiled = parser.parse(expr_str, &mut slab.ps)?.from(&slab.ps).compile(&slab.ps, &mut slab.cs);
-//!
 //!     let mut ns = fasteval::EmptyNamespace;  // We only define unsafe variables, not normal variables,
 //!                                             // so EmptyNamespace is fine.
+//!     let expr_str = "sin(deg/360 * 2*pi())";
+//!     let compiled = parser.parse(expr_str, &mut slab.ps)?.from(&slab.ps).compile(&slab.ps, &mut slab.cs, &mut ns);
 //!
 //!     for d in 0..360 {
 //!         deg = d as f64;
@@ -335,7 +334,8 @@
 //! ```
 //! use fasteval::Compiler;  // use this trait so we can call compile().
 //! fn main() -> Result<(), fasteval::Error> {
-//!     let parser = fasteval::Parser::new();
+//!     use fasteval::EmptyNamespace;
+//! let parser = fasteval::Parser::new();
 //!     let mut slab = fasteval::Slab::new();
 //!
 //!     let expr_str = "sin(deg/360 * 2*pi())";
@@ -360,7 +360,7 @@
 //!                //     vals:{}
 //!                // }
 //!
-//!     let compiled = expr_ref.compile(&slab.ps, &mut slab.cs);
+//!     let compiled = expr_ref.compile(&slab.ps, &mut slab.cs, &mut EmptyNamespace);
 //!
 //!     // Let's take a look at the compilation results and the AST inside the Slab:
 //!     // Notice that compilation has performed constant-folding: 1/360 * 2*pi = 0.017453292519943295

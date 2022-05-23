@@ -373,6 +373,7 @@ impl BinaryOp {
     }
 }
 
+#[macro_export]
 macro_rules! eval_var {
     ($ns:ident, $name:ident, $args:expr, $keybuf:expr) => {
         match $ns.lookup($name,$args,$keybuf) {

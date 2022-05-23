@@ -192,13 +192,11 @@ pub struct Slab {
 ///
 ///     let expr_str = "sin(deg/360 * 2*pi())";
 ///     let expr_ref = fasteval::Parser::new().parse(expr_str, &mut slab.ps)?.from(&slab.ps);
-///
-///     // The main reason people use Unsafe Variables is to maximize performance.
-///     // Compilation also helps performance, so it is usually used together with Unsafe Variables:
-///     let compiled = expr_ref.compile(&slab.ps, &mut slab.cs);
-///
 ///     let mut ns = fasteval::EmptyNamespace;  // We only define unsafe variables, not normal variables,
 ///                                             // so EmptyNamespace is fine.
+///     // The main reason people use Unsafe Variables is to maximize performance.
+///     // Compilation also helps performance, so it is usually used together with Unsafe Variables:
+///     let compiled = expr_ref.compile(&slab.ps, &mut slab.cs, &mut ns);
 ///
 ///     for d in 0..360 {
 ///         deg = d as f64;

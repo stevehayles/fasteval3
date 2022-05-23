@@ -1,5 +1,7 @@
 // usage:  cargo run --release --features unsafe-vars --example unsafe-vars
 
+use fasteval::EmptyNamespace;
+
 fn main() -> Result<(), fasteval::Error> {
     #[cfg(not(feature="unsafe-vars"))]
     {
@@ -26,9 +28,9 @@ fn main() -> Result<(), fasteval::Error> {
         unsafe { slab.ps.add_unsafe_var("deg".to_string(), &deg); } // `add_unsafe_var()` only exists if the `unsafe-vars` feature is enabled: `cargo test --features unsafe-vars`
 
         let expr_str = "sin(deg/360 * 2*pi())";
-        let compiled = parser.parse(expr_str, &mut slab.ps)?.from(&slab.ps).compile(&slab.ps, &mut slab.cs);
+        let compiled = parser.parse(expr_str, &mut slab.ps)?.from(&slab.ps).compile(&slab.ps, &mut slab.cs, &mut EmptyNamespace);
 
-        let mut ns = fasteval::EmptyNamespace;  // We only define unsafe variables, not normal variables,
+        let mut ns = EmptyNamespace;  // We only define unsafe variables, not normal variables,
                                                 // so EmptyNamespace is fine.
 
         for d in 0..360 {
