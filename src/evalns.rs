@@ -22,10 +22,10 @@
 //!
 //! ## EmptyNamespace
 //! ```
-//! fn main() -> Result<(), fasteval::Error> {
-//!     let mut ns = fasteval::EmptyNamespace;
+//! fn main() -> Result<(), fasteval2::Error> {
+//!     let mut ns = fasteval2::EmptyNamespace;
 //!
-//!     let val = fasteval::ez_eval("sin(pi()/2)", &mut ns)?;
+//!     let val = fasteval2::ez_eval("sin(pi()/2)", &mut ns)?;
 //!     assert_eq!(val, 1.0);
 //!
 //!     Ok(())
@@ -34,11 +34,11 @@
 //!
 //! ## StringToF64Namespace
 //! ```
-//! fn main() -> Result<(), fasteval::Error> {
-//!     let mut ns = fasteval::StringToF64Namespace::new();
+//! fn main() -> Result<(), fasteval2::Error> {
+//!     let mut ns = fasteval2::StringToF64Namespace::new();
 //!     ns.insert("x".to_string(), 2.0);
 //!
-//!     let val = fasteval::ez_eval("x * (x + 1)", &mut ns)?;
+//!     let val = fasteval2::ez_eval("x * (x + 1)", &mut ns)?;
 //!     assert_eq!(val, 6.0);
 //!
 //!     Ok(())
@@ -47,11 +47,11 @@
 //!
 //! ## StrToF64Namespace
 //! ```
-//! fn main() -> Result<(), fasteval::Error> {
-//!     let mut ns = fasteval::StrToF64Namespace::new();
+//! fn main() -> Result<(), fasteval2::Error> {
+//!     let mut ns = fasteval2::StrToF64Namespace::new();
 //!     ns.insert("x", 2.0);
 //!
-//!     let val = fasteval::ez_eval("x * (x + 1)", &mut ns)?;
+//!     let val = fasteval2::ez_eval("x * (x + 1)", &mut ns)?;
 //!     assert_eq!(val, 6.0);
 //!
 //!     Ok(())
@@ -60,7 +60,7 @@
 //!
 //! ## Callback: FnMut(&str,Vec<f64>) -> Option<f64>
 //! ```
-//! fn main() -> Result<(), fasteval::Error> {
+//! fn main() -> Result<(), fasteval2::Error> {
 //!     let mut num_lookups = 0;
 //!     let mut cb = |name:&str, args:Vec<f64>| -> Option<f64> {
 //!         num_lookups += 1;
@@ -70,7 +70,7 @@
 //!         }
 //!     };
 //!
-//!     let val = fasteval::ez_eval("x * (x + 1)", &mut cb)?;
+//!     let val = fasteval2::ez_eval("x * (x + 1)", &mut cb)?;
 //!     assert_eq!(val, 6.0);
 //!     assert_eq!(num_lookups, 2);  // Notice that 'x' was looked-up twice.
 //!
@@ -80,14 +80,14 @@
 //!
 //! ## StringToCallbackNamespace
 //! ```
-//! fn main() -> Result<(), fasteval::Error> {
-//!     let mut ns = fasteval::StringToCallbackNamespace::new();
+//! fn main() -> Result<(), fasteval2::Error> {
+//!     let mut ns = fasteval2::StringToCallbackNamespace::new();
 //!     ns.insert("x".to_string(), Box::new(|_args| 2.0));
 //!     ns.insert("double".to_string(), Box::new(|args| {
 //!         args.get(0).map(|arg0| arg0*2.0).unwrap_or(std::f64::NAN)
 //!     }));
 //!
-//!     let val = fasteval::ez_eval("double(x + 1) + 1", &mut ns)?;
+//!     let val = fasteval2::ez_eval("double(x + 1) + 1", &mut ns)?;
 //!     assert_eq!(val, 7.0);
 //!
 //!     Ok(())
@@ -96,14 +96,14 @@
 //!
 //! ## StrToCallbackNamespace
 //! ```
-//! fn main() -> Result<(), fasteval::Error> {
-//!     let mut ns = fasteval::StrToCallbackNamespace::new();
+//! fn main() -> Result<(), fasteval2::Error> {
+//!     let mut ns = fasteval2::StrToCallbackNamespace::new();
 //!     ns.insert("x", Box::new(|_args| 2.0));
 //!     ns.insert("double", Box::new(|args| {
 //!         args.get(0).map(|arg0| arg0*2.0).unwrap_or(std::f64::NAN)
 //!     }));
 //!
-//!     let val = fasteval::ez_eval("double(x + 1) + 1", &mut ns)?;
+//!     let val = fasteval2::ez_eval("double(x + 1) + 1", &mut ns)?;
 //!     assert_eq!(val, 7.0);
 //!
 //!     Ok(())
@@ -112,7 +112,7 @@
 //!
 //! ## CachedCallbackNamespace
 //! ```
-//! fn main() -> Result<(), fasteval::Error> {
+//! fn main() -> Result<(), fasteval2::Error> {
 //!     let mut num_lookups = 0;
 //!     let val = {
 //!         let cb = |name:&str, args:Vec<f64>| -> Option<f64> {
@@ -127,9 +127,9 @@
 //!                 _ => None,
 //!             }
 //!         };
-//!         let mut ns = fasteval::CachedCallbackNamespace::new(cb);
+//!         let mut ns = fasteval2::CachedCallbackNamespace::new(cb);
 //!
-//!         fasteval::ez_eval("x * (x + 1)", &mut ns)?
+//!         fasteval2::ez_eval("x * (x + 1)", &mut ns)?
 //!     };
 //!     assert_eq!(val, 6.0);
 //!     assert_eq!(num_lookups, 1);  // Notice that only 1 lookup occurred.
@@ -141,28 +141,28 @@
 //!
 //! ## LayeredStringToF64Namespace
 //! ```
-//! fn main() -> Result<(), fasteval::Error> {
-//!     let mut layer1 = fasteval::StringToF64Namespace::new();
+//! fn main() -> Result<(), fasteval2::Error> {
+//!     let mut layer1 = fasteval2::StringToF64Namespace::new();
 //!     layer1.insert("x".to_string(), 2.0);
 //!     layer1.insert("y".to_string(), 3.0);
 //!
-//!     let mut layers : fasteval::LayeredStringToF64Namespace = vec![layer1];
+//!     let mut layers : fasteval2::LayeredStringToF64Namespace = vec![layer1];
 //!
-//!     let val = fasteval::ez_eval("x * y", &mut layers)?;
+//!     let val = fasteval2::ez_eval("x * y", &mut layers)?;
 //!     assert_eq!(val, 6.0);
 //!
 //!     // Let's add another layer which shadows the previous one:
-//!     let mut layer2 = fasteval::StringToF64Namespace::new();
+//!     let mut layer2 = fasteval2::StringToF64Namespace::new();
 //!     layer2.insert("x".to_string(), 3.0);
 //!     layers.push(layer2);
 //!
-//!     let val = fasteval::ez_eval("x * y", &mut layers)?;
+//!     let val = fasteval2::ez_eval("x * y", &mut layers)?;
 //!     assert_eq!(val, 9.0);
 //!
 //!     // Remove the top layer and we'll be back to what we had before:
 //!     layers.pop();
 //!
-//!     let val = fasteval::ez_eval("x * y", &mut layers)?;
+//!     let val = fasteval2::ez_eval("x * y", &mut layers)?;
 //!     assert_eq!(val, 6.0);
 //!
 //!     Ok(())

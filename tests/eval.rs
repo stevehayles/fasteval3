@@ -1,5 +1,5 @@
-use fasteval::{Evaler, Error, Slab, Cached, EmptyNamespace, CachedCallbackNamespace, Parser};
-use fasteval::bool_to_f64;
+use fasteval2::{Evaler, Error, Slab, Cached, EmptyNamespace, CachedCallbackNamespace, Parser};
+use fasteval2::bool_to_f64;
 
 use std::mem;
 use std::collections::{BTreeMap, BTreeSet};

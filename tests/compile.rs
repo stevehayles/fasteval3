@@ -1,11 +1,11 @@
-use fasteval::{Parser, Compiler, Evaler, Error, Slab, EmptyNamespace, CachedCallbackNamespace, ExpressionI, InstructionI, eval_compiled, eval_compiled_ref};
-use fasteval::parser::{PrintFunc, ExpressionOrString::{EExpr, EStr}};
+use fasteval2::{Parser, Compiler, Evaler, Error, Slab, EmptyNamespace, CachedCallbackNamespace, ExpressionI, InstructionI, eval_compiled, eval_compiled_ref};
+use fasteval2::parser::{PrintFunc, ExpressionOrString::{EExpr, EStr}};
 #[cfg(feature="eval-builtin")]
-use fasteval::parser::{EvalFunc, KWArg};
-use fasteval::compiler::IC;
-use fasteval::compiler::Instruction::{self, IConst, INeg, INot, IInv, IAdd, IMul, IMod, IExp, ILT, ILTE, IEQ, INE, IGTE, IGT, IAND, IOR, IVar, IFuncInt, IFuncCeil, IFuncFloor, IFuncAbs, IFuncSign, IFuncLog, IFuncRound, IFuncMin, IFuncMax, IFuncSin, IFuncCos, IFuncTan, IFuncASin, IFuncACos, IFuncATan, IFuncSinH, IFuncCosH, IFuncTanH, IFuncASinH, IFuncACosH, IFuncATanH, IPrintFunc};
+use fasteval2::parser::{EvalFunc, KWArg};
+use fasteval2::compiler::IC;
+use fasteval2::compiler::Instruction::{self, IConst, INeg, INot, IInv, IAdd, IMul, IMod, IExp, ILT, ILTE, IEQ, INE, IGTE, IGT, IAND, IOR, IVar, IFuncInt, IFuncCeil, IFuncFloor, IFuncAbs, IFuncSign, IFuncLog, IFuncRound, IFuncMin, IFuncMax, IFuncSin, IFuncCos, IFuncTan, IFuncASin, IFuncACos, IFuncATan, IFuncSinH, IFuncCosH, IFuncTanH, IFuncASinH, IFuncACosH, IFuncATanH, IPrintFunc};
 #[cfg(feature="eval-builtin")]
-use fasteval::compiler::Instruction::IEvalFunc;
+use fasteval2::compiler::Instruction::IEvalFunc;
 
 #[test]
 fn slab_overflow() {

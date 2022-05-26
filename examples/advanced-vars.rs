@@ -1,6 +1,6 @@
 // usage:  cargo run --release --example advanced-vars
 
-fn main() -> Result<(), fasteval::Error> {
+fn main() -> Result<(), fasteval2::Error> {
     let mut cb = |name:&str, args:Vec<f64>| -> Option<f64> {
         let mydata : [f64; 3] = [11.1, 22.2, 33.3];
         match name {
@@ -22,7 +22,7 @@ fn main() -> Result<(), fasteval::Error> {
         }
     };
 
-    let val = fasteval::ez_eval("sum(x^2, y^2)^0.5 + data[0]",    &mut cb)?;
+    let val = fasteval2::ez_eval("sum(x^2, y^2)^0.5 + data[0]",    &mut cb)?;
     //                           |   |                   |
     //                           |   |                   square-brackets act like parenthesis
     //                           |   variables are like custom functions with zero args

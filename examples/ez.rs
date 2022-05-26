@@ -2,11 +2,11 @@
 
 // In case you didn't know, Rust allows `main()` to return a `Result`.
 // This lets us use the `?` operator inside of `main()`.  Very convenient!
-fn main() -> Result<(), fasteval::Error> {
+fn main() -> Result<(), fasteval2::Error> {
     // This example doesn't use any variables, so just use an EmptyNamespace:
-    let mut ns = fasteval::EmptyNamespace;
+    let mut ns = fasteval2::EmptyNamespace;
 
-    let val = fasteval::ez_eval(
+    let val = fasteval2::ez_eval(
         "1+2*3/4^5%6 + log(100K) + log(e(),100) + [3*(3-3)/3] + (2<3) && 1.23",    &mut ns)?;
     //    |            |      |    |   |          |               |   |
     //    |            |      |    |   |          |               |   boolean logic with short-circuit support

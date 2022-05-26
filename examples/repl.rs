@@ -42,8 +42,8 @@
 
 
 
-use fasteval::Evaler;  // Import this trait for '.eval()' functionality.
-use fasteval::{Parser, Slab};
+use fasteval2::Evaler;  // Import this trait for '.eval()' functionality.
+use fasteval2::{Parser, Slab};
 
 use std::collections::BTreeMap;
 use std::io::{self, BufRead, Write};

@@ -1,9 +1,9 @@
 // usage:  cargo run --release --example internals
 
-use fasteval::{Compiler, EmptyNamespace};  // use this trait so we can call compile().
-fn main() -> Result<(), fasteval::Error> {
-    let parser = fasteval::Parser::new();
-    let mut slab = fasteval::Slab::new();
+use fasteval2::{Compiler, EmptyNamespace};  // use this trait so we can call compile().
+fn main() -> Result<(), fasteval2::Error> {
+    let parser = fasteval2::Parser::new();
+    let mut slab = fasteval2::Slab::new();
 
     let expr_str = "sin(deg/360 * 2*pi())";
     let expr_ref = parser.parse(expr_str, &mut slab.ps)?.from(&slab.ps);

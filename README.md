@@ -15,7 +15,7 @@ Documentation:
 Add this to your Cargo.toml:
 
     [dependencies]
-    fasteval = "0.2.4"
+    fasteval2 = "0.2.4"
 
 
 You can use [`codegen-units=1`](https://doc.rust-lang.org/stable/cargo/reference/manifest.html#the-profile-sections) for better run-time performance. In some cases [it will greatly improves LLVM's compile-time optimizations](http://likebike.com/posts/How_To_Write_Fast_Rust_Code.html#emit-asm).
@@ -51,11 +51,11 @@ for you.  It is slightly inefficient because it always allocates a
 fresh [`Slab`](https://docs.rs/fasteval/latest/fasteval/slab/index.html), but it is very simple to use:
 
 ```rust
-fn main() -> Result<(), fasteval::Error> {
+fn main() -> Result<(), fasteval2::Error> {
     // This example doesn't use any variables, so just use an EmptyNamespace:
-    let mut ns = fasteval::EmptyNamespace;
+    let mut ns = fasteval2::EmptyNamespace;
 
-    let val = fasteval::ez_eval(
+    let val = fasteval2::ez_eval(
         "1+2*3/4^5%6 + log(100K) + log(e(),100) + [3*(3-3)/3] + (2<3) && 1.23",    &mut ns)?;
     //    |            |      |    |   |          |               |   |
     //    |            |      |    |   |          |               |   boolean logic with short-circuit support

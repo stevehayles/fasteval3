@@ -447,7 +447,7 @@
 extern crate test;  // 'extern crate' seems to be required for this scenario: https://github.com/rust-lang/rust/issues/57288
 use test::{Bencher, black_box};
 
-use fasteval::{Parser, Compiler, Evaler, Slab, EmptyNamespace, CachedCallbackNamespace, ez_eval, eval_compiled, eval_compiled_ref};
+use fasteval2::{Parser, Compiler, Evaler, Slab, EmptyNamespace, CachedCallbackNamespace, ez_eval, eval_compiled, eval_compiled_ref};
 
 use std::collections::BTreeMap;
 use std::f64::NAN;
@@ -556,7 +556,7 @@ fn parse_eval_1000x(b:&mut Bencher) {
     let mut ns = Namespace!();
 
     b.iter(|| {
-        let _ = (|| -> Result<(),fasteval::Error> {
+        let _ = (|| -> Result<(),fasteval2::Error> {
             for _ in 0..1000 {
                 black_box(parser.parse(EXPR, &mut slab.ps)?.from(&slab.ps).eval(&slab, &mut ns)?);
             }
@@ -575,7 +575,7 @@ fn parse_eval_1000x(b:&mut Bencher) {
 //     let mut ns = CachedLayeredNamespace::new(evalcb);
 // 
 //     b.iter(|| {
-//         let _ = (|| -> Result<(),fasteval::Error> {
+//         let _ = (|| -> Result<(),fasteval2::Error> {
 //             for _ in 0..1000 {
 //                 let expr_ref = parser.parse(EXPR, &mut slab.ps)?.from(&slab.ps);
 //                 let mut bub = Bubble::new(&mut ns);  bub.push();
@@ -609,7 +609,7 @@ fn parse_eval_unsafe_1000x(b:&mut Bencher) {
     let mut ns = EmptyNamespace;
 
     b.iter(|| {
-        let _ = (|| -> Result<(),fasteval::Error> {
+        let _ = (|| -> Result<(),fasteval2::Error> {
             for _ in 0..1000 {
                 black_box(parser.parse(EXPR, &mut slab.ps)?.from(&slab.ps).eval(&slab, &mut ns)?);
             }
@@ -630,7 +630,7 @@ fn preparse_eval_1000x(b:&mut Bencher) {
     };
 
     b.iter(|| {
-        let _ = (|| -> Result<(),fasteval::Error> {
+        let _ = (|| -> Result<(),fasteval2::Error> {
             for _ in 0..1000 {
                 black_box( expr_ref.eval(&slab, &mut ns)? );
             }
@@ -648,7 +648,7 @@ fn parse_compile_eval_1000x(b:&mut Bencher) {
     let mut ns = Namespace!();
 
     b.iter(|| {
-        let _ = (|| -> Result<(),fasteval::Error> {
+        let _ = (|| -> Result<(),fasteval2::Error> {
             for _ in 0..1000 {
                 let instr = parser.parse(EXPR, &mut slab.ps)?.from(&slab.ps).compile(&slab.ps, &mut slab.cs, &mut ns);
                 black_box(eval_compiled!(instr, &slab, &mut ns));
@@ -670,7 +670,7 @@ fn preparse_precompile_eval_1000x(b:&mut Bencher) {
     };
 
     b.iter(|| {
-        let _ = (|| -> Result<(),fasteval::Error> {
+        let _ = (|| -> Result<(),fasteval2::Error> {
             let (instr_ref, slab_ref, ns_mut) = (&instr, &slab, &mut ns);  // Localize (doesn't help much)
             for _ in 0..1000 {
                 black_box( eval_compiled_ref!(instr_ref, slab_ref, ns_mut));
@@ -680,7 +680,7 @@ fn preparse_precompile_eval_1000x(b:&mut Bencher) {
     });
 
     //// Produces basically the same results, proving that the --emit=asm performanace boost is not coming from this test function -- it's coming from the evaluation, and I'm not able to replicate it.
-    // let _ = (|| -> Result<(),fasteval::Error> {
+    // let _ = (|| -> Result<(),fasteval2::Error> {
     //     let mut slab = Slab::new();
     //     let mut ns = Namespace!();
     //     let instr = match parse_noclear(EXPR, &mut slab.ps) {
@@ -710,7 +710,7 @@ fn preparse_precompile_eval_closure_1000x(b:&mut Bencher) {
     };
 
     b.iter(|| {
-        let _ = (|| -> Result<(),fasteval::Error> {
+        let _ = (|| -> Result<(),fasteval2::Error> {
             let (instr_ref, slab_ref, ns_mut) = (&instr, &slab, &mut ns);  // Localize (doesn't help much)
             for _ in 0..1000 {
                 black_box( eval_compiled_ref!(instr_ref, slab_ref, ns_mut));
@@ -733,7 +733,7 @@ fn preparse_precompile_eval_closure_1000x(b:&mut Bencher) {
 //     };
 // 
 //     b.iter(|| {
-//         let _ = (|| -> Result<(),fasteval::Error> {
+//         let _ = (|| -> Result<(),fasteval2::Error> {
 //             for _ in 0..1000 {
 //                 let mut bub = Bubble::new(&mut ns);  bub.push();
 //                 black_box( eval_compiled_ref!(&instr, &slab, &mut bub) );
@@ -766,7 +766,7 @@ fn preparse_precompile_eval_unsafe_1000x(b:&mut Bencher) {
     let instr = Parser::new().parse_noclear(EXPR, &mut slab.ps).unwrap().from(&slab.ps).compile(&slab.ps, &mut slab.cs, &mut EmptyNamespace);
 
     b.iter(|| {
-        (|| -> Result<(),fasteval::Error> {
+        (|| -> Result<(),fasteval2::Error> {
             for _ in 0..1000 {
                 black_box(eval_compiled_ref!(&instr, &slab, &mut ns));
             }
@@ -779,7 +779,7 @@ fn preparse_precompile_eval_unsafe_1000x(b:&mut Bencher) {
 // #[cfg(feature="unsafe-vars")]
 // #[allow(non_snake_case)]
 // fn preparse_precompile_eval_unsafe_100B(_:&mut Bencher) {
-//     let _ = (|| -> Result<(),fasteval::Error> {
+//     let _ = (|| -> Result<(),fasteval2::Error> {
 //         let mut slab = Slab::new();
 //         let x = 1.0;
 //         let y = 2.0;

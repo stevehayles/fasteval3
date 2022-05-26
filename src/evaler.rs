@@ -6,7 +6,7 @@
 
 
 
-use crate as fasteval;
+use crate as fasteval2;
 
 use crate::error::Error;
 use crate::slab::Slab;
@@ -48,12 +48,12 @@ use crate::parser::StdFunc::{EGauss, ESigmaSquared};
 #[macro_export]
 macro_rules! eval_compiled {
     ($evaler:ident, $slab_ref:expr, $ns_mut:expr) => {
-        if let fasteval::IConst(c) = $evaler {
+        if let fasteval2::IConst(c) = $evaler {
             c
         } else {
             #[cfg(feature="unsafe-vars")]
             {
-                if let fasteval::IUnsafeVar{ptr, ..} = $evaler {
+                if let fasteval2::IUnsafeVar{ptr, ..} = $evaler {
                     unsafe { *ptr }
                 } else {
                     $evaler.eval($slab_ref, $ns_mut)?
@@ -87,12 +87,12 @@ macro_rules! eval_compiled {
 #[macro_export]
 macro_rules! eval_compiled_ref {
     ($evaler:ident, $slab_ref:expr, $ns_mut:expr) => {
-        if let fasteval::IConst(c) = $evaler {
+        if let fasteval2::IConst(c) = $evaler {
             *c
         } else {
             #[cfg(feature="unsafe-vars")]
             {
-                if let fasteval::IUnsafeVar{ptr, ..} = $evaler {
+                if let fasteval2::IUnsafeVar{ptr, ..} = $evaler {
                     unsafe { **ptr }
                 } else {
                     $evaler.eval($slab_ref, $ns_mut)?
@@ -120,7 +120,7 @@ macro_rules! eval_ic_ref {
 
                 #[cfg(feature="unsafe-vars")]
                 {
-                    if let fasteval::IUnsafeVar{ptr, ..} = instr_ref {
+                    if let fasteval2::IUnsafeVar{ptr, ..} = instr_ref {
                         unsafe { **ptr }
                     } else {
                         instr_ref.eval($slab_ref, $ns_mut)?
@@ -140,7 +140,7 @@ macro_rules! eval_ic_ref {
 pub trait Evaler : fmt::Debug {
     /// Evaluate this `Expression`/`Instruction` and return an `f64`.
     ///
-    /// Returns a `fasteval::Error` if there are any problems, such as undefined variables.
+    /// Returns a `fasteval2::Error` if there are any problems, such as undefined variables.
     fn eval(&self, slab:&Slab, ns:&mut impl EvalNamespace) -> Result<f64,Error>;
 
     /// Don't call this directly.  Use `var_names()` instead.

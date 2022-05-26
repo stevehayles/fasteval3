@@ -1,4 +1,4 @@
-use fasteval::{Error, Slab, Parser};
+use fasteval2::{Error, Slab, Parser};
 
 #[test]
 fn basics() {

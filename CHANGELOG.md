@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.2] - 2020-01-15
 ### Removed
-- Removed the `fasteval::parse()` convenience function.  Now use the `Parser`
+- Removed the `fasteval2::parse()` convenience function.  Now use the `Parser`
   directly: `Parser::new().parse()`.  This was done to improve the usability of
   custom safety parse limits.
 

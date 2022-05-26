@@ -1,4 +1,4 @@
-use fasteval::{Parser, Compiler, Evaler, Error, Slab, CachedCallbackNamespace, eval_compiled_ref, EmptyNamespace};
+use fasteval2::{Parser, Compiler, Evaler, Error, Slab, CachedCallbackNamespace, eval_compiled_ref, EmptyNamespace};
 
 use std::str::from_utf8;
 
@@ -108,7 +108,7 @@ fn overflow_stack() {
     chk_perr(from_utf8(&[b'('; 8192]).unwrap(), Error::TooLong);
 
     // Test custom safety parse limits:
-    assert_eq!(Parser{expr_len_limit:fasteval::parser::DEFAULT_EXPR_LEN_LIMIT,
+    assert_eq!(Parser{expr_len_limit:fasteval2::parser::DEFAULT_EXPR_LEN_LIMIT,
                       expr_depth_limit:31}.parse(
                         from_utf8(&[b'('; 32]).unwrap(),
                         &mut Slab::new().ps
@@ -116,7 +116,7 @@ fn overflow_stack() {
                Err(Error::TooDeep));
 
     assert_eq!(Parser{expr_len_limit:8,
-                      expr_depth_limit:fasteval::parser::DEFAULT_EXPR_DEPTH_LIMIT}.parse(
+                      expr_depth_limit:fasteval2::parser::DEFAULT_EXPR_DEPTH_LIMIT}.parse(
                         from_utf8(&[b'('; 32]).unwrap(),
                         &mut Slab::new().ps
                       ),

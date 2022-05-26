@@ -845,24 +845,23 @@ impl Parser {
                 } else { Err(Error::WrongArgs("atanh: expected one arg".to_string())) }
             }
             "sigma_squared" => {
-                let scale = args.pop().unwrap();
-                let decay = args.pop();
-                if args.len() == 0 {
+                if 1 <= args.len() && args.len() <= 2 {
+                    let scale = args[0];
+                    let decay = args.get(1).map(|x| *x);
                     Ok(ESigmaSquared{scale, decay})
                 } else {
                     Err(Error::WrongArgs("sigma_squared: expected from 1 or 2 args".to_string()))
-
                 }
             }
             "gauss" => {
-                if args.len() != 4 {
-                    Err(Error::WrongArgs("gauss: expected from 3 to 4 args".to_string()))
-                } else {
-                    let x = args.pop().unwrap();
-                    let origin = args.pop().unwrap();
-                    let offset = args.pop().unwrap();
-                    let sigma_squared = args.pop().unwrap();
+                if args.len() == 4 {
+                    let x = args[0];
+                    let origin = args[1];
+                    let offset = args[2];
+                    let sigma_squared = args[3];
                     Ok(EGauss{x, origin, offset, sigma_squared})
+                } else {
+                    Err(Error::WrongArgs("gauss: expected from 3 to 4 args".to_string()))
                 }
             }
 
