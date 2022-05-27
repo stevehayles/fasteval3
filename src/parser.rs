@@ -1066,7 +1066,7 @@ impl Parser {
             _ => {
                 #[cfg(feature = "unsafe-vars")]
                 match slab.unsafe_vars.get(fname_str) {
-                    None => Ok(Func { name: fname, args }),
+                    None => Ok(EFunc { name: fname, args }),
                     Some(&ptr) => Ok(EUnsafeVar { name: fname, ptr }),
                 }
 
