@@ -569,7 +569,7 @@ impl Evaler for StdFunc {
                     None => 0.5,
                 };
                 let scale = get_expr!(slab.ps, scale).eval(slab, ns)?;
-                Ok((-scale * scale) / (2.0 * decay.ln()))
+                Ok((-scale * scale) / decay.ln())
             }
             EGauss {
                 x,
@@ -583,7 +583,7 @@ impl Evaler for StdFunc {
                 let sigma_squared = get_expr!(slab.ps, sigma_squared).eval(slab, ns)?;
                 let mut num = 0f64.max((x - origin).abs() - offset);
                 num *= num;
-                Ok((-num / (2f64 * sigma_squared)).exp())
+                Ok((-num / sigma_squared).exp())
             }
         }
     }
@@ -820,7 +820,7 @@ impl Evaler for Instruction {
             ISigmaSquared { scale, decay } => {
                 let scale = eval_ic_ref!(scale, slab, ns);
                 let decay = eval_ic_ref!(decay, slab, ns);
-                Ok(-(scale * scale) / (2f64 * decay.ln()))
+                Ok(-(scale * scale) / decay.ln())
             }
             IGauss {
                 x,
@@ -834,7 +834,7 @@ impl Evaler for Instruction {
                 let sigma_squared = eval_ic_ref!(sigma_squared, slab, ns);
                 let mut num = 0f64.max((x - origin).abs() - offset);
                 num *= num;
-                Ok((-num / (2f64 * sigma_squared)).exp())
+                Ok((-num / sigma_squared).exp())
             }
 
             IEQ(left, right) => Ok(bool_to_f64!(f64_eq!(
