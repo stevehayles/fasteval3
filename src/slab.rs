@@ -51,17 +51,18 @@
 //! }
 //! ```
 
+use crate::compiler::{
+    Instruction::{self, IConst},
+    InstructionI,
+};
 use crate::error::Error;
-use crate::parser::{ExpressionI, ValueI,
-                    Expression,  Value};
-use crate::compiler::{Instruction::{self, IConst}, InstructionI};
+use crate::parser::{Expression, ExpressionI, Value, ValueI};
 
 use std::fmt;
 use std::mem;
 
-#[cfg(feature="unsafe-vars")]
+#[cfg(feature = "unsafe-vars")]
 use std::collections::BTreeMap;
-
 
 // Eliminate function call overhead:
 macro_rules! get_expr {
@@ -90,7 +91,6 @@ macro_rules! get_instr {
     };
 }
 
-
 impl ExpressionI {
     /// Gets an Expression reference from the ParseSlab.
     ///
@@ -101,8 +101,8 @@ impl ExpressionI {
     /// would force you to split the process into at least two lines.)
     ///
     #[inline]
-    pub fn from(self, ps:&ParseSlab) -> &Expression {
-        get_expr!(ps,self)
+    pub fn from(self, ps: &ParseSlab) -> &Expression {
+        get_expr!(ps, self)
     }
 }
 impl ValueI {
@@ -111,15 +111,15 @@ impl ValueI {
     /// See the comments on [ExpressionI::from](struct.ExpressionI.html#method.from).
     ///
     #[inline]
-    pub fn from(self, ps:&ParseSlab) -> &Value {
-        get_val!(ps,self)
+    pub fn from(self, ps: &ParseSlab) -> &Value {
+        get_val!(ps, self)
     }
 }
 
 /// [See the `slab module` documentation.](index.html)
 pub struct Slab {
-    pub ps:ParseSlab,
-    pub cs:CompileSlab,
+    pub ps: ParseSlab,
+    pub cs: CompileSlab,
 }
 
 /// `ParseSlab` is where `parse()` results are stored, located at `Slab.ps`.
@@ -206,22 +206,22 @@ pub struct Slab {
 ///
 ///     Ok(())
 /// }
-/// 
+///
 /// ```
 pub struct ParseSlab {
-    pub(crate) exprs      :Vec<Expression>,
-    pub(crate) vals       :Vec<Value>,
-    pub(crate) def_expr   :Expression,
-    pub(crate) def_val    :Value,
-    pub(crate) char_buf   :String,
-    #[cfg(feature="unsafe-vars")]
-    pub(crate) unsafe_vars:BTreeMap<String, *const f64>,
+    pub(crate) exprs: Vec<Expression>,
+    pub(crate) vals: Vec<Value>,
+    pub(crate) def_expr: Expression,
+    pub(crate) def_val: Value,
+    pub(crate) char_buf: String,
+    #[cfg(feature = "unsafe-vars")]
+    pub(crate) unsafe_vars: BTreeMap<String, *const f64>,
 }
 
 /// `CompileSlab` is where `compile()` results are stored, located at `Slab.cs`.
 pub struct CompileSlab {
-    pub(crate) instrs   :Vec<Instruction>,
-    pub(crate) def_instr:Instruction,
+    pub(crate) instrs: Vec<Instruction>,
+    pub(crate) def_instr: Instruction,
 }
 
 impl ParseSlab {
@@ -231,7 +231,7 @@ impl ParseSlab {
     /// If `expr_i` is out-of-bounds, a reference to a default `Expression` is returned.
     ///
     #[inline]
-    pub fn get_expr(&self, expr_i:ExpressionI) -> &Expression {
+    pub fn get_expr(&self, expr_i: ExpressionI) -> &Expression {
         // I'm using this non-panic match structure to boost performance:
         match self.exprs.get(expr_i.0) {
             Some(expr_ref) => expr_ref,
@@ -245,7 +245,7 @@ impl ParseSlab {
     /// If `val_i` is out-of-bounds, a reference to a default `Value` is returned.
     ///
     #[inline]
-    pub fn get_val(&self, val_i:ValueI) -> &Value {
+    pub fn get_val(&self, val_i: ValueI) -> &Value {
         match self.vals.get(val_i.0) {
             Some(val_ref) => val_ref,
             None => &self.def_val,
@@ -259,9 +259,11 @@ impl ParseSlab {
     /// If `ParseSlab.exprs` is already full, a `SlabOverflow` error is returned.
     ///
     #[inline]
-    pub(crate) fn push_expr(&mut self, expr:Expression) -> Result<ExpressionI,Error> {
+    pub(crate) fn push_expr(&mut self, expr: Expression) -> Result<ExpressionI, Error> {
         let i = self.exprs.len();
-        if i>=self.exprs.capacity() { return Err(Error::SlabOverflow); }
+        if i >= self.exprs.capacity() {
+            return Err(Error::SlabOverflow);
+        }
         self.exprs.push(expr);
         Ok(ExpressionI(i))
     }
@@ -273,9 +275,11 @@ impl ParseSlab {
     /// If `ParseSlab.vals` is already full, a `SlabOverflow` error is returned.
     ///
     #[inline]
-    pub(crate) fn push_val(&mut self, val:Value) -> Result<ValueI,Error> {
+    pub(crate) fn push_val(&mut self, val: Value) -> Result<ValueI, Error> {
         let i = self.vals.len();
-        if i>=self.vals.capacity() { return Err(Error::SlabOverflow); }
+        if i >= self.vals.capacity() {
+            return Err(Error::SlabOverflow);
+        }
         self.vals.push(val);
         Ok(ValueI(i))
     }
@@ -288,9 +292,9 @@ impl ParseSlab {
     }
 
     /// [See the `add_unsafe_var()` documentation above.](#unsafe-variable-registration-with-add_unsafe_var)
-    #[cfg(feature="unsafe-vars")]
+    #[cfg(feature = "unsafe-vars")]
     #[allow(clippy::trivially_copy_pass_by_ref)]
-    pub unsafe fn add_unsafe_var(&mut self, name:String, ptr:&f64) {
+    pub unsafe fn add_unsafe_var(&mut self, name: String, ptr: &f64) {
         self.unsafe_vars.insert(name, ptr as *const f64);
     }
 }
@@ -302,7 +306,7 @@ impl CompileSlab {
     /// If `instr_i` is out-of-bounds, a reference to a default `Instruction` is returned.
     ///
     #[inline]
-    pub fn get_instr(&self, instr_i:InstructionI) -> &Instruction {
+    pub fn get_instr(&self, instr_i: InstructionI) -> &Instruction {
         match self.instrs.get(instr_i.0) {
             Some(instr_ref) => instr_ref,
             None => &self.def_instr,
@@ -310,23 +314,25 @@ impl CompileSlab {
     }
 
     /// Appends an `Instruction` to `CompileSlab.instrs`.
-    pub(crate) fn push_instr(&mut self, instr:Instruction) -> InstructionI {
-        if self.instrs.capacity()==0 { self.instrs.reserve(32); }
+    pub(crate) fn push_instr(&mut self, instr: Instruction) -> InstructionI {
+        if self.instrs.capacity() == 0 {
+            self.instrs.reserve(32);
+        }
         let i = self.instrs.len();
         self.instrs.push(instr);
         InstructionI(i)
     }
 
     /// Removes an `Instruction` from `CompileSlab.instrs` as efficiently as possible.
-    pub(crate) fn take_instr(&mut self, i:InstructionI) -> Instruction {
-        if i.0==self.instrs.len()-1 {
+    pub(crate) fn take_instr(&mut self, i: InstructionI) -> Instruction {
+        if i.0 == self.instrs.len() - 1 {
             match self.instrs.pop() {
                 Some(instr) => instr,
                 None => IConst(std::f64::NAN),
             }
         } else {
             match self.instrs.get_mut(i.0) {
-                Some(instr_ref) => mem::replace(instr_ref, IConst(std::f64::NAN)),  // Replace with a conspicuous value in case we use it by accident.
+                Some(instr_ref) => mem::replace(instr_ref, IConst(std::f64::NAN)), // Replace with a conspicuous value in case we use it by accident.
                 None => IConst(std::f64::NAN),
             }
         }
@@ -342,24 +348,26 @@ impl CompileSlab {
 impl Slab {
     /// Creates a new default-sized `Slab`.
     #[inline]
-    pub fn new() -> Self { Self::with_capacity(64) }
+    pub fn new() -> Self {
+        Self::with_capacity(64)
+    }
 
     /// Creates a new `Slab` with the given capacity.
     #[inline]
-    pub fn with_capacity(cap:usize) -> Self {
-        Self{
-            ps:ParseSlab{
-                exprs      :Vec::with_capacity(cap),
-                vals       :Vec::with_capacity(cap),
-                def_expr   :Default::default(),
-                def_val    :Default::default(),
-                char_buf   :String::with_capacity(64),
-                #[cfg(feature="unsafe-vars")]
-                unsafe_vars:BTreeMap::new(),
+    pub fn with_capacity(cap: usize) -> Self {
+        Self {
+            ps: ParseSlab {
+                exprs: Vec::with_capacity(cap),
+                vals: Vec::with_capacity(cap),
+                def_expr: Default::default(),
+                def_val: Default::default(),
+                char_buf: String::with_capacity(64),
+                #[cfg(feature = "unsafe-vars")]
+                unsafe_vars: BTreeMap::new(),
             },
-            cs:CompileSlab{
-                instrs   :Vec::new(),  // Don't pre-allocate for compilation.
-                def_instr:Default::default(),
+            cs: CompileSlab {
+                instrs: Vec::new(), // Don't pre-allocate for compilation.
+                def_instr: Default::default(),
             },
         }
     }
@@ -373,21 +381,27 @@ impl Slab {
     }
 }
 
-
-fn write_indexed_list<T>(f:&mut fmt::Formatter, lst:&[T]) -> Result<(), fmt::Error> where T:fmt::Debug {
+fn write_indexed_list<T>(f: &mut fmt::Formatter, lst: &[T]) -> Result<(), fmt::Error>
+where
+    T: fmt::Debug,
+{
     write!(f, "{{")?;
     let mut nonempty = false;
-    for (i,x) in lst.iter().enumerate() {
-        if nonempty { write!(f, ",")?; }
+    for (i, x) in lst.iter().enumerate() {
+        if nonempty {
+            write!(f, ",")?;
+        }
         nonempty = true;
-        write!(f, " {}:{:?}",i,x)?;
+        write!(f, " {}:{:?}", i, x)?;
     }
-    if nonempty { write!(f, " ")?; }
+    if nonempty {
+        write!(f, " ")?;
+    }
     write!(f, "}}")?;
     Ok(())
 }
 impl fmt::Debug for Slab {
-    fn fmt(&self, f:&mut fmt::Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(f, "Slab{{ exprs:")?;
         write_indexed_list(f, &self.ps.exprs)?;
         write!(f, ", vals:")?;
@@ -399,7 +413,7 @@ impl fmt::Debug for Slab {
     }
 }
 impl fmt::Debug for ParseSlab {
-    fn fmt(&self, f:&mut fmt::Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(f, "ParseSlab{{ exprs:")?;
         write_indexed_list(f, &self.exprs)?;
         write!(f, ", vals:")?;
@@ -409,7 +423,7 @@ impl fmt::Debug for ParseSlab {
     }
 }
 impl fmt::Debug for CompileSlab {
-    fn fmt(&self, f:&mut fmt::Formatter) -> Result<(), fmt::Error> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(f, "CompileSlab{{ instrs:")?;
         write_indexed_list(f, &self.instrs)?;
         write!(f, " }}")?;
@@ -418,6 +432,7 @@ impl fmt::Debug for CompileSlab {
 }
 
 impl Default for Slab {
-    fn default() -> Self { Self::with_capacity(64) }
+    fn default() -> Self {
+        Self::with_capacity(64)
+    }
 }
-

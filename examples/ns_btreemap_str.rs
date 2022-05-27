@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 fn main() -> Result<(), fasteval2::Error> {
-    let mut map : BTreeMap<&'static str,f64> = BTreeMap::new();
+    let mut map: BTreeMap<&'static str, f64> = BTreeMap::new();
     map.insert("x", 2.0);
 
     let val = fasteval2::ez_eval("x * (x + 1)", &mut map)?;

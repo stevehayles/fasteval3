@@ -1,48 +1,61 @@
-use fasteval2::{Parser, Compiler, Evaler, Error, Slab, CachedCallbackNamespace, eval_compiled_ref, EmptyNamespace};
+use fasteval2::{
+    eval_compiled_ref, CachedCallbackNamespace, Compiler, EmptyNamespace, Error, Evaler, Parser,
+    Slab,
+};
 
 use std::str::from_utf8;
 
-fn evalns_cb(name:&str, args:Vec<f64>) -> Option<f64> {
+fn evalns_cb(name: &str, args: Vec<f64>) -> Option<f64> {
     match name {
         "w" => Some(0.0),
         "x" => Some(1.0),
         "y" => Some(2.0),
         "y7" => Some(2.7),
         "z" => Some(3.0),
-        "foo" => Some(args[0]*10.0),
-        "bar" => Some(args[0]+args[1]),
+        "foo" => Some(args[0] * 10.0),
+        "bar" => Some(args[0] + args[1]),
         _ => None,
     }
 }
 
-fn chk_ok(expr_str:&str, expect_compile_str:&str, expect_slab_str:&str, expect_eval:f64) {
+fn chk_ok(expr_str: &str, expect_compile_str: &str, expect_slab_str: &str, expect_eval: f64) {
     let mut slab = Slab::new();
-    let expr = Parser::new().parse(expr_str, &mut slab.ps).unwrap().from(&slab.ps);
+    let expr = Parser::new()
+        .parse(expr_str, &mut slab.ps)
+        .unwrap()
+        .from(&slab.ps);
     let instr = expr.compile(&slab.ps, &mut slab.cs, &mut EmptyNamespace);
 
-    assert_eq!(format!("{:?}",instr), expect_compile_str);
-    assert_eq!(format!("{:?}",slab), expect_slab_str);
+    assert_eq!(format!("{:?}", instr), expect_compile_str);
+    assert_eq!(format!("{:?}", slab), expect_slab_str);
 
-    (|| -> Result<(),Error> {
+    (|| -> Result<(), Error> {
         let mut ns = CachedCallbackNamespace::new(evalns_cb);
         assert_eq!(eval_compiled_ref!(&instr, &slab, &mut ns), expect_eval);
 
         // Make sure Instruction eval matches normal eval:
-        assert_eq!(eval_compiled_ref!(&instr, &slab, &mut ns), expr.eval(&slab, &mut ns).unwrap());
+        assert_eq!(
+            eval_compiled_ref!(&instr, &slab, &mut ns),
+            expr.eval(&slab, &mut ns).unwrap()
+        );
 
         Ok(())
-    })().unwrap();
+    })()
+    .unwrap();
 }
 
-fn chk_perr(expr_str:&str, expect_err:Error) {
+fn chk_perr(expr_str: &str, expect_err: Error) {
     let mut slab = Slab::new();
     let res = Parser::new().parse(expr_str, &mut slab.ps);
     assert_eq!(res, Err(expect_err));
 }
 
-fn chk_eerr(expr_str:&str, expect_err:Error) {
+fn chk_eerr(expr_str: &str, expect_err: Error) {
     let mut slab = Slab::new();
-    let expr = Parser::new().parse(expr_str, &mut slab.ps).unwrap().from(&slab.ps);
+    let expr = Parser::new()
+        .parse(expr_str, &mut slab.ps)
+        .unwrap()
+        .from(&slab.ps);
     let instr = expr.compile(&slab.ps, &mut slab.cs, &mut EmptyNamespace);
     let mut ns = CachedCallbackNamespace::new(evalns_cb);
     assert_eq!(instr.eval(&slab, &mut ns), Err(expect_err));
@@ -82,21 +95,34 @@ fn meval() {
 "IConst(0.4253241482607541)",
 "Slab{ exprs:{ 0:Expression { first: EConstant(1.0), pairs: [] }, 1:Expression { first: EConstant(2.0), pairs: [] }, 2:Expression { first: EStdFunc(EFuncSin(ExpressionI(0))), pairs: [ExprPair(EAdd, EStdFunc(EFuncCos(ExpressionI(1))))] } }, vals:{}, instrs:{} }",
 (1f64).sin() + (2f64).cos());
-
-
-
-
-
 }
 
 #[test]
 fn overflow_stack() {
-    chk_perr(from_utf8(&[b'('; 1]).unwrap(), Error::EofWhileParsing("value".to_string()));
-    chk_perr(from_utf8(&[b'('; 2]).unwrap(), Error::EofWhileParsing("value".to_string()));
-    chk_perr(from_utf8(&[b'('; 4]).unwrap(), Error::EofWhileParsing("value".to_string()));
-    chk_perr(from_utf8(&[b'('; 8]).unwrap(), Error::EofWhileParsing("value".to_string()));
-    chk_perr(from_utf8(&[b'('; 16]).unwrap(), Error::EofWhileParsing("value".to_string()));
-    chk_perr(from_utf8(&[b'('; 32]).unwrap(), Error::EofWhileParsing("value".to_string()));
+    chk_perr(
+        from_utf8(&[b'('; 1]).unwrap(),
+        Error::EofWhileParsing("value".to_string()),
+    );
+    chk_perr(
+        from_utf8(&[b'('; 2]).unwrap(),
+        Error::EofWhileParsing("value".to_string()),
+    );
+    chk_perr(
+        from_utf8(&[b'('; 4]).unwrap(),
+        Error::EofWhileParsing("value".to_string()),
+    );
+    chk_perr(
+        from_utf8(&[b'('; 8]).unwrap(),
+        Error::EofWhileParsing("value".to_string()),
+    );
+    chk_perr(
+        from_utf8(&[b'('; 16]).unwrap(),
+        Error::EofWhileParsing("value".to_string()),
+    );
+    chk_perr(
+        from_utf8(&[b'('; 32]).unwrap(),
+        Error::EofWhileParsing("value".to_string()),
+    );
     chk_perr(from_utf8(&[b'('; 33]).unwrap(), Error::TooDeep);
     chk_perr(from_utf8(&[b'('; 64]).unwrap(), Error::TooDeep);
     chk_perr(from_utf8(&[b'('; 128]).unwrap(), Error::TooDeep);
@@ -108,18 +134,21 @@ fn overflow_stack() {
     chk_perr(from_utf8(&[b'('; 8192]).unwrap(), Error::TooLong);
 
     // Test custom safety parse limits:
-    assert_eq!(Parser{expr_len_limit:fasteval2::parser::DEFAULT_EXPR_LEN_LIMIT,
-                      expr_depth_limit:31}.parse(
-                        from_utf8(&[b'('; 32]).unwrap(),
-                        &mut Slab::new().ps
-                      ),
-               Err(Error::TooDeep));
+    assert_eq!(
+        Parser {
+            expr_len_limit: fasteval2::parser::DEFAULT_EXPR_LEN_LIMIT,
+            expr_depth_limit: 31
+        }
+        .parse(from_utf8(&[b'('; 32]).unwrap(), &mut Slab::new().ps),
+        Err(Error::TooDeep)
+    );
 
-    assert_eq!(Parser{expr_len_limit:8,
-                      expr_depth_limit:fasteval2::parser::DEFAULT_EXPR_DEPTH_LIMIT}.parse(
-                        from_utf8(&[b'('; 32]).unwrap(),
-                        &mut Slab::new().ps
-                      ),
-               Err(Error::TooLong));
+    assert_eq!(
+        Parser {
+            expr_len_limit: 8,
+            expr_depth_limit: fasteval2::parser::DEFAULT_EXPR_DEPTH_LIMIT
+        }
+        .parse(from_utf8(&[b'('; 32]).unwrap(), &mut Slab::new().ps),
+        Err(Error::TooLong)
+    );
 }
-

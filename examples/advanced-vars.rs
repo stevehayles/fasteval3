@@ -1,15 +1,15 @@
 // usage:  cargo run --release --example advanced-vars
 
 fn main() -> Result<(), fasteval2::Error> {
-    let mut cb = |name:&str, args:Vec<f64>| -> Option<f64> {
-        let mydata : [f64; 3] = [11.1, 22.2, 33.3];
+    let mut cb = |name: &str, args: Vec<f64>| -> Option<f64> {
+        let mydata: [f64; 3] = [11.1, 22.2, 33.3];
         match name {
             // Custom constants/variables:
             "x" => Some(3.0),
             "y" => Some(4.0),
 
             // Custom function:
-            "sum" => Some(args.into_iter().fold(0.0, |s,f| s+f)),
+            "sum" => Some(args.into_iter().fold(0.0, |s, f| s + f)),
 
             // Custom array-like objects:
             // The `args.get...` code is the same as:
@@ -22,7 +22,7 @@ fn main() -> Result<(), fasteval2::Error> {
         }
     };
 
-    let val = fasteval2::ez_eval("sum(x^2, y^2)^0.5 + data[0]",    &mut cb)?;
+    let val = fasteval2::ez_eval("sum(x^2, y^2)^0.5 + data[0]", &mut cb)?;
     //                           |   |                   |
     //                           |   |                   square-brackets act like parenthesis
     //                           |   variables are like custom functions with zero args
@@ -44,7 +44,7 @@ fn main() -> Result<(), fasteval2::Error> {
     //       This design was chosen so that builtin functions do not pollute
     //       the variable namespace, which is important for some applications.
     //       Here are some examples:
-    //           pi        -- Uses the custom 'pi' variable, NOT the builtin 'pi' function.  
+    //           pi        -- Uses the custom 'pi' variable, NOT the builtin 'pi' function.
     //           pi()      -- Uses the builtin 'pi' function even if a custom variable is defined.
     //           pi(1,2,3) -- Uses the builtin 'pi' function, and produces a WrongArgs error
     //                        during parse because the builtin does not expect any arguments.

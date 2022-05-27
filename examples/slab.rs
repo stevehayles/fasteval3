@@ -1,7 +1,7 @@
 // usage:  cargo run --release --example slab
 
-use std::collections::BTreeMap;
-use fasteval2::Evaler;  // use this trait so we can call eval().
+use fasteval2::Evaler;
+use std::collections::BTreeMap; // use this trait so we can call eval().
 fn main() -> Result<(), fasteval2::Error> {
     let parser = fasteval2::Parser::new();
     let mut slab = fasteval2::Slab::new();
@@ -11,7 +11,7 @@ fn main() -> Result<(), fasteval2::Error> {
 
     // Let's evaluate the expression a couple times with different 'x' values:
 
-    let mut map : BTreeMap<String,f64> = BTreeMap::new();
+    let mut map: BTreeMap<String, f64> = BTreeMap::new();
     map.insert("x".to_string(), 1.0);
     let val = expr_ref.eval(&slab, &mut map)?;
     assert_eq!(val, 2.0);

@@ -76,13 +76,11 @@ fn layered_str_to_f64() {
 
 #[test]
 fn cb() {
-    let mut ns = |name:&str, args:Vec<f64>| {
-        match name {
-            "a" => Some(1.11),
-            "b" => Some(2.22),
-            "len" => Some(args.len() as f64),
-            _ => None,
-        }
+    let mut ns = |name: &str, args: Vec<f64>| match name {
+        "a" => Some(1.11),
+        "b" => Some(2.22),
+        "len" => Some(args.len() as f64),
+        _ => None,
     };
 
     let val = ez_eval("a + b + 1", &mut ns).unwrap();
@@ -91,13 +89,14 @@ fn cb() {
 
 #[test]
 fn cached_cb() {
-    let mut ns = fasteval2::CachedCallbackNamespace::new(|name:&str, args:Vec<f64>| {
-        match name {
-            "a" => { eprintln!("cached_cb: a: This should only be printed once."); Some(1.11) }
-            "b" => Some(2.22),
-            "len" => Some(args.len() as f64),
-            _ => None,
+    let mut ns = fasteval2::CachedCallbackNamespace::new(|name: &str, args: Vec<f64>| match name {
+        "a" => {
+            eprintln!("cached_cb: a: This should only be printed once.");
+            Some(1.11)
         }
+        "b" => Some(2.22),
+        "len" => Some(args.len() as f64),
+        _ => None,
     });
 
     let val = ez_eval("a + b + 1", &mut ns).unwrap();
@@ -116,23 +115,28 @@ fn custom_vector_funcs() {
 
     ns.insert("x", Box::new(|_args| 2.0));
 
-    ns.insert("vec_store", Box::new(|args| {
-        let mut vecs = vecs_cell.borrow_mut();
-        let index = vecs.len();
-        vecs.push(args);
-        index as f64
-    }));
+    ns.insert(
+        "vec_store",
+        Box::new(|args| {
+            let mut vecs = vecs_cell.borrow_mut();
+            let index = vecs.len();
+            vecs.push(args);
+            index as f64
+        }),
+    );
 
-    ns.insert("vec_sum", Box::new(|args| {
-        if let Some(index) = args.get(0) {
-            if let Some(v) = vecs_cell.borrow().get(*index as usize) {
-                return v.iter().sum();
+    ns.insert(
+        "vec_sum",
+        Box::new(|args| {
+            if let Some(index) = args.get(0) {
+                if let Some(v) = vecs_cell.borrow().get(*index as usize) {
+                    return v.iter().sum();
+                }
             }
-        }
-        std::f64::NAN
-    }));
+            std::f64::NAN
+        }),
+    );
 
     let val = ez_eval("vec_sum(vec_store(1.1, x, 3.3)) + vec_sum(0)", &mut ns).unwrap();
     assert_eq!(val, 12.8);
 }
-

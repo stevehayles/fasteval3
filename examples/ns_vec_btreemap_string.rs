@@ -6,7 +6,7 @@ fn main() -> Result<(), fasteval2::Error> {
     layer1.insert("x".to_string(), 2.0);
     layer1.insert("y".to_string(), 3.0);
 
-    let mut layers : Vec<BTreeMap<String,f64>> = vec![layer1];
+    let mut layers: Vec<BTreeMap<String, f64>> = vec![layer1];
 
     let val = fasteval2::ez_eval("x * y", &mut layers)?;
     assert_eq!(val, 6.0);

@@ -23,14 +23,11 @@
 //! String: ".*"
 //! ```
 
-
 use crate::error::Error;
 use crate::slab::ParseSlab;
 
-use std::str::{from_utf8, from_utf8_unchecked};
 use std::ptr;
-
-
+use std::str::{from_utf8, from_utf8_unchecked};
 
 /// An `ExpressionI` represents an index into `Slab.ps.exprs`.
 ///
@@ -46,14 +43,13 @@ pub struct ExpressionI(pub usize);
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct ValueI(pub usize);
 
-
 /// An `Expression` is the top node of a parsed AST.
 ///
 /// It can be `compile()`d or `eval()`d.
 #[derive(Debug, PartialEq)]
 pub struct Expression {
     pub(crate) first: Value,
-    pub(crate) pairs: Vec<ExprPair>,  // cap=8
+    pub(crate) pairs: Vec<ExprPair>, // cap=8
 }
 
 #[derive(Debug, PartialEq)]
@@ -67,7 +63,7 @@ pub enum Value {
     EStdFunc(StdFunc),
     EPrintFunc(PrintFunc),
 }
-use Value::{EConstant, EUnaryOp, EStdFunc, EPrintFunc};
+use Value::{EConstant, EPrintFunc, EStdFunc, EUnaryOp};
 
 /// Unary Operators
 #[derive(Debug, PartialEq)]
@@ -77,47 +73,65 @@ pub enum UnaryOp {
     ENot(ValueI),
     EParentheses(ExpressionI),
 }
-use UnaryOp::{EPos, ENeg, ENot, EParentheses};
+use UnaryOp::{ENeg, ENot, EParentheses, EPos};
 
 /// Binary Operators
 #[derive(Debug, PartialEq, PartialOrd, Copy, Clone)]
 pub enum BinaryOp {
     // Sorted in order of precedence (low-priority to high-priority):
     // Keep this order in-sync with evaler.rs.  (Search for 'rtol' and 'ltor'.)
-    EOR    =  1,  // Lowest Priority
-    EAND   =  2,
-    ENE    =  3,
-    EEQ    =  4,
-    EGTE   =  5,
-    ELTE   =  6,
-    EGT    =  7,
-    ELT    =  8,
-    EAdd   =  9,
-    ESub   = 10,
-    EMul   = 11,
-    EDiv   = 12,
-    EMod   = 13,
-    EExp   = 14,  // Highest Priority
+    EOR = 1, // Lowest Priority
+    EAND = 2,
+    ENE = 3,
+    EEQ = 4,
+    EGTE = 5,
+    ELTE = 6,
+    EGT = 7,
+    ELT = 8,
+    EAdd = 9,
+    ESub = 10,
+    EMul = 11,
+    EDiv = 12,
+    EMod = 13,
+    EExp = 14, // Highest Priority
 }
-use BinaryOp::{EAdd, ESub, EMul, EDiv, EMod, EExp, ELT, ELTE, EEQ, ENE, EGTE, EGT, EOR, EAND};
+use BinaryOp::{EAdd, EDiv, EExp, EMod, EMul, ESub, EAND, EEQ, EGT, EGTE, ELT, ELTE, ENE, EOR};
 
 /// A Function Call with Standard Syntax.
 #[derive(Debug, PartialEq)]
 pub enum StdFunc {
     EVar(String),
-    #[cfg(feature="unsafe-vars")]
-    EUnsafeVar{name:String, ptr:*const f64},
-    EFunc{name:String, args:Vec<ExpressionI>},  // cap=4
+    #[cfg(feature = "unsafe-vars")]
+    EUnsafeVar {
+        name: String,
+        ptr: *const f64,
+    },
+    EFunc {
+        name: String,
+        args: Vec<ExpressionI>,
+    }, // cap=4
 
     EFuncInt(ExpressionI),
     EFuncCeil(ExpressionI),
     EFuncFloor(ExpressionI),
     EFuncAbs(ExpressionI),
     EFuncSign(ExpressionI),
-    EFuncLog{     base:Option<ExpressionI>, expr:ExpressionI},
-    EFuncRound{modulus:Option<ExpressionI>, expr:ExpressionI},
-    EFuncMin{first:ExpressionI, rest:Vec<ExpressionI>},  // cap=4
-    EFuncMax{first:ExpressionI, rest:Vec<ExpressionI>},  // cap=4
+    EFuncLog {
+        base: Option<ExpressionI>,
+        expr: ExpressionI,
+    },
+    EFuncRound {
+        modulus: Option<ExpressionI>,
+        expr: ExpressionI,
+    },
+    EFuncMin {
+        first: ExpressionI,
+        rest: Vec<ExpressionI>,
+    }, // cap=4
+    EFuncMax {
+        first: ExpressionI,
+        rest: Vec<ExpressionI>,
+    }, // cap=4
 
     EFuncE,
     EFuncPi,
@@ -135,26 +149,36 @@ pub enum StdFunc {
     EFuncACosH(ExpressionI),
     EFuncATanH(ExpressionI),
 
-    ESigmaSquared{scale:ExpressionI, decay:Option<ExpressionI>},
-    EGauss{x:ExpressionI, origin:ExpressionI, offset:ExpressionI, sigma_squared:ExpressionI},
+    ESigmaSquared {
+        scale: ExpressionI,
+        decay: Option<ExpressionI>,
+    },
+    EGauss {
+        x: ExpressionI,
+        origin: ExpressionI,
+        offset: ExpressionI,
+        sigma_squared: ExpressionI,
+    },
 }
-use StdFunc::{EVar, EFunc, EFuncInt, EFuncCeil, EFuncFloor, EFuncAbs, EFuncSign, EFuncLog, EFuncRound, EFuncMin, EFuncMax, EFuncE, EFuncPi, EFuncSin, EFuncCos, EFuncTan, EFuncASin, EFuncACos, EFuncATan, EFuncSinH, EFuncCosH, EFuncTanH, EFuncASinH, EFuncACosH, EFuncATanH};
-#[cfg(feature="unsafe-vars")]
+#[cfg(feature = "unsafe-vars")]
 use StdFunc::EUnsafeVar;
+use StdFunc::{
+    EFunc, EFuncACos, EFuncACosH, EFuncASin, EFuncASinH, EFuncATan, EFuncATanH, EFuncAbs,
+    EFuncCeil, EFuncCos, EFuncCosH, EFuncE, EFuncFloor, EFuncInt, EFuncLog, EFuncMax, EFuncMin,
+    EFuncPi, EFuncRound, EFuncSign, EFuncSin, EFuncSinH, EFuncTan, EFuncTanH, EVar,
+};
 
 /// Represents a `print()` function call in the `fasteval` expression AST.
 #[derive(Debug, PartialEq)]
-pub struct PrintFunc(pub Vec<ExpressionOrString>);  // cap=8
+pub struct PrintFunc(pub Vec<ExpressionOrString>); // cap=8
 
 /// Used by the `print()` function.  Can hold an `Expression` or a `String`.
 #[derive(Debug, PartialEq)]
 pub enum ExpressionOrString {
     EExpr(ExpressionI),
-    EStr(String),  // cap=64
+    EStr(String), // cap=64
 }
 use ExpressionOrString::{EExpr, EStr};
-
-
 
 impl Clone for PrintFunc {
     fn clone(&self) -> Self {
@@ -169,17 +193,15 @@ impl Clone for PrintFunc {
     }
 }
 
-
-
 enum Token<T> {
     Pass,
     Bite(T),
 }
-use Token::{Pass, Bite};
 use crate::parser::StdFunc::{EGauss, ESigmaSquared};
+use Token::{Bite, Pass};
 
 macro_rules! peek {
-    ($bs:ident) =>  {
+    ($bs:ident) => {
         $bs.first().copied()
     };
 }
@@ -196,10 +218,10 @@ macro_rules! peek_n {
 }
 macro_rules! peek_is {
     ($bs:ident, $skip:literal, $val:literal) => {
-        peek_n!($bs,$skip) == Some($val)
+        peek_n!($bs, $skip) == Some($val)
     };
     ($bs:ident, $skip:expr, $val:literal) => {
-        peek_n!($bs,$skip) == Some($val)
+        peek_n!($bs, $skip) == Some($val)
     };
 }
 
@@ -240,9 +262,10 @@ macro_rules! skip_n {
 
 macro_rules! is_space {
     ($b:ident) => {
-        if $b>b' ' { false }
-        else {
-            $b==b' ' || $b==b'\n' || $b==b'\t' || $b==b'\r'
+        if $b > b' ' {
+            false
+        } else {
+            $b == b' ' || $b == b'\n' || $b == b'\t' || $b == b'\r'
         }
     };
 }
@@ -255,33 +278,39 @@ macro_rules! spaces {
     };
 }
 
-
-pub const DEFAULT_EXPR_LEN_LIMIT  : usize = 4096;
+pub const DEFAULT_EXPR_LEN_LIMIT: usize = 4096;
 pub const DEFAULT_EXPR_DEPTH_LIMIT: usize = 32;
 
 pub struct Parser {
-    pub expr_len_limit  :usize,
-    pub expr_depth_limit:usize,
+    pub expr_len_limit: usize,
+    pub expr_depth_limit: usize,
 }
 
 impl Parser {
     #[inline]
-    pub const fn new() -> Self { Self{expr_len_limit:DEFAULT_EXPR_LEN_LIMIT,
-                                      expr_depth_limit:DEFAULT_EXPR_DEPTH_LIMIT} }
-
-    fn is_varname_byte(b:u8, i:usize) -> bool {
-        (b'A'<=b && b<=b'Z') || (b'a'<=b && b<=b'z') || b==b'_' || (i>0 && ( b'0'<=b && b<=b'9' ))
+    pub const fn new() -> Self {
+        Self {
+            expr_len_limit: DEFAULT_EXPR_LEN_LIMIT,
+            expr_depth_limit: DEFAULT_EXPR_DEPTH_LIMIT,
+        }
     }
-    fn is_varname_byte_opt(bo:Option<u8>, i:usize) -> bool {
+
+    fn is_varname_byte(b: u8, i: usize) -> bool {
+        (b'A' <= b && b <= b'Z')
+            || (b'a' <= b && b <= b'z')
+            || b == b'_'
+            || (i > 0 && (b'0' <= b && b <= b'9'))
+    }
+    fn is_varname_byte_opt(bo: Option<u8>, i: usize) -> bool {
         match bo {
-            Some(b) => Self::is_varname_byte(b,i),
+            Some(b) => Self::is_varname_byte(b, i),
             None => false,
         }
     }
 
     /// Use this function to parse an expression String.  The `Slab` will be cleared first.
     #[inline]
-    pub fn parse(&self, expr_str:&str, slab:&mut ParseSlab) -> Result<ExpressionI,Error> {
+    pub fn parse(&self, expr_str: &str, slab: &mut ParseSlab) -> Result<ExpressionI, Error> {
         slab.clear();
         self.parse_noclear(expr_str, slab)
     }
@@ -293,23 +322,37 @@ impl Parser {
     /// This function cannot return Result<&Expression> because it would
     /// prolong the mut ref.  / That's why we return an ExpressionI instead.
     #[inline]
-    pub fn parse_noclear(&self, expr_str:&str, slab:&mut ParseSlab) -> Result<ExpressionI,Error> {
-        if expr_str.len()>self.expr_len_limit { return Err(Error::TooLong); }  // Restrict length for safety
+    pub fn parse_noclear(
+        &self,
+        expr_str: &str,
+        slab: &mut ParseSlab,
+    ) -> Result<ExpressionI, Error> {
+        if expr_str.len() > self.expr_len_limit {
+            return Err(Error::TooLong);
+        } // Restrict length for safety
         let mut bs = expr_str.as_bytes();
         self.read_expression(slab, &mut bs, 0, true)
     }
 
-    fn read_expression(&self, slab:&mut ParseSlab, bs:&mut &[u8], depth:usize, expect_eof:bool) -> Result<ExpressionI,Error> {
-        if depth>self.expr_depth_limit { return Err(Error::TooDeep); }
+    fn read_expression(
+        &self,
+        slab: &mut ParseSlab,
+        bs: &mut &[u8],
+        depth: usize,
+        expect_eof: bool,
+    ) -> Result<ExpressionI, Error> {
+        if depth > self.expr_depth_limit {
+            return Err(Error::TooDeep);
+        }
 
-        let first = self.read_value(slab,bs,depth)?;
+        let first = self.read_value(slab, bs, depth)?;
         let mut pairs = Vec::<ExprPair>::with_capacity(8);
         loop {
             match self.read_binaryop(bs)? {
                 Pass => break,
                 Bite(bop) => {
-                    let val = self.read_value(slab,bs,depth)?;
-                    pairs.push(ExprPair(bop,val));
+                    let val = self.read_value(slab, bs, depth)?;
+                    pairs.push(ExprPair(bop, val));
                 }
             }
         }
@@ -321,56 +364,77 @@ impl Parser {
             };
             return Err(Error::UnparsedTokensRemaining(bs_str.to_string()));
         }
-        Ok(slab.push_expr(Expression{first, pairs})?)
+        Ok(slab.push_expr(Expression { first, pairs })?)
     }
 
-    fn read_value(&self, slab:&mut ParseSlab, bs:&mut &[u8], depth:usize) -> Result<Value,Error> {
-        if depth>self.expr_depth_limit { return Err(Error::TooDeep) }
+    fn read_value(
+        &self,
+        slab: &mut ParseSlab,
+        bs: &mut &[u8],
+        depth: usize,
+    ) -> Result<Value, Error> {
+        if depth > self.expr_depth_limit {
+            return Err(Error::TooDeep);
+        }
 
-        match Self::read_const(slab,bs)? {
+        match Self::read_const(slab, bs)? {
             Pass => {}
             Bite(c) => return Ok(EConstant(c)),
         }
-        match self.read_unaryop(slab,bs,depth)? {
+        match self.read_unaryop(slab, bs, depth)? {
             Pass => {}
             Bite(u) => return Ok(EUnaryOp(u)),
         }
-        match self.read_callable(slab,bs,depth)? {
+        match self.read_callable(slab, bs, depth)? {
             Pass => {}
             Bite(c) => return Ok(c),
         }
 
         // Improve the precision of this error case:
-        if bs.is_empty() { return Err(Error::EofWhileParsing("value".to_string())); }
+        if bs.is_empty() {
+            return Err(Error::EofWhileParsing("value".to_string()));
+        }
 
         Err(Error::InvalidValue)
     }
 
-    fn read_const(slab:&mut ParseSlab, bs:&mut &[u8]) -> Result<Token<f64>,Error> {
+    fn read_const(slab: &mut ParseSlab, bs: &mut &[u8]) -> Result<Token<f64>, Error> {
         spaces!(bs);
 
-        let mut toklen=0;  let mut sign_ok=true;  let mut specials_ok=true;  let mut suffix_ok=true;  let mut saw_val=false;
+        let mut toklen = 0;
+        let mut sign_ok = true;
+        let mut specials_ok = true;
+        let mut suffix_ok = true;
+        let mut saw_val = false;
         loop {
             match peek_n!(bs, toklen) {
                 None => break,
                 Some(b) => {
-                    if b'0'<=b && b<=b'9' || b==b'.' {
+                    if b'0' <= b && b <= b'9' || b == b'.' {
                         saw_val = true;
-                        sign_ok=false; specials_ok=false;
-                        toklen = toklen+1;
-                    } else if sign_ok && (b==b'-' || b==b'+') {
                         sign_ok = false;
-                        toklen = toklen+1;
-                    } else if saw_val && (b==b'e' || b==b'E') {
+                        specials_ok = false;
+                        toklen = toklen + 1;
+                    } else if sign_ok && (b == b'-' || b == b'+') {
+                        sign_ok = false;
+                        toklen = toklen + 1;
+                    } else if saw_val && (b == b'e' || b == b'E') {
                         suffix_ok = false;
                         sign_ok = true;
-                        toklen = toklen+1;
-                    } else if specials_ok && ( b==b'N' && peek_is!(bs,toklen+1,b'a') && peek_is!(bs,toklen+2,b'N')  ||  b==b'i' && peek_is!(bs,toklen+1,b'n') && peek_is!(bs,toklen+2,b'f') ) {
-                        #[cfg(feature="alpha-keywords")]
+                        toklen = toklen + 1;
+                    } else if specials_ok
+                        && (b == b'N'
+                            && peek_is!(bs, toklen + 1, b'a')
+                            && peek_is!(bs, toklen + 2, b'N')
+                            || b == b'i'
+                                && peek_is!(bs, toklen + 1, b'n')
+                                && peek_is!(bs, toklen + 2, b'f'))
+                    {
+                        #[cfg(feature = "alpha-keywords")]
                         {
                             saw_val = true;
                             suffix_ok = false;
-                            toklen = toklen+3;
+                            toklen = toklen + 3;
                         }
                         break;
                     } else {
@@ -380,40 +444,44 @@ impl Parser {
             }
         }
 
-        if !saw_val { return Ok(Pass); }
+        if !saw_val {
+            return Ok(Pass);
+        }
 
         let mut tok = unsafe { from_utf8_unchecked(&bs[..toklen]) };
         if suffix_ok {
-            match peek_n!(bs,toklen) {
+            match peek_n!(bs, toklen) {
                 None => (),
                 Some(b) => {
-                    let (exp,suffixlen) = match b {
-                        b'k' | b'K' => (3,1),
-                        b'M' => (6,1),
-                        b'G' => (9,1),
-                        b'T' => (12,1),
-                        b'm' => (-3,1),
-                        b'u' | b'\xb5' => (-6,1),  // ASCII-encoded 'µ'
-                        b'\xc2' if peek_is!(bs,toklen+1,b'\xb5') => (-6,2),  // UTF8-encoded 'µ'
-                        b'n' => (-9,1),
-                        b'p' => (-12,1),
-                        _ => (0,0),
+                    let (exp, suffixlen) = match b {
+                        b'k' | b'K' => (3, 1),
+                        b'M' => (6, 1),
+                        b'G' => (9, 1),
+                        b'T' => (12, 1),
+                        b'm' => (-3, 1),
+                        b'u' | b'\xb5' => (-6, 1), // ASCII-encoded 'µ'
+                        b'\xc2' if peek_is!(bs, toklen + 1, b'\xb5') => (-6, 2), // UTF8-encoded 'µ'
+                        b'n' => (-9, 1),
+                        b'p' => (-12, 1),
+                        _ => (0, 0),
                     };
-                    if exp!=0 {
+                    if exp != 0 {
                         slab.char_buf.clear();
                         slab.char_buf.push_str(tok);
                         slab.char_buf.push('e');
                         slab.char_buf.push_str(&exp.to_string());
                         tok = &slab.char_buf;
 
-                        toklen = toklen+suffixlen;
+                        toklen = toklen + suffixlen;
                     }
                 }
             }
         }
 
-        let val = tok.parse::<f64>().map_err(|_| { Error::ParseF64(tok.to_string()) })?;
-        skip_n!(bs,toklen);
+        let val = tok
+            .parse::<f64>()
+            .map_err(|_| Error::ParseF64(tok.to_string()))?;
+        skip_n!(bs, toklen);
 
         Ok(Bite(val))
     }
@@ -505,82 +573,138 @@ impl Parser {
     //     Ok(Bite(val))
     // }
 
-    fn read_unaryop(&self, slab:&mut ParseSlab, bs:&mut &[u8], depth:usize) -> Result<Token<UnaryOp>,Error> {
+    fn read_unaryop(
+        &self,
+        slab: &mut ParseSlab,
+        bs: &mut &[u8],
+        depth: usize,
+    ) -> Result<Token<UnaryOp>, Error> {
         spaces!(bs);
         match peek!(bs) {
-            None => Ok(Pass),  // Err(KErr::new("EOF at UnaryOp position")), -- Instead of erroring, let the higher level decide what to do.
+            None => Ok(Pass), // Err(KErr::new("EOF at UnaryOp position")), -- Instead of erroring, let the higher level decide what to do.
             Some(b) => match b {
                 b'+' => {
                     skip!(bs);
-                    let v = self.read_value(slab,bs,depth+1)?;
+                    let v = self.read_value(slab, bs, depth + 1)?;
                     Ok(Bite(EPos(slab.push_val(v)?)))
                 }
                 b'-' => {
                     skip!(bs);
-                    let v = self.read_value(slab,bs,depth+1)?;
+                    let v = self.read_value(slab, bs, depth + 1)?;
                     Ok(Bite(ENeg(slab.push_val(v)?)))
                 }
                 b'(' => {
                     skip!(bs);
-                    let xi = self.read_expression(slab,bs,depth+1,false)?;
+                    let xi = self.read_expression(slab, bs, depth + 1, false)?;
                     spaces!(bs);
-                    if read!(bs,"parentheses")? != b')' { return Err(Error::Expected(")".to_string())); }
+                    if read!(bs, "parentheses")? != b')' {
+                        return Err(Error::Expected(")".to_string()));
+                    }
                     Ok(Bite(EParentheses(xi)))
                 }
                 b'[' => {
                     skip!(bs);
-                    let xi = self.read_expression(slab,bs,depth+1,false)?;
+                    let xi = self.read_expression(slab, bs, depth + 1, false)?;
                     spaces!(bs);
-                    if read!(bs,"square brackets")? != b']' { return Err(Error::Expected("]".to_string())); }
+                    if read!(bs, "square brackets")? != b']' {
+                        return Err(Error::Expected("]".to_string()));
+                    }
                     Ok(Bite(EParentheses(xi)))
                 }
                 b'!' => {
                     skip!(bs);
-                    let v = self.read_value(slab,bs,depth+1)?;
+                    let v = self.read_value(slab, bs, depth + 1)?;
                     Ok(Bite(ENot(slab.push_val(v)?)))
                 }
                 _ => Ok(Pass),
-            }
+            },
         }
     }
 
-    fn read_binaryop(&self, bs:&mut &[u8]) -> Result<Token<BinaryOp>,Error> {
+    fn read_binaryop(&self, bs: &mut &[u8]) -> Result<Token<BinaryOp>, Error> {
         spaces!(bs);
         match peek!(bs) {
             None => Ok(Pass), // Err(KErr::new("EOF")), -- EOF is usually OK in a BinaryOp position.
             Some(b) => match b {
-                b'+' => { skip!(bs); Ok(Bite(EAdd)) }
-                b'-' => { skip!(bs); Ok(Bite(ESub)) }
-                b'*' => { skip!(bs); Ok(Bite(EMul)) }
-                b'/' => { skip!(bs); Ok(Bite(EDiv)) }
-                b'%' => { skip!(bs); Ok(Bite(EMod)) }
-                b'^' => { skip!(bs); Ok(Bite(EExp)) }
-                b'<' => { skip!(bs);
-                          if peek_is!(bs,0,b'=') { skip!(bs); Ok(Bite(ELTE)) }
-                          else { Ok(Bite(ELT)) } }
-                b'>' => { skip!(bs);
-                          if peek_is!(bs,0,b'=') { skip!(bs); Ok(Bite(EGTE)) }
-                          else { Ok(Bite(EGT)) } }
-                b'=' if peek_is!(bs,1,b'=') => { skip_n!(bs,2);
-                                                Ok(Bite(EEQ)) }
-                b'!' if peek_is!(bs,1,b'=') => { skip_n!(bs,2);
-                                                Ok(Bite(ENE)) }
-                #[cfg(feature="alpha-keywords")]
-                b'o' if peek_is!(bs,1,b'r') => { skip_n!(bs,2);
-                                                Ok(Bite(EOR)) }
-                b'|' if peek_is!(bs,1,b'|') => { skip_n!(bs,2);
-                                                Ok(Bite(EOR)) }
-                #[cfg(feature="alpha-keywords")]
-                b'a' if peek_is!(bs,1,b'n') && peek_is!(bs,2,b'd') => { skip_n!(bs,3);
-                                                                      Ok(Bite(EAND)) }
-                b'&' if peek_is!(bs,1,b'&') => { skip_n!(bs,2);
-                                                Ok(Bite(EAND)) }
+                b'+' => {
+                    skip!(bs);
+                    Ok(Bite(EAdd))
+                }
+                b'-' => {
+                    skip!(bs);
+                    Ok(Bite(ESub))
+                }
+                b'*' => {
+                    skip!(bs);
+                    Ok(Bite(EMul))
+                }
+                b'/' => {
+                    skip!(bs);
+                    Ok(Bite(EDiv))
+                }
+                b'%' => {
+                    skip!(bs);
+                    Ok(Bite(EMod))
+                }
+                b'^' => {
+                    skip!(bs);
+                    Ok(Bite(EExp))
+                }
+                b'<' => {
+                    skip!(bs);
+                    if peek_is!(bs, 0, b'=') {
+                        skip!(bs);
+                        Ok(Bite(ELTE))
+                    } else {
+                        Ok(Bite(ELT))
+                    }
+                }
+                b'>' => {
+                    skip!(bs);
+                    if peek_is!(bs, 0, b'=') {
+                        skip!(bs);
+                        Ok(Bite(EGTE))
+                    } else {
+                        Ok(Bite(EGT))
+                    }
+                }
+                b'=' if peek_is!(bs, 1, b'=') => {
+                    skip_n!(bs, 2);
+                    Ok(Bite(EEQ))
+                }
+                b'!' if peek_is!(bs, 1, b'=') => {
+                    skip_n!(bs, 2);
+                    Ok(Bite(ENE))
+                }
+                #[cfg(feature = "alpha-keywords")]
+                b'o' if peek_is!(bs, 1, b'r') => {
+                    skip_n!(bs, 2);
+                    Ok(Bite(EOR))
+                }
+                b'|' if peek_is!(bs, 1, b'|') => {
+                    skip_n!(bs, 2);
+                    Ok(Bite(EOR))
+                }
+                #[cfg(feature = "alpha-keywords")]
+                b'a' if peek_is!(bs, 1, b'n') && peek_is!(bs, 2, b'd') => {
+                    skip_n!(bs, 3);
+                    Ok(Bite(EAND))
+                }
+                b'&' if peek_is!(bs, 1, b'&') => {
+                    skip_n!(bs, 2);
+                    Ok(Bite(EAND))
+                }
                 _ => Ok(Pass),
-            }
+            },
         }
     }
 
-    fn read_callable(&self, slab:&mut ParseSlab, bs:&mut &[u8], depth:usize) -> Result<Token<Value>,Error> {
+    fn read_callable(
+        &self,
+        slab: &mut ParseSlab,
+        bs: &mut &[u8],
+        depth: usize,
+    ) -> Result<Token<Value>, Error> {
         match Self::read_varname(bs)? {
             Pass => Ok(Pass),
             Bite(varname) => {
@@ -588,20 +712,31 @@ impl Parser {
                     Pass => {
                         // VarNames without Parenthesis are always treated as custom 0-arg functions.
 
-                        #[cfg(feature="unsafe-vars")]
+                        #[cfg(feature = "unsafe-vars")]
                         match slab.unsafe_vars.get(&varname) {
                             None => Ok(Bite(EStdFunc(EVar(varname)))),
-                            Some(&ptr) => Ok(Bite(EStdFunc(EUnsafeVar{name:varname, ptr})))
+                            Some(&ptr) => Ok(Bite(EStdFunc(EUnsafeVar { name: varname, ptr }))),
                         }
 
-                        #[cfg(not(feature="unsafe-vars"))]
+                        #[cfg(not(feature = "unsafe-vars"))]
                         Ok(Bite(EStdFunc(EVar(varname))))
                     }
                     Bite(open_parenth) => {
                         // VarNames with Parenthesis are first matched against builtins, then custom.
                         match varname.as_ref() {
-                            "print" => Ok(Bite(EPrintFunc(self.read_printfunc(slab,bs,depth,open_parenth)?))),
-                            _ => Ok(Bite(EStdFunc(self.read_func(varname,slab,bs,depth,open_parenth)?))),
+                            "print" => Ok(Bite(EPrintFunc(self.read_printfunc(
+                                slab,
+                                bs,
+                                depth,
+                                open_parenth,
+                            )?))),
+                            _ => Ok(Bite(EStdFunc(self.read_func(
+                                varname,
+                                slab,
+                                bs,
+                                depth,
+                                open_parenth,
+                            )?))),
                         }
                     }
                 }
@@ -609,32 +744,43 @@ impl Parser {
         }
     }
 
-    fn read_varname(bs:&mut &[u8]) -> Result<Token<String>,Error> {
+    fn read_varname(bs: &mut &[u8]) -> Result<Token<String>, Error> {
         spaces!(bs);
 
         let mut toklen = 0;
-        while Self::is_varname_byte_opt(peek_n!(bs,toklen),toklen) { toklen=toklen+1; }
+        while Self::is_varname_byte_opt(peek_n!(bs, toklen), toklen) {
+            toklen = toklen + 1;
+        }
 
-        if toklen==0 { return Ok(Pass); }
+        if toklen == 0 {
+            return Ok(Pass);
+        }
 
         let out = unsafe { from_utf8_unchecked(&bs[..toklen]) }.to_string();
         skip_n!(bs, toklen);
         Ok(Bite(out))
     }
 
-    fn read_open_parenthesis(bs:&mut &[u8]) -> Result<Token<u8>,Error> {
+    fn read_open_parenthesis(bs: &mut &[u8]) -> Result<Token<u8>, Error> {
         spaces!(bs);
 
         match peek!(bs) {
             Some(b'(') | Some(b'[') => Ok(Bite(match read!(bs) {
-                                                   Ok(b) => b,
-                                                   Err(..) => return Err(Error::Unreachable),
-                                               })),
+                Ok(b) => b,
+                Err(..) => return Err(Error::Unreachable),
+            })),
             _ => Ok(Pass),
         }
     }
 
-    fn read_func(&self, fname:String, slab:&mut ParseSlab, bs:&mut &[u8], depth:usize, open_parenth:u8) -> Result<StdFunc,Error> {
+    fn read_func(
+        &self,
+        fname: String,
+        slab: &mut ParseSlab,
+        bs: &mut &[u8],
+        depth: usize,
+        open_parenth: u8,
+    ) -> Result<StdFunc, Error> {
         let close_parenth = match open_parenth {
             b'(' => b')',
             b'[' => b']',
@@ -645,7 +791,7 @@ impl Parser {
             spaces!(bs);
             match peek!(bs) {
                 Some(b) => {
-                    if b==close_parenth {
+                    if b == close_parenth {
                         skip!(bs);
                         break;
                     }
@@ -660,197 +806,284 @@ impl Parser {
                     _ => return Err(Error::Expected("',' or ';'".to_string())),
                 }
             }
-            args.push(self.read_expression(slab,bs,depth+1,false)?);
+            args.push(self.read_expression(slab, bs, depth + 1, false)?);
         }
 
         let fname_str = fname.as_str();
         match fname_str {
             "int" => {
-                if args.len()==1 { Ok(EFuncInt(match args.pop() {
-                                                   Some(xi) => xi,
-                                                   None => return Err(Error::Unreachable),
-                                               }))
-                } else { Err(Error::WrongArgs("int: expected one arg".to_string())) }
+                if args.len() == 1 {
+                    Ok(EFuncInt(match args.pop() {
+                        Some(xi) => xi,
+                        None => return Err(Error::Unreachable),
+                    }))
+                } else {
+                    Err(Error::WrongArgs("int: expected one arg".to_string()))
+                }
             }
             "ceil" => {
-                if args.len()==1 { Ok(EFuncCeil(match args.pop() {
-                                                   Some(xi) => xi,
-                                                   None => return Err(Error::Unreachable),
-                                               }))
-                } else { Err(Error::WrongArgs("ceil: expected one arg".to_string())) }
+                if args.len() == 1 {
+                    Ok(EFuncCeil(match args.pop() {
+                        Some(xi) => xi,
+                        None => return Err(Error::Unreachable),
+                    }))
+                } else {
+                    Err(Error::WrongArgs("ceil: expected one arg".to_string()))
+                }
             }
             "floor" => {
-                if args.len()==1 { Ok(EFuncFloor(match args.pop() {
-                                                     Some(xi) => xi,
-                                                     None => return Err(Error::Unreachable),
-                                                 }))
-                } else { Err(Error::WrongArgs("floor: expected one arg".to_string())) }
+                if args.len() == 1 {
+                    Ok(EFuncFloor(match args.pop() {
+                        Some(xi) => xi,
+                        None => return Err(Error::Unreachable),
+                    }))
+                } else {
+                    Err(Error::WrongArgs("floor: expected one arg".to_string()))
+                }
             }
             "abs" => {
-                if args.len()==1 { Ok(EFuncAbs(match args.pop() {
-                                                   Some(xi) => xi,
-                                                   None => return Err(Error::Unreachable),
-                                               }))
-                } else { Err(Error::WrongArgs("abs: expected one arg".to_string())) }
+                if args.len() == 1 {
+                    Ok(EFuncAbs(match args.pop() {
+                        Some(xi) => xi,
+                        None => return Err(Error::Unreachable),
+                    }))
+                } else {
+                    Err(Error::WrongArgs("abs: expected one arg".to_string()))
+                }
             }
             "sign" => {
-                if args.len()==1 { Ok(EFuncSign(match args.pop() {
-                                                    Some(xi) => xi,
-                                                    None => return Err(Error::Unreachable),
-                                                }))
-                } else { Err(Error::WrongArgs("sign: expected one arg".to_string())) }
+                if args.len() == 1 {
+                    Ok(EFuncSign(match args.pop() {
+                        Some(xi) => xi,
+                        None => return Err(Error::Unreachable),
+                    }))
+                } else {
+                    Err(Error::WrongArgs("sign: expected one arg".to_string()))
+                }
             }
             "log" => {
-                if args.len()==1 { Ok(EFuncLog{base:None, expr:match args.pop() {
-                                                                   Some(xi) => xi,
-                                                                   None => return Err(Error::Unreachable),
-                                                               }})
-                } else if args.len()==2 {
+                if args.len() == 1 {
+                    Ok(EFuncLog {
+                        base: None,
+                        expr: match args.pop() {
+                            Some(xi) => xi,
+                            None => return Err(Error::Unreachable),
+                        },
+                    })
+                } else if args.len() == 2 {
                     let expr = match args.pop() {
-                                   Some(xi) => xi,
-                                   None => return Err(Error::Unreachable),
-                               };
-                    Ok(EFuncLog{base:Some(match args.pop() {
-                                              Some(xi) => xi,
-                                              None => return Err(Error::Unreachable),
-                                          }),
-                                expr})
-                } else { Err(Error::WrongArgs("expected log(x) or log(base,x)".to_string())) }
+                        Some(xi) => xi,
+                        None => return Err(Error::Unreachable),
+                    };
+                    Ok(EFuncLog {
+                        base: Some(match args.pop() {
+                            Some(xi) => xi,
+                            None => return Err(Error::Unreachable),
+                        }),
+                        expr,
+                    })
+                } else {
+                    Err(Error::WrongArgs(
+                        "expected log(x) or log(base,x)".to_string(),
+                    ))
+                }
             }
             "round" => {
-                if args.len()==1 { Ok(EFuncRound{modulus:None, expr:match args.pop() {
-                                                                        Some(xi) => xi,
-                                                                        None => return Err(Error::Unreachable),
-                                                                    }})
-                } else if args.len()==2 {
+                if args.len() == 1 {
+                    Ok(EFuncRound {
+                        modulus: None,
+                        expr: match args.pop() {
+                            Some(xi) => xi,
+                            None => return Err(Error::Unreachable),
+                        },
+                    })
+                } else if args.len() == 2 {
                     let expr = match args.pop() {
-                                   Some(xi) => xi,
-                                   None => return Err(Error::Unreachable),
-                               };
-                    Ok(EFuncRound{modulus:Some(match args.pop() {
-                                                   Some(xi) => xi,
-                                                   None => return Err(Error::Unreachable),
-                                               }),
-                                  expr})
-                } else { Err(Error::WrongArgs("round: expected round(x) or round(modulus,x)".to_string())) }
+                        Some(xi) => xi,
+                        None => return Err(Error::Unreachable),
+                    };
+                    Ok(EFuncRound {
+                        modulus: Some(match args.pop() {
+                            Some(xi) => xi,
+                            None => return Err(Error::Unreachable),
+                        }),
+                        expr,
+                    })
+                } else {
+                    Err(Error::WrongArgs(
+                        "round: expected round(x) or round(modulus,x)".to_string(),
+                    ))
+                }
             }
             "min" => {
                 if !args.is_empty() {
                     match remove_no_panic(&mut args, 0) {
-                        Some(first) => Ok(EFuncMin{first, rest:args}),
+                        Some(first) => Ok(EFuncMin { first, rest: args }),
                         None => Err(Error::Unreachable),
                     }
-                } else { Err(Error::WrongArgs("min: expected one or more args".to_string())) }
+                } else {
+                    Err(Error::WrongArgs(
+                        "min: expected one or more args".to_string(),
+                    ))
+                }
             }
             "max" => {
                 if !args.is_empty() {
                     match remove_no_panic(&mut args, 0) {
-                        Some(first) => Ok(EFuncMax{first, rest:args}),
+                        Some(first) => Ok(EFuncMax { first, rest: args }),
                         None => Err(Error::Unreachable),
                     }
-                } else { Err(Error::WrongArgs("max: expected one or more args".to_string())) }
+                } else {
+                    Err(Error::WrongArgs(
+                        "max: expected one or more args".to_string(),
+                    ))
+                }
             }
 
             "e" => {
-                if args.is_empty() { Ok(EFuncE)
-                } else { Err(Error::WrongArgs("e: expected no args".to_string())) }
+                if args.is_empty() {
+                    Ok(EFuncE)
+                } else {
+                    Err(Error::WrongArgs("e: expected no args".to_string()))
+                }
             }
             "pi" => {
-                if args.is_empty() { Ok(EFuncPi)
-                } else { Err(Error::WrongArgs("pi: expected no args".to_string())) }
+                if args.is_empty() {
+                    Ok(EFuncPi)
+                } else {
+                    Err(Error::WrongArgs("pi: expected no args".to_string()))
+                }
             }
 
             "sin" => {
-                if args.len()==1 { Ok(EFuncSin(match args.pop() {
-                                                   Some(xi) => xi,
-                                                   None => return Err(Error::Unreachable),
-                                               }))
-                } else { Err(Error::WrongArgs("sin: expected one arg".to_string())) }
+                if args.len() == 1 {
+                    Ok(EFuncSin(match args.pop() {
+                        Some(xi) => xi,
+                        None => return Err(Error::Unreachable),
+                    }))
+                } else {
+                    Err(Error::WrongArgs("sin: expected one arg".to_string()))
+                }
             }
             "cos" => {
-                if args.len()==1 { Ok(EFuncCos(match args.pop() {
-                                                   Some(xi) => xi,
-                                                   None => return Err(Error::Unreachable),
-                                               }))
-                } else { Err(Error::WrongArgs("cos: expected one arg".to_string())) }
+                if args.len() == 1 {
+                    Ok(EFuncCos(match args.pop() {
+                        Some(xi) => xi,
+                        None => return Err(Error::Unreachable),
+                    }))
+                } else {
+                    Err(Error::WrongArgs("cos: expected one arg".to_string()))
+                }
             }
             "tan" => {
-                if args.len()==1 { Ok(EFuncTan(match args.pop() {
-                                                   Some(xi) => xi,
-                                                   None => return Err(Error::Unreachable),
-                                               }))
-                } else { Err(Error::WrongArgs("tan: expected one arg".to_string())) }
+                if args.len() == 1 {
+                    Ok(EFuncTan(match args.pop() {
+                        Some(xi) => xi,
+                        None => return Err(Error::Unreachable),
+                    }))
+                } else {
+                    Err(Error::WrongArgs("tan: expected one arg".to_string()))
+                }
             }
             "asin" => {
-                if args.len()==1 { Ok(EFuncASin(match args.pop() {
-                                                    Some(xi) => xi,
-                                                    None => return Err(Error::Unreachable),
-                                                }))
-                } else { Err(Error::WrongArgs("asin: expected one arg".to_string())) }
+                if args.len() == 1 {
+                    Ok(EFuncASin(match args.pop() {
+                        Some(xi) => xi,
+                        None => return Err(Error::Unreachable),
+                    }))
+                } else {
+                    Err(Error::WrongArgs("asin: expected one arg".to_string()))
+                }
             }
             "acos" => {
-                if args.len()==1 { Ok(EFuncACos(match args.pop() {
-                                                    Some(xi) => xi,
-                                                    None => return Err(Error::Unreachable),
-                                                }))
-                } else { Err(Error::WrongArgs("acos: expected one arg".to_string())) }
+                if args.len() == 1 {
+                    Ok(EFuncACos(match args.pop() {
+                        Some(xi) => xi,
+                        None => return Err(Error::Unreachable),
+                    }))
+                } else {
+                    Err(Error::WrongArgs("acos: expected one arg".to_string()))
+                }
             }
             "atan" => {
-                if args.len()==1 { Ok(EFuncATan(match args.pop() {
-                                                    Some(xi) => xi,
-                                                    None => return Err(Error::Unreachable),
-                                                }))
-                } else { Err(Error::WrongArgs("atan: expected one arg".to_string())) }
+                if args.len() == 1 {
+                    Ok(EFuncATan(match args.pop() {
+                        Some(xi) => xi,
+                        None => return Err(Error::Unreachable),
+                    }))
+                } else {
+                    Err(Error::WrongArgs("atan: expected one arg".to_string()))
+                }
             }
             "sinh" => {
-                if args.len()==1 { Ok(EFuncSinH(match args.pop() {
-                                                    Some(xi) => xi,
-                                                    None => return Err(Error::Unreachable),
-                                                }))
-                } else { Err(Error::WrongArgs("sinh: expected one arg".to_string())) }
+                if args.len() == 1 {
+                    Ok(EFuncSinH(match args.pop() {
+                        Some(xi) => xi,
+                        None => return Err(Error::Unreachable),
+                    }))
+                } else {
+                    Err(Error::WrongArgs("sinh: expected one arg".to_string()))
+                }
             }
             "cosh" => {
-                if args.len()==1 { Ok(EFuncCosH(match args.pop() {
-                                                    Some(xi) => xi,
-                                                    None => return Err(Error::Unreachable),
-                                                }))
-                } else { Err(Error::WrongArgs("cosh: expected one arg".to_string())) }
+                if args.len() == 1 {
+                    Ok(EFuncCosH(match args.pop() {
+                        Some(xi) => xi,
+                        None => return Err(Error::Unreachable),
+                    }))
+                } else {
+                    Err(Error::WrongArgs("cosh: expected one arg".to_string()))
+                }
             }
             "tanh" => {
-                if args.len()==1 { Ok(EFuncTanH(match args.pop() {
-                                                    Some(xi) => xi,
-                                                    None => return Err(Error::Unreachable),
-                                                }))
-                } else { Err(Error::WrongArgs("tanh: expected one arg".to_string())) }
+                if args.len() == 1 {
+                    Ok(EFuncTanH(match args.pop() {
+                        Some(xi) => xi,
+                        None => return Err(Error::Unreachable),
+                    }))
+                } else {
+                    Err(Error::WrongArgs("tanh: expected one arg".to_string()))
+                }
             }
             "asinh" => {
-                if args.len()==1 { Ok(EFuncASinH(match args.pop() {
-                                                     Some(xi) => xi,
-                                                     None => return Err(Error::Unreachable),
-                                                 }))
-                } else { Err(Error::WrongArgs("asinh: expected one arg".to_string())) }
+                if args.len() == 1 {
+                    Ok(EFuncASinH(match args.pop() {
+                        Some(xi) => xi,
+                        None => return Err(Error::Unreachable),
+                    }))
+                } else {
+                    Err(Error::WrongArgs("asinh: expected one arg".to_string()))
+                }
             }
             "acosh" => {
-                if args.len()==1 { Ok(EFuncACosH(match args.pop() {
-                                                     Some(xi) => xi,
-                                                     None => return Err(Error::Unreachable),
-                                                 }))
-                } else { Err(Error::WrongArgs("acosh: expected one arg".to_string())) }
+                if args.len() == 1 {
+                    Ok(EFuncACosH(match args.pop() {
+                        Some(xi) => xi,
+                        None => return Err(Error::Unreachable),
+                    }))
+                } else {
+                    Err(Error::WrongArgs("acosh: expected one arg".to_string()))
+                }
             }
             "atanh" => {
-                if args.len()==1 { Ok(EFuncATanH(match args.pop() {
-                                                     Some(xi) => xi,
-                                                     None => return Err(Error::Unreachable),
-                                                 }))
-                } else { Err(Error::WrongArgs("atanh: expected one arg".to_string())) }
+                if args.len() == 1 {
+                    Ok(EFuncATanH(match args.pop() {
+                        Some(xi) => xi,
+                        None => return Err(Error::Unreachable),
+                    }))
+                } else {
+                    Err(Error::WrongArgs("atanh: expected one arg".to_string()))
+                }
             }
             "sigma_squared" => {
                 if 1 <= args.len() && args.len() <= 2 {
                     let scale = args[0];
                     let decay = args.get(1).map(|x| *x);
-                    Ok(ESigmaSquared{scale, decay})
+                    Ok(ESigmaSquared { scale, decay })
                 } else {
-                    Err(Error::WrongArgs("sigma_squared: expected from 1 or 2 args".to_string()))
+                    Err(Error::WrongArgs(
+                        "sigma_squared: expected from 1 or 2 args".to_string(),
+                    ))
                 }
             }
             "gauss" => {
@@ -859,26 +1092,39 @@ impl Parser {
                     let origin = args[1];
                     let offset = args[2];
                     let sigma_squared = args[3];
-                    Ok(EGauss{x, origin, offset, sigma_squared})
+                    Ok(EGauss {
+                        x,
+                        origin,
+                        offset,
+                        sigma_squared,
+                    })
                 } else {
-                    Err(Error::WrongArgs("gauss: expected from 3 to 4 args".to_string()))
+                    Err(Error::WrongArgs(
+                        "gauss: expected from 3 to 4 args".to_string(),
+                    ))
                 }
             }
 
             _ => {
-                #[cfg(feature="unsafe-vars")]
+                #[cfg(feature = "unsafe-vars")]
                 match slab.unsafe_vars.get(fname_str) {
-                    None => Ok(EFunc{name:fname, args}),
-                    Some(&ptr) => Ok(EUnsafeVar{name:fname, ptr}),
+                    None => Ok(EFunc { name: fname, args }),
+                    Some(&ptr) => Ok(EUnsafeVar { name: fname, ptr }),
                 }
 
-                #[cfg(not(feature="unsafe-vars"))]
-                Ok(EFunc{name:fname, args})
+                #[cfg(not(feature = "unsafe-vars"))]
+                Ok(EFunc { name: fname, args })
             }
         }
     }
 
-    fn read_printfunc(&self, slab:&mut ParseSlab, bs:&mut &[u8], depth:usize, open_parenth:u8) -> Result<PrintFunc,Error> {
+    fn read_printfunc(
+        &self,
+        slab: &mut ParseSlab,
+        bs: &mut &[u8],
+        depth: usize,
+        open_parenth: u8,
+    ) -> Result<PrintFunc, Error> {
         let close_parenth = match open_parenth {
             b'(' => b')',
             b'[' => b']',
@@ -889,51 +1135,69 @@ impl Parser {
             spaces!(bs);
             match peek!(bs) {
                 Some(b) => {
-                    if b==close_parenth {
+                    if b == close_parenth {
                         skip!(bs);
                         break;
                     }
                 }
-                None => { return Err(Error::EofWhileParsing("print".to_string())); }
+                None => {
+                    return Err(Error::EofWhileParsing("print".to_string()));
+                }
             }
             if !args.is_empty() {
                 match read!(bs) {
                     Ok(b',') | Ok(b';') => {}
-                    _ => { return Err(Error::Expected("',' or ';'".to_string())); }
+                    _ => {
+                        return Err(Error::Expected("',' or ';'".to_string()));
+                    }
                 }
             }
-            args.push(self.read_expressionorstring(slab,bs,depth+1)?);
+            args.push(self.read_expressionorstring(slab, bs, depth + 1)?);
         }
 
         Ok(PrintFunc(args))
     }
 
-    fn read_expressionorstring(&self, slab:&mut ParseSlab, bs:&mut &[u8], depth:usize) -> Result<ExpressionOrString,Error> {
+    fn read_expressionorstring(
+        &self,
+        slab: &mut ParseSlab,
+        bs: &mut &[u8],
+        depth: usize,
+    ) -> Result<ExpressionOrString, Error> {
         match Self::read_string(bs)? {
             Pass => {}
             Bite(s) => return Ok(EStr(s)),
         }
-        Ok(EExpr(self.read_expression(slab,bs,depth+1,false)?))
+        Ok(EExpr(self.read_expression(slab, bs, depth + 1, false)?))
     }
 
     // TODO: Improve this logic, especially to handle embedded quotes:
-    fn read_string(bs:&mut &[u8]) -> Result<Token<String>,Error> {
+    fn read_string(bs: &mut &[u8]) -> Result<Token<String>, Error> {
         spaces!(bs);
 
         match peek!(bs) {
-            None => return Err(Error::EofWhileParsing("opening quote of string".to_string())),
-            Some(b'"') => { skip!(bs); }
-            Some(_) => { return Ok(Pass) }
+            None => {
+                return Err(Error::EofWhileParsing(
+                    "opening quote of string".to_string(),
+                ))
+            }
+            Some(b'"') => {
+                skip!(bs);
+            }
+            Some(_) => return Ok(Pass),
         }
 
         let mut toklen = 0;
-        while match peek_n!(bs,toklen) {
+        while match peek_n!(bs, toklen) {
             None => false,
             Some(b'"') => false,
             Some(_) => true,
-        } { toklen=toklen+1; }
+        } {
+            toklen = toklen + 1;
+        }
 
-        let out = from_utf8(&bs[..toklen]).map_err(|_| Error::Utf8ErrorWhileParsing("string".to_string()))?;
+        let out = from_utf8(&bs[..toklen])
+            .map_err(|_| Error::Utf8ErrorWhileParsing("string".to_string()))?;
         skip_n!(bs, toklen);
         match read!(bs) {
             Err(Error::EOF) => Err(Error::EofWhileParsing("string".to_string())),
@@ -945,20 +1209,31 @@ impl Parser {
 }
 
 impl Default for Parser {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 impl Default for Expression {
-    fn default() -> Self { Expression{first:Default::default(), pairs:Vec::new()} }
+    fn default() -> Self {
+        Expression {
+            first: Default::default(),
+            pairs: Vec::new(),
+        }
+    }
 }
 impl Default for Value {
-    fn default() -> Self { EConstant(std::f64::NAN) }
+    fn default() -> Self {
+        EConstant(std::f64::NAN)
+    }
 }
 
 // A version of Vec::remove that doesn't panic:
 // (Mostly copy-pasted from https://doc.rust-lang.org/src/alloc/vec.rs.html#991-1010 .)
-pub(crate) fn remove_no_panic<T>(vself:&mut Vec<T>, index:usize) -> Option<T> {
+pub(crate) fn remove_no_panic<T>(vself: &mut Vec<T>, index: usize) -> Option<T> {
     let len = vself.len();
-    if index >= len { return None }
+    if index >= len {
+        return None;
+    }
     unsafe {
         // infallible
         let ret;
@@ -970,14 +1245,12 @@ pub(crate) fn remove_no_panic<T>(vself:&mut Vec<T>, index:usize) -> Option<T> {
             ret = ptr::read(ptr);
 
             // Shift everything down to fill in that spot.
-            ptr::copy(ptr.offset(1), ptr, len-index-1);
+            ptr::copy(ptr.offset(1), ptr, len - index - 1);
         }
-        vself.set_len(len-1);
+        vself.set_len(len - 1);
         Some(ret)
     }
 }
-
-
 
 #[cfg(test)]
 mod internal_tests {
@@ -991,29 +1264,29 @@ mod internal_tests {
     #[test]
     fn rem_no_panic() {
         let mut v = vec![1u8, 2, 3];
-        assert_eq!(format!("{:?}",v), "[1, 2, 3]");
-        assert_eq!(remove_no_panic(&mut v,1), Some(2));
-        assert_eq!(remove_no_panic(&mut v,10), None);
-        assert_eq!(format!("{:?}",v), "[1, 3]");
+        assert_eq!(format!("{:?}", v), "[1, 2, 3]");
+        assert_eq!(remove_no_panic(&mut v, 1), Some(2));
+        assert_eq!(remove_no_panic(&mut v, 10), None);
+        assert_eq!(format!("{:?}", v), "[1, 3]");
     }
 
     #[test]
     fn util() {
-        match (|| -> Result<(),Error> {
-            let bsarr = [1,2,3];
+        match (|| -> Result<(), Error> {
+            let bsarr = [1, 2, 3];
             let bs = &mut &bsarr[..];
 
             assert_eq!(peek!(bs), Some(1));
-            assert_eq!(peek_n!(bs,1), Some(2));
-            assert_eq!(peek_n!(bs,2), Some(3));
-            assert_eq!(peek_n!(bs,3), None);
+            assert_eq!(peek_n!(bs, 1), Some(2));
+            assert_eq!(peek_n!(bs, 2), Some(3));
+            assert_eq!(peek_n!(bs, 3), None);
 
             assert_eq!(read!(bs)?, 1);
             skip!(bs);
             assert_eq!(read!(bs)?, 3);
             match read!(bs).err() {
-                Some(Error::EOF) => {},
-                _ => panic!("I expected an EOF")
+                Some(Error::EOF) => {}
+                _ => panic!("I expected an EOF"),
             }
 
             Ok(())
@@ -1029,13 +1302,20 @@ mod internal_tests {
         assert!((b"").is_empty());
         assert!(!(b"x").is_empty());
 
-        let b=b' ';  assert!(is_space!(b));
-        let b=b'\t'; assert!(is_space!(b));
-        let b=b'\r'; assert!(is_space!(b));
-        let b=b'\n'; assert!(is_space!(b));
-        let b=b'a';  assert!(!is_space!(b));
-        let b=b'1';  assert!(!is_space!(b));
-        let b=b'.';  assert!(!is_space!(b));
+        let b = b' ';
+        assert!(is_space!(b));
+        let b = b'\t';
+        assert!(is_space!(b));
+        let b = b'\r';
+        assert!(is_space!(b));
+        let b = b'\n';
+        assert!(is_space!(b));
+        let b = b'a';
+        assert!(!is_space!(b));
+        let b = b'1';
+        assert!(!is_space!(b));
+        let b = b'.';
+        assert!(!is_space!(b));
 
         {
             let bsarr = b"  abc 123   ";
@@ -1047,14 +1327,17 @@ mod internal_tests {
 
     #[test]
     fn priv_tests() {
-        assert!(Parser::is_varname_byte_opt(Some(b'a'),0));
+        assert!(Parser::is_varname_byte_opt(Some(b'a'), 0));
 
         let mut slab = Slab::new();
 
         {
             let bsarr = b"12.34";
             let bs = &mut &bsarr[..];
-            assert_eq!(Parser::new().read_value(&mut slab.ps, bs, 0), Ok(EConstant(12.34)));
+            assert_eq!(
+                Parser::new().read_value(&mut slab.ps, bs, 0),
+                Ok(EConstant(12.34))
+            );
         }
     }
 
@@ -1091,4 +1374,3 @@ mod internal_tests {
     //     });
     // }
 }
-

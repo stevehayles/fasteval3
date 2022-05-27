@@ -40,9 +40,7 @@
 //! log(100K) = 5
 //! 1.23
 
-
-
-use fasteval2::Evaler;  // Import this trait for '.eval()' functionality.
+use fasteval2::Evaler; // Import this trait for '.eval()' functionality.
 use fasteval2::{Parser, Slab};
 
 use std::collections::BTreeMap;
@@ -60,7 +58,8 @@ fn repl() {
     let stdin = io::stdin();
     let mut lines = stdin.lock().lines();
     loop {
-        eprint!(">>> ");  io::stderr().flush().unwrap();
+        eprint!(">>> ");
+        io::stderr().flush().unwrap();
 
         let mut ans_key = "_".to_string();
 
@@ -69,11 +68,13 @@ fn repl() {
             None => break,
         };
         let mut line = line.trim().to_string();
-        if line == "" { continue; }
+        if line == "" {
+            continue;
+        }
 
-        let pieces : Vec<&str> = line.split_whitespace().collect();
+        let pieces: Vec<&str> = line.split_whitespace().collect();
         if pieces[0] == "let" {
-            if pieces.len()<4 || pieces[2]!="=" {
+            if pieces.len() < 4 || pieces[2] != "=" {
                 eprintln!("incorrect 'let' syntax.  Should be: let x = ...");
                 continue;
             }
@@ -81,10 +82,11 @@ fn repl() {
             line = pieces[3..].join(" ");
         } else if pieces[0] == "push" {
             ns_stack.push(BTreeMap::new());
-            eprintln!("Entered scope[{}]", ns_stack.len()-1);
+            eprintln!("Entered scope[{}]", ns_stack.len() - 1);
             continue;
         } else if pieces[0] == "pop" {
-            let mut return_value = std::f64::NAN;  let mut has_return_value = false;
+            let mut return_value = std::f64::NAN;
+            let mut has_return_value = false;
             if let Some(v) = ns_stack.last().unwrap().get(&ans_key) {
                 return_value = *v;
                 has_return_value = true;
@@ -92,7 +94,9 @@ fn repl() {
 
             ns_stack.pop();
             eprintln!("Exited scope[{}]", ns_stack.len());
-            if ns_stack.is_empty() { ns_stack.push(BTreeMap::new()); }  // All scopes have been removed.  Add a new one.
+            if ns_stack.is_empty() {
+                ns_stack.push(BTreeMap::new());
+            } // All scopes have been removed.  Add a new one.
 
             if has_return_value {
                 ns_stack.last_mut().unwrap().insert(ans_key, return_value);
@@ -123,4 +127,3 @@ fn repl() {
 
     println!();
 }
-
