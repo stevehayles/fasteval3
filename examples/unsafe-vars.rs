@@ -1,7 +1,5 @@
 // usage:  cargo run --release --features unsafe-vars --example unsafe-vars
 
-use fasteval2::EmptyNamespace;
-
 fn main() -> Result<(), fasteval2::Error> {
     #[cfg(not(feature = "unsafe-vars"))]
     {
@@ -30,7 +28,7 @@ fn main() -> Result<(), fasteval2::Error> {
         let expr_str = "sin(deg/360 * 2*pi())";
         let compiled = parser.parse(expr_str, &mut slab.ps)?.from(&slab.ps).compile(&slab.ps, &mut slab.cs, &mut EmptyNamespace);
 
-        let mut ns = EmptyNamespace;  // We only define unsafe variables, not normal variables,
+        let mut ns = fasteval2::EmptyNamespace;  // We only define unsafe variables, not normal variables,
                                                 // so EmptyNamespace is fine.
 
         for d in 0..360 {

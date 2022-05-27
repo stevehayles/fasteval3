@@ -40,8 +40,6 @@ use crate::parser::{
 };
 use crate::slab::Slab;
 
-use crate::parser::StdFunc::{EGauss, ESigmaSquared};
-use crate::Instruction::{IGauss, ISigmaSquared};
 use std::collections::BTreeSet;
 use std::f64::consts;
 use std::fmt;
@@ -447,24 +445,6 @@ impl Evaler for StdFunc {
                     get_expr!(slab.ps, xi)._var_names(slab, dst);
                 }
             }
-            ESigmaSquared { scale, decay } => {
-                match decay {
-                    Some(xi) => get_expr!(slab.ps, xi)._var_names(slab, dst),
-                    None => (),
-                }
-                get_expr!(slab.ps, scale)._var_names(slab, dst);
-            }
-            EGauss {
-                x,
-                origin,
-                offset,
-                sigma_squared,
-            } => {
-                get_expr!(slab.ps, x)._var_names(slab, dst);
-                get_expr!(slab.ps, origin)._var_names(slab, dst);
-                get_expr!(slab.ps, offset)._var_names(slab, dst);
-                get_expr!(slab.ps, sigma_squared)._var_names(slab, dst);
-            }
         };
     }
     fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f64, Error> {
@@ -563,28 +543,6 @@ impl Evaler for StdFunc {
 
             EFuncE => Ok(consts::E),
             EFuncPi => Ok(consts::PI),
-            ESigmaSquared { scale, decay } => {
-                let decay = match decay {
-                    Some(decay) => get_expr!(slab.ps, decay).eval(slab, ns)?,
-                    None => 0.5,
-                };
-                let scale = get_expr!(slab.ps, scale).eval(slab, ns)?;
-                Ok((-scale * scale) / decay.ln())
-            }
-            EGauss {
-                x,
-                origin,
-                offset,
-                sigma_squared,
-            } => {
-                let x = get_expr!(slab.ps, x).eval(slab, ns)?;
-                let origin = get_expr!(slab.ps, origin).eval(slab, ns)?;
-                let offset = get_expr!(slab.ps, offset).eval(slab, ns)?;
-                let sigma_squared = get_expr!(slab.ps, sigma_squared).eval(slab, ns)?;
-                let mut num = 0f64.max((x - origin).abs() - offset);
-                num *= num;
-                Ok((-num / sigma_squared).exp())
-            }
         }
     }
 }
@@ -689,23 +647,6 @@ impl Evaler for Instruction {
                 let mut iconst: Instruction;
                 ic_to_instr!(slab.cs, iconst, lic)._var_names(slab, dst);
                 ic_to_instr!(slab.cs, iconst, ric)._var_names(slab, dst);
-            }
-            ISigmaSquared { scale, decay } => {
-                let mut iconst: Instruction;
-                ic_to_instr!(slab.cs, iconst, scale)._var_names(slab, dst);
-                ic_to_instr!(slab.cs, iconst, decay)._var_names(slab, dst);
-            }
-            IGauss {
-                x,
-                origin,
-                offset,
-                sigma_squared,
-            } => {
-                let mut iconst: Instruction;
-                ic_to_instr!(slab.cs, iconst, x)._var_names(slab, dst);
-                ic_to_instr!(slab.cs, iconst, origin)._var_names(slab, dst);
-                ic_to_instr!(slab.cs, iconst, offset)._var_names(slab, dst);
-                ic_to_instr!(slab.cs, iconst, sigma_squared)._var_names(slab, dst);
             }
 
             IAdd(li, ric)
@@ -816,25 +757,6 @@ impl Evaler for Instruction {
                 } else {
                     Ok(right)
                 }
-            }
-            ISigmaSquared { scale, decay } => {
-                let scale = eval_ic_ref!(scale, slab, ns);
-                let decay = eval_ic_ref!(decay, slab, ns);
-                Ok(-(scale * scale) / decay.ln())
-            }
-            IGauss {
-                x,
-                origin,
-                offset,
-                sigma_squared,
-            } => {
-                let x = eval_ic_ref!(x, slab, ns);
-                let origin = eval_ic_ref!(origin, slab, ns);
-                let offset = eval_ic_ref!(offset, slab, ns);
-                let sigma_squared = eval_ic_ref!(sigma_squared, slab, ns);
-                let mut num = 0f64.max((x - origin).abs() - offset);
-                num *= num;
-                Ok((-num / sigma_squared).exp())
             }
 
             IEQ(left, right) => Ok(bool_to_f64!(f64_eq!(

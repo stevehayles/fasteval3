@@ -148,17 +148,6 @@ pub enum StdFunc {
     EFuncASinH(ExpressionI),
     EFuncACosH(ExpressionI),
     EFuncATanH(ExpressionI),
-
-    ESigmaSquared {
-        scale: ExpressionI,
-        decay: Option<ExpressionI>,
-    },
-    EGauss {
-        x: ExpressionI,
-        origin: ExpressionI,
-        offset: ExpressionI,
-        sigma_squared: ExpressionI,
-    },
 }
 #[cfg(feature = "unsafe-vars")]
 use StdFunc::EUnsafeVar;
@@ -197,7 +186,6 @@ enum Token<T> {
     Pass,
     Bite(T),
 }
-use crate::parser::StdFunc::{EGauss, ESigmaSquared};
 use Token::{Bite, Pass};
 
 macro_rules! peek {
@@ -800,9 +788,8 @@ impl Parser {
             }
             if !args.is_empty() {
                 match read!(bs) {
-                    Ok(b',') | Ok(b';') => {
-                        // I accept ',' or ';' because the TV API disallows the ',' char in symbols... so I'm using ';' as a compromise.
-                    }
+                    // I accept ',' or ';' because the TV API disallows the ',' char in symbols... so I'm using ';' as a compromise.
+                    Ok(b',') | Ok(b';') => {}
                     _ => return Err(Error::Expected("',' or ';'".to_string())),
                 }
             }
@@ -1075,40 +1062,11 @@ impl Parser {
                     Err(Error::WrongArgs("atanh: expected one arg".to_string()))
                 }
             }
-            "sigma_squared" => {
-                if 1 <= args.len() && args.len() <= 2 {
-                    let scale = args[0];
-                    let decay = args.get(1).map(|x| *x);
-                    Ok(ESigmaSquared { scale, decay })
-                } else {
-                    Err(Error::WrongArgs(
-                        "sigma_squared: expected from 1 or 2 args".to_string(),
-                    ))
-                }
-            }
-            "gauss" => {
-                if args.len() == 4 {
-                    let x = args[0];
-                    let origin = args[1];
-                    let offset = args[2];
-                    let sigma_squared = args[3];
-                    Ok(EGauss {
-                        x,
-                        origin,
-                        offset,
-                        sigma_squared,
-                    })
-                } else {
-                    Err(Error::WrongArgs(
-                        "gauss: expected from 3 to 4 args".to_string(),
-                    ))
-                }
-            }
 
             _ => {
                 #[cfg(feature = "unsafe-vars")]
                 match slab.unsafe_vars.get(fname_str) {
-                    None => Ok(EFunc { name: fname, args }),
+                    None => Ok(Func { name: fname, args }),
                     Some(&ptr) => Ok(EUnsafeVar { name: fname, ptr }),
                 }
 

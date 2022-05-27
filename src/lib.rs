@@ -301,6 +301,11 @@
 //! ```
 //! use fasteval2::Evaler;    // use this trait so we can call eval().
 //! use fasteval2::Compiler;  // use this trait so we can call compile().
+//! #[cfg(not(feature = "unsafe-vars"))]
+//! fn main() -> Result<(), fasteval2::Error> {
+//!     Ok(())
+//! }
+//! #[cfg(feature = "unsafe-vars")]
 //! fn main() -> Result<(), fasteval2::Error> {
 //!     let parser = fasteval2::Parser::new();
 //!     let mut slab = fasteval2::Slab::new();

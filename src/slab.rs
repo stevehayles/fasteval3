@@ -166,6 +166,7 @@ pub struct Slab {
 /// use fasteval2::Compiler;  // use this trait so we can call compile().
 ///
 /// // Here is an example of INCORRECT registration.  DO NOT DO THIS!
+/// #[cfg(feature = "unsafe-vars")]
 /// fn bad_unsafe_var(slab_mut:&mut fasteval2::Slab) {
 ///     let bad : f64 = 0.0;
 ///
@@ -175,7 +176,11 @@ pub struct Slab {
 ///     // 'bad' goes out-of-scope here, and the pointer we registered is no longer valid!
 ///     // This will result in undefined behavior.
 /// }
-///
+/// #[cfg(not(feature = "unsafe-vars"))]
+/// fn main() -> Result<(), fasteval2::Error> {
+///     Ok(())
+/// }
+/// #[cfg(feature = "unsafe-vars")]
 /// fn main() -> Result<(), fasteval2::Error> {
 ///     let mut slab = fasteval2::Slab::new();
 ///

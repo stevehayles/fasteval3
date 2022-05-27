@@ -102,51 +102,51 @@ fn consts() {
 
     Parser::new().parse("12.34u", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(0.00001234), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-5), pairs: [] } }, vals:{}, instrs:{} }");
 
     Parser::new().parse("12.34µ", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(0.00001234), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-5), pairs: [] } }, vals:{}, instrs:{} }");
 
     Parser::new().parse("12.34n", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(0.00000001234), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-8), pairs: [] } }, vals:{}, instrs:{} }");
 
     Parser::new().parse("12.34p", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(0.00000000001234), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-11), pairs: [] } }, vals:{}, instrs:{} }");
 
     Parser::new().parse("12.34e56", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(1234000000000000000000000000000000000000000000000000000000.0), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e57), pairs: [] } }, vals:{}, instrs:{} }");
 
     Parser::new().parse("12.34e+56", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(1234000000000000000000000000000000000000000000000000000000.0), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e57), pairs: [] } }, vals:{}, instrs:{} }");
 
     Parser::new().parse("12.34E56", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(1234000000000000000000000000000000000000000000000000000000.0), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e57), pairs: [] } }, vals:{}, instrs:{} }");
 
     Parser::new().parse("12.34E+56", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(1234000000000000000000000000000000000000000000000000000000.0), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e57), pairs: [] } }, vals:{}, instrs:{} }");
 
     Parser::new().parse("12.34e-56", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(0.0000000000000000000000000000000000000000000000000000001234), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-55), pairs: [] } }, vals:{}, instrs:{} }");
 
     Parser::new().parse("12.34E-56", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(0.0000000000000000000000000000000000000000000000000000001234), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-55), pairs: [] } }, vals:{}, instrs:{} }");
 
     Parser::new().parse("+12.34E-56", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(0.0000000000000000000000000000000000000000000000000000001234), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-55), pairs: [] } }, vals:{}, instrs:{} }");
 
     Parser::new().parse("-12.34E-56", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(-0.0000000000000000000000000000000000000000000000000000001234), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(-1.234e-55), pairs: [] } }, vals:{}, instrs:{} }");
 
     Parser::new().parse("-x", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
