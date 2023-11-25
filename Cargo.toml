@@ -23,3 +23,11 @@ alpha-keywords = []  # Enable 'NaN', 'inf', 'and', 'or'
 unsafe-vars = []     # tinyexpr-style pointer-based variables.
 nightly = []         # Enable features that depend on Rust nightly.
 
+[lints.rust]
+single_use_lifetimes = "warn"
+unreachable_pub = "warn"
+
+[lints.clippy]
+str_to_string = "warn"
+pedantic = "warn"
+nursery = "warn"
