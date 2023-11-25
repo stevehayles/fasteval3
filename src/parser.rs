@@ -178,7 +178,7 @@ impl Clone for PrintFunc {
                 EStr(s) => EStr(s.clone()),
             });
         }
-        PrintFunc(vec)
+        Self(vec)
     }
 }
 

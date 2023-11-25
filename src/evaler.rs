@@ -605,7 +605,7 @@ impl Evaler for Instruction {
             IFunc { name, args } => {
                 dst.insert(name.clone());
                 for ic in args {
-                    let iconst: Instruction;
+                    let iconst: Self;
                     ic_to_instr!(slab.cs, iconst, ic)._var_names(slab, dst);
                 }
             }
@@ -638,7 +638,7 @@ impl Evaler for Instruction {
                 modulus: lic,
                 of: ric,
             } => {
-                let mut iconst: Instruction;
+                let mut iconst: Self;
                 ic_to_instr!(slab.cs, iconst, lic)._var_names(slab, dst);
                 ic_to_instr!(slab.cs, iconst, ric)._var_names(slab, dst);
             }
@@ -650,7 +650,7 @@ impl Evaler for Instruction {
             | IFuncMin(li, ric)
             | IFuncMax(li, ric) => {
                 get_instr!(slab.cs, li)._var_names(slab, dst);
-                let iconst: Instruction;
+                let iconst: Self;
                 ic_to_instr!(slab.cs, iconst, ric)._var_names(slab, dst);
             }
 

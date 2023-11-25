@@ -748,10 +748,10 @@ impl Compiler for Value {
         ns: &mut impl EvalNamespace,
     ) -> Instruction {
         match self {
-            Value::EConstant(c) => IConst(*c),
-            Value::EUnaryOp(u) => u.compile(pslab, cslab, ns),
-            Value::EStdFunc(f) => f.compile(pslab, cslab, ns),
-            Value::EPrintFunc(pf) => IPrintFunc(pf.clone()),
+            Self::EConstant(c) => IConst(*c),
+            Self::EUnaryOp(u) => u.compile(pslab, cslab, ns),
+            Self::EStdFunc(f) => f.compile(pslab, cslab, ns),
+            Self::EPrintFunc(pf) => IPrintFunc(pf.clone()),
         }
     }
 }
