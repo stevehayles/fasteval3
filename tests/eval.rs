@@ -122,7 +122,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(0.3299999999999983)
+        Ok(0.329_999_999_999_998_3)
     );
     assert_eq!(
         Parser::new()
@@ -228,7 +228,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(-1.0999999999999996)
+        Ok(-1.099_999_999_999_999_6)
     );
     assert_eq!(
         Parser::new()
@@ -359,7 +359,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(0.19999999999999996)
+        Ok(0.199_999_999_999_999_96)
     );
     assert_eq!(
         Parser::new()
@@ -426,7 +426,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(0.00000000000000006123233995736766)
+        Ok(0.000_000_000_000_000_061_232_339_957_367_66)
     );
     assert_eq!(
         Parser::new()
@@ -434,7 +434,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(0.9999999999999999)
+        Ok(0.999_999_999_999_999_9)
     );
     assert_eq!(
         Parser::new()
@@ -466,7 +466,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(2.3012989023072947)
+        Ok(2.301_298_902_307_294_7)
     );
     assert_eq!(
         Parser::new()
@@ -474,7 +474,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(2.5091784786580567)
+        Ok(2.509_178_478_658_056_7)
     );
     assert_eq!(
         Parser::new()
@@ -482,7 +482,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(0.6557942026326724)
+        Ok(0.655_794_202_632_672_4)
     );
 }
 
@@ -671,7 +671,7 @@ fn custom_func() {
                 ns.cache_clear();
                 &mut ns
             }),
-        Ok(4.4399999999999995)
+        Ok(4.439_999_999_999_999_5)
     );
 
     assert_eq!(

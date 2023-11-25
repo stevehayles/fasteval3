@@ -170,8 +170,8 @@ fn aaa_test_e() {
     assert_eq!(do_eval("3+4+5+6"), 18.0);
     assert_eq!(do_eval("3-4-5-6"), -12.0);
     assert_eq!(do_eval("3*4*5*6"), 360.0);
-    assert_eq!(do_eval("3/4/5/6"), 0.024999999999999998); // Fragile!
-    assert_eq!(do_eval("2^3^4"), 2417851639229258349412352.0);
+    assert_eq!(do_eval("3/4/5/6"), 0.024_999_999_999_999_998); // Fragile!
+    assert_eq!(do_eval("2^3^4"), 2_417_851_639_229_258_349_412_352.0);
     assert_eq!(do_eval("3*3-3/3"), 8.0);
     assert_eq!(do_eval("(1+1)^3"), 8.0);
     assert_eq!(do_eval("(1+(-1)^4)^3"), 8.0);
@@ -181,19 +181,19 @@ fn aaa_test_e() {
 
     assert_eq!(do_eval("5%2"), 1.0);
     assert_eq!(do_eval("5%3"), 2.0);
-    assert_eq!(do_eval("5.1%3.2"), 1.8999999999999995);
-    assert_eq!(do_eval("5.1%2.5"), 0.09999999999999964);
-    assert_eq!(do_eval("5.1%2.499999999"), 0.10000000199999981);
+    assert_eq!(do_eval("5.1%3.2"), 1.899_999_999_999_999_5);
+    assert_eq!(do_eval("5.1%2.5"), 0.099_999_999_999_999_64);
+    assert_eq!(do_eval("5.1%2.499999999"), 0.100_000_001_999_999_81);
     assert_eq!(do_eval("-5%2"), -1.0);
     assert_eq!(do_eval("-5%3"), -2.0);
-    assert_eq!(do_eval("-5.1%3.2"), -1.8999999999999995);
-    assert_eq!(do_eval("-5.1%2.5"), -0.09999999999999964);
-    assert_eq!(do_eval("-5.1%2.499999999"), -0.10000000199999981);
+    assert_eq!(do_eval("-5.1%3.2"), -1.899_999_999_999_999_5);
+    assert_eq!(do_eval("-5.1%2.5"), -0.099_999_999_999_999_64);
+    assert_eq!(do_eval("-5.1%2.499999999"), -0.100_000_001_999_999_81);
     assert_eq!(do_eval("5%-2"), 1.0);
     assert_eq!(do_eval("5%-3"), 2.0);
-    assert_eq!(do_eval("5.1%-3.2"), 1.8999999999999995);
-    assert_eq!(do_eval("5.1%-2.5"), 0.09999999999999964);
-    assert_eq!(do_eval("5.1%-2.499999999"), 0.10000000199999981);
+    assert_eq!(do_eval("5.1%-3.2"), 1.899_999_999_999_999_5);
+    assert_eq!(do_eval("5.1%-2.5"), 0.099_999_999_999_999_64);
+    assert_eq!(do_eval("5.1%-2.499999999"), 0.100_000_001_999_999_81);
     assert_eq!(do_eval("int(5)%int(2)"), 1.0);
     assert_eq!(do_eval("int(5)%int(3)"), 2.0);
     assert_eq!(do_eval("int(5.1)%round(3.2)"), 2.0);
@@ -362,7 +362,7 @@ fn aaa_test_i() {
 fn aaa_test_j() {
     assert_eq!(do_eval("2/3*3/2"), 1.0);
     assert_eq!(do_eval("2%3*3/2"), 3.0);
-    assert_eq!(do_eval("3^2%2^2*2^2/3^2"), 0.4444444444444444);
+    assert_eq!(do_eval("3^2%2^2*2^2/3^2"), 0.444_444_444_444_444_4);
     assert_eq!(do_eval("1+2-3+4"), 4.0);
 }
 

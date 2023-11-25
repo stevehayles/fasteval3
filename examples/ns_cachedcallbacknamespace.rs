@@ -9,7 +9,7 @@ fn main() -> Result<(), fasteval3::Error> {
                 "x" => {
                     // Pretend that it is very expensive to calculate this,
                     // and that's why we want to use the CachedCallbackNamespace cache.
-                    for _ in 0..1000000 { /* do work */ } // Fake Work for this example.
+                    for _ in 0..1_000_000 { /* do work */ } // Fake Work for this example.
                     Some(2.0)
                 }
                 _ => None,
