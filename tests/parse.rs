@@ -68,12 +68,12 @@ fn consts() {
 
     assert_eq!(
         Parser::new().parse(".", &mut slab.ps),
-        Err(Error::ParseF64(".".to_string()))
+        Err(Error::ParseF64(String::from(".")))
     );
 
     assert_eq!(
         Parser::new().parse("12..34", &mut slab.ps),
-        Err(Error::ParseF64("12..34".to_string()))
+        Err(Error::ParseF64(String::from("12..34")))
     );
 
     Parser::new().parse("12.34k", &mut slab.ps).unwrap();
@@ -190,15 +190,15 @@ fn consts() {
 
     assert_eq!(
         Parser::new().parse("-infK", &mut slab.ps),
-        Err(Error::UnparsedTokensRemaining("K".to_string()))
+        Err(Error::UnparsedTokensRemaining(String::from("K")))
     );
     assert_eq!(
         Parser::new().parse("NaNK", &mut slab.ps),
-        Err(Error::UnparsedTokensRemaining("K".to_string()))
+        Err(Error::UnparsedTokensRemaining(String::from("K")))
     );
     assert_eq!(
         Parser::new().parse("12.34e56K", &mut slab.ps),
-        Err(Error::UnparsedTokensRemaining("K".to_string()))
+        Err(Error::UnparsedTokensRemaining(String::from("K")))
     );
 }
 

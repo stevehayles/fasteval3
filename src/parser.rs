@@ -229,7 +229,7 @@ macro_rules! read {
                 *$bs = &$bs[1..];
                 Ok(*b)
             }
-            None => Err(Error::EofWhileParsing($parsing.to_string())),
+            None => Err(Error::EofWhileParsing($parsing.to_owned())),
         }
     };
 }
@@ -357,7 +357,7 @@ impl Parser {
                 Ok(s) => s,
                 Err(..) => "Utf8Error while handling UnparsedTokensRemaining error",
             };
-            return Err(Error::UnparsedTokensRemaining(bs_str.to_string()));
+            return Err(Error::UnparsedTokensRemaining(bs_str.to_owned()));
         }
         slab.push_expr(Expression { first, pairs })
     }
@@ -387,7 +387,7 @@ impl Parser {
 
         // Improve the precision of this error case:
         if bs.is_empty() {
-            return Err(Error::EofWhileParsing("value".to_string()));
+            return Err(Error::EofWhileParsing(String::from("value")));
         }
 
         Err(Error::InvalidValue)
@@ -475,7 +475,7 @@ impl Parser {
 
         let val = tok
             .parse::<f64>()
-            .map_err(|_| Error::ParseF64(tok.to_string()))?;
+            .map_err(|_| Error::ParseF64(tok.to_owned()))?;
         skip_n!(bs, toklen);
 
         Ok(Bite(val))
@@ -593,7 +593,7 @@ impl Parser {
                     let xi = self.read_expression(slab, bs, depth + 1, false)?;
                     spaces!(bs);
                     if read!(bs, "parentheses")? != b')' {
-                        return Err(Error::Expected(")".to_string()));
+                        return Err(Error::Expected(String::from(")")));
                     }
                     Ok(Bite(EParentheses(xi)))
                 }
@@ -602,7 +602,7 @@ impl Parser {
                     let xi = self.read_expression(slab, bs, depth + 1, false)?;
                     spaces!(bs);
                     if read!(bs, "square brackets")? != b']' {
-                        return Err(Error::Expected("]".to_string()));
+                        return Err(Error::Expected(String::from("]")));
                     }
                     Ok(Bite(EParentheses(xi)))
                 }
@@ -751,7 +751,7 @@ impl Parser {
             return Ok(Pass);
         }
 
-        let out = unsafe { from_utf8_unchecked(&bs[..toklen]) }.to_string();
+        let out = unsafe { from_utf8_unchecked(&bs[..toklen]) }.to_owned();
         skip_n!(bs, toklen);
         Ok(Bite(out))
     }
@@ -779,7 +779,7 @@ impl Parser {
         let close_parenth = match open_parenth {
             b'(' => b')',
             b'[' => b']',
-            _ => return Err(Error::Expected("'(' or '['".to_string())),
+            _ => return Err(Error::Expected(String::from("'(' or '['"))),
         };
         let mut args = Vec::<ExpressionI>::with_capacity(4);
         loop {
@@ -797,7 +797,7 @@ impl Parser {
                 match read!(bs) {
                     // I accept ',' or ';' because the TV API disallows the ',' char in symbols... so I'm using ';' as a compromise.
                     Ok(b',') | Ok(b';') => {}
-                    _ => return Err(Error::Expected("',' or ';'".to_string())),
+                    _ => return Err(Error::Expected(String::from("',' or ';'"))),
                 }
             }
             args.push(self.read_expression(slab, bs, depth + 1, false)?);
@@ -812,7 +812,7 @@ impl Parser {
                         None => return Err(Error::Unreachable),
                     }))
                 } else {
-                    Err(Error::WrongArgs("int: expected one arg".to_string()))
+                    Err(Error::WrongArgs(String::from("int: expected one arg")))
                 }
             }
             "ceil" => {
@@ -822,7 +822,7 @@ impl Parser {
                         None => return Err(Error::Unreachable),
                     }))
                 } else {
-                    Err(Error::WrongArgs("ceil: expected one arg".to_string()))
+                    Err(Error::WrongArgs(String::from("ceil: expected one arg")))
                 }
             }
             "floor" => {
@@ -832,7 +832,7 @@ impl Parser {
                         None => return Err(Error::Unreachable),
                     }))
                 } else {
-                    Err(Error::WrongArgs("floor: expected one arg".to_string()))
+                    Err(Error::WrongArgs(String::from("floor: expected one arg")))
                 }
             }
             "abs" => {
@@ -842,7 +842,7 @@ impl Parser {
                         None => return Err(Error::Unreachable),
                     }))
                 } else {
-                    Err(Error::WrongArgs("abs: expected one arg".to_string()))
+                    Err(Error::WrongArgs(String::from("abs: expected one arg")))
                 }
             }
             "sign" => {
@@ -852,7 +852,7 @@ impl Parser {
                         None => return Err(Error::Unreachable),
                     }))
                 } else {
-                    Err(Error::WrongArgs("sign: expected one arg".to_string()))
+                    Err(Error::WrongArgs(String::from("sign: expected one arg")))
                 }
             }
             "log" => {
@@ -878,7 +878,7 @@ impl Parser {
                     })
                 } else {
                     Err(Error::WrongArgs(
-                        "expected log(x) or log(base,x)".to_string(),
+                        String::from("expected log(x) or log(base,x)"),
                     ))
                 }
             }
@@ -905,7 +905,7 @@ impl Parser {
                     })
                 } else {
                     Err(Error::WrongArgs(
-                        "round: expected round(x) or round(modulus,x)".to_string(),
+                        String::from("round: expected round(x) or round(modulus,x)"),
                     ))
                 }
             }
@@ -917,7 +917,7 @@ impl Parser {
                     }
                 } else {
                     Err(Error::WrongArgs(
-                        "min: expected one or more args".to_string(),
+                        String::from("min: expected one or more args"),
                     ))
                 }
             }
@@ -929,7 +929,7 @@ impl Parser {
                     }
                 } else {
                     Err(Error::WrongArgs(
-                        "max: expected one or more args".to_string(),
+                        String::from("max: expected one or more args"),
                     ))
                 }
             }
@@ -938,14 +938,14 @@ impl Parser {
                 if args.is_empty() {
                     Ok(EFuncE)
                 } else {
-                    Err(Error::WrongArgs("e: expected no args".to_string()))
+                    Err(Error::WrongArgs(String::from("e: expected no args")))
                 }
             }
             "pi" => {
                 if args.is_empty() {
                     Ok(EFuncPi)
                 } else {
-                    Err(Error::WrongArgs("pi: expected no args".to_string()))
+                    Err(Error::WrongArgs(String::from("pi: expected no args")))
                 }
             }
 
@@ -956,7 +956,7 @@ impl Parser {
                         None => return Err(Error::Unreachable),
                     }))
                 } else {
-                    Err(Error::WrongArgs("sin: expected one arg".to_string()))
+                    Err(Error::WrongArgs(String::from("sin: expected one arg")))
                 }
             }
             "cos" => {
@@ -966,7 +966,7 @@ impl Parser {
                         None => return Err(Error::Unreachable),
                     }))
                 } else {
-                    Err(Error::WrongArgs("cos: expected one arg".to_string()))
+                    Err(Error::WrongArgs(String::from("cos: expected one arg")))
                 }
             }
             "tan" => {
@@ -976,7 +976,7 @@ impl Parser {
                         None => return Err(Error::Unreachable),
                     }))
                 } else {
-                    Err(Error::WrongArgs("tan: expected one arg".to_string()))
+                    Err(Error::WrongArgs(String::from("tan: expected one arg")))
                 }
             }
             "asin" => {
@@ -986,7 +986,7 @@ impl Parser {
                         None => return Err(Error::Unreachable),
                     }))
                 } else {
-                    Err(Error::WrongArgs("asin: expected one arg".to_string()))
+                    Err(Error::WrongArgs(String::from("asin: expected one arg")))
                 }
             }
             "acos" => {
@@ -996,7 +996,7 @@ impl Parser {
                         None => return Err(Error::Unreachable),
                     }))
                 } else {
-                    Err(Error::WrongArgs("acos: expected one arg".to_string()))
+                    Err(Error::WrongArgs(String::from("acos: expected one arg")))
                 }
             }
             "atan" => {
@@ -1006,7 +1006,7 @@ impl Parser {
                         None => return Err(Error::Unreachable),
                     }))
                 } else {
-                    Err(Error::WrongArgs("atan: expected one arg".to_string()))
+                    Err(Error::WrongArgs(String::from("atan: expected one arg")))
                 }
             }
             "sinh" => {
@@ -1016,7 +1016,7 @@ impl Parser {
                         None => return Err(Error::Unreachable),
                     }))
                 } else {
-                    Err(Error::WrongArgs("sinh: expected one arg".to_string()))
+                    Err(Error::WrongArgs(String::from("sinh: expected one arg")))
                 }
             }
             "cosh" => {
@@ -1026,7 +1026,7 @@ impl Parser {
                         None => return Err(Error::Unreachable),
                     }))
                 } else {
-                    Err(Error::WrongArgs("cosh: expected one arg".to_string()))
+                    Err(Error::WrongArgs(String::from("cosh: expected one arg")))
                 }
             }
             "tanh" => {
@@ -1036,7 +1036,7 @@ impl Parser {
                         None => return Err(Error::Unreachable),
                     }))
                 } else {
-                    Err(Error::WrongArgs("tanh: expected one arg".to_string()))
+                    Err(Error::WrongArgs(String::from("tanh: expected one arg")))
                 }
             }
             "asinh" => {
@@ -1046,7 +1046,7 @@ impl Parser {
                         None => return Err(Error::Unreachable),
                     }))
                 } else {
-                    Err(Error::WrongArgs("asinh: expected one arg".to_string()))
+                    Err(Error::WrongArgs(String::from("asinh: expected one arg")))
                 }
             }
             "acosh" => {
@@ -1056,7 +1056,7 @@ impl Parser {
                         None => return Err(Error::Unreachable),
                     }))
                 } else {
-                    Err(Error::WrongArgs("acosh: expected one arg".to_string()))
+                    Err(Error::WrongArgs(String::from("acosh: expected one arg")))
                 }
             }
             "atanh" => {
@@ -1066,7 +1066,7 @@ impl Parser {
                         None => return Err(Error::Unreachable),
                     }))
                 } else {
-                    Err(Error::WrongArgs("atanh: expected one arg".to_string()))
+                    Err(Error::WrongArgs(String::from("atanh: expected one arg")))
                 }
             }
 
@@ -1093,7 +1093,7 @@ impl Parser {
         let close_parenth = match open_parenth {
             b'(' => b')',
             b'[' => b']',
-            _ => return Err(Error::Expected("'(' or '['".to_string())),
+            _ => return Err(Error::Expected(String::from("'(' or '['"))),
         };
         let mut args = Vec::<ExpressionOrString>::with_capacity(8);
         loop {
@@ -1106,14 +1106,14 @@ impl Parser {
                     }
                 }
                 None => {
-                    return Err(Error::EofWhileParsing("print".to_string()));
+                    return Err(Error::EofWhileParsing(String::from("print")));
                 }
             }
             if !args.is_empty() {
                 match read!(bs) {
                     Ok(b',') | Ok(b';') => {}
                     _ => {
-                        return Err(Error::Expected("',' or ';'".to_string()));
+                        return Err(Error::Expected(String::from("',' or ';'")));
                     }
                 }
             }
@@ -1143,7 +1143,7 @@ impl Parser {
         match peek!(bs) {
             None => {
                 return Err(Error::EofWhileParsing(
-                    "opening quote of string".to_string(),
+                    String::from("opening quote of string"),
                 ))
             }
             Some(b'"') => {
@@ -1162,12 +1162,12 @@ impl Parser {
         }
 
         let out = from_utf8(&bs[..toklen])
-            .map_err(|_| Error::Utf8ErrorWhileParsing("string".to_string()))?;
+            .map_err(|_| Error::Utf8ErrorWhileParsing(String::from("string")))?;
         skip_n!(bs, toklen);
         match read!(bs) {
-            Err(Error::EOF) => Err(Error::EofWhileParsing("string".to_string())),
+            Err(Error::EOF) => Err(Error::EofWhileParsing(String::from("string"))),
             Err(_) => Err(Error::Unreachable),
-            Ok(b'"') => Ok(Bite(out.to_string())),
+            Ok(b'"') => Ok(Bite(out.to_owned())),
             Ok(_) => Err(Error::Unreachable),
         }
     }

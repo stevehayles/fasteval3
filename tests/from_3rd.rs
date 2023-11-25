@@ -63,16 +63,16 @@ fn chk_eerr(expr_str: &str, expect_err: Error) {
 
 #[test]
 fn meval() {
-    chk_perr("", Error::EofWhileParsing("value".to_string()));
-    chk_perr("(", Error::EofWhileParsing("value".to_string()));
-    chk_perr("0(", Error::UnparsedTokensRemaining("(".to_string()));
-    chk_eerr("e", Error::Undefined("e".to_string()));
-    chk_perr("1E", Error::ParseF64("1E".to_string()));
-    chk_perr("1e+", Error::ParseF64("1e+".to_string()));
+    chk_perr("", Error::EofWhileParsing(String::from("value")));
+    chk_perr("(", Error::EofWhileParsing(String::from("value")));
+    chk_perr("0(", Error::UnparsedTokensRemaining(String::from("(")));
+    chk_eerr("e", Error::Undefined(String::from("e")));
+    chk_perr("1E", Error::ParseF64(String::from("1E")));
+    chk_perr("1e+", Error::ParseF64(String::from("1e+")));
     chk_perr("()", Error::InvalidValue);
-    chk_perr("2)", Error::UnparsedTokensRemaining(")".to_string()));
-    chk_perr("2^", Error::EofWhileParsing("value".to_string()));
-    chk_perr("(((2)", Error::EofWhileParsing("parentheses".to_string()));
+    chk_perr("2)", Error::UnparsedTokensRemaining(String::from(")")));
+    chk_perr("2^", Error::EofWhileParsing(String::from("value")));
+    chk_perr("(((2)", Error::EofWhileParsing(String::from("parentheses")));
     chk_perr("f(2,)", Error::InvalidValue);
     chk_perr("f(,2)", Error::InvalidValue);
 
@@ -101,27 +101,27 @@ fn meval() {
 fn overflow_stack() {
     chk_perr(
         from_utf8(&[b'('; 1]).unwrap(),
-        Error::EofWhileParsing("value".to_string()),
+        Error::EofWhileParsing(String::from("value")),
     );
     chk_perr(
         from_utf8(&[b'('; 2]).unwrap(),
-        Error::EofWhileParsing("value".to_string()),
+        Error::EofWhileParsing(String::from("value")),
     );
     chk_perr(
         from_utf8(&[b'('; 4]).unwrap(),
-        Error::EofWhileParsing("value".to_string()),
+        Error::EofWhileParsing(String::from("value")),
     );
     chk_perr(
         from_utf8(&[b'('; 8]).unwrap(),
-        Error::EofWhileParsing("value".to_string()),
+        Error::EofWhileParsing(String::from("value")),
     );
     chk_perr(
         from_utf8(&[b'('; 16]).unwrap(),
-        Error::EofWhileParsing("value".to_string()),
+        Error::EofWhileParsing(String::from("value")),
     );
     chk_perr(
         from_utf8(&[b'('; 32]).unwrap(),
-        Error::EofWhileParsing("value".to_string()),
+        Error::EofWhileParsing(String::from("value")),
     );
     chk_perr(from_utf8(&[b'('; 33]).unwrap(), Error::TooDeep);
     chk_perr(from_utf8(&[b'('; 64]).unwrap(), Error::TooDeep);

@@ -234,7 +234,7 @@ fn double_neg() {
     assert_eq!(comp("1 + ----1.5").1, IConst(2.5));
     assert_eq!(comp("1 - ----1.5").1, IConst(-0.5));
 
-    assert_eq!(comp("x").1, IVar("x".to_string()));
+    assert_eq!(comp("x").1, IVar(String::from("x")));
 
     comp_chk("1-1", IConst(0.0), "CompileSlab{ instrs:{} }", 0.0);
     comp_chk(
@@ -263,7 +263,7 @@ fn double_neg() {
     );
     comp_chk(
         "0.5 - -x - 0.5",
-        IVar("x".to_string()),
+        IVar(String::from("x")),
         "CompileSlab{ instrs:{} }",
         1.0,
     );
@@ -309,7 +309,7 @@ fn all_instrs() {
     comp_chk("-1", IConst(-1.0), "CompileSlab{ instrs:{} }", -1.0);
 
     // IVar:
-    comp_chk("x", IVar("x".to_string()), "CompileSlab{ instrs:{} }", 1.0);
+    comp_chk("x", IVar(String::from("x")), "CompileSlab{ instrs:{} }", 1.0);
     comp_chk("x()", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0);
     comp_chk("x[]", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0);
 
@@ -890,7 +890,7 @@ fn all_instrs() {
     );
     comp_chk(
         "0 or x",
-        IVar("x".to_string()),
+        IVar(String::from("x")),
         "CompileSlab{ instrs:{} }",
         1.0,
     );
@@ -908,16 +908,16 @@ fn all_instrs() {
     );
 
     // IVar
-    comp_chk("x", IVar("x".to_string()), "CompileSlab{ instrs:{} }", 1.0);
+    comp_chk("x", IVar(String::from("x")), "CompileSlab{ instrs:{} }", 1.0);
     {
         let (_s, i) = comp("int");
-        assert_eq!(i, IVar("int".to_string()));
+        assert_eq!(i, IVar(String::from("int")));
 
         let (_s, i) = comp("print");
-        assert_eq!(i, IVar("print".to_string()));
+        assert_eq!(i, IVar(String::from("print")));
 
         let (_s, i) = comp("eval");
-        assert_eq!(i, IVar("eval".to_string()));
+        assert_eq!(i, IVar(String::from("eval")));
     }
 
     // IUnsafeVar
@@ -1091,7 +1091,7 @@ fn all_instrs() {
     );
     comp_chk(
         "min(y7)",
-        IVar("y7".to_string()),
+        IVar(String::from("y7")),
         "CompileSlab{ instrs:{} }",
         2.7,
     );
@@ -1160,7 +1160,7 @@ fn all_instrs() {
     );
     comp_chk(
         "max(y7)",
-        IVar("y7".to_string()),
+        IVar(String::from("y7")),
         "CompileSlab{ instrs:{} }",
         2.7,
     );
@@ -1346,7 +1346,7 @@ fn all_instrs() {
     comp_chk(
         r#"print("test",1.23)"#,
         IPrintFunc(PrintFunc(vec![
-            EStr("test".to_string()),
+            EStr(String::from("test")),
             EExpr(ExpressionI(0)),
         ])),
         "CompileSlab{ instrs:{} }",

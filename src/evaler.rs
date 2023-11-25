@@ -564,7 +564,7 @@ impl Evaler for PrintFunc {
                 //let fmtstr = process_str(fmtstr);
 
                 return Err(Error::WrongArgs(
-                    "printf formatting is not yet implemented".to_string(),
+                    String::from("printf formatting is not yet implemented"),
                 )); // TODO: Make a pure-rust sprintf libarary.
 
                 //return Ok(val);

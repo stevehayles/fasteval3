@@ -12,11 +12,11 @@ fn main() -> Result<(), fasteval3::Error> {
     // Let's evaluate the expression a couple times with different 'x' values:
 
     let mut map: BTreeMap<String, f64> = BTreeMap::new();
-    map.insert("x".to_string(), 1.0);
+    map.insert(String::from("x"), 1.0);
     let val = expr_ref.eval(&slab, &mut map)?;
     assert_eq!(val, 2.0);
 
-    map.insert("x".to_string(), 2.5);
+    map.insert(String::from("x"), 2.5);
     let val = expr_ref.eval(&slab, &mut map)?;
     assert_eq!(val, 3.5);
 

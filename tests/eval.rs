@@ -8,9 +8,9 @@ use std::mem;
 fn eval() {
     let mut slab = Slab::new();
     let mut ns = BTreeMap::<String, f64>::new();
-    ns.insert("x".to_string(), 1.0);
-    ns.insert("y".to_string(), 2.0);
-    ns.insert("z".to_string(), 3.0);
+    ns.insert(String::from("x"), 1.0);
+    ns.insert(String::from("y"), 2.0);
+    ns.insert(String::from("z"), 3.0);
 
     // Sanity check:
     assert_eq!(
@@ -39,7 +39,7 @@ fn eval() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Err(Error::Undefined("a".to_string()))
+        Err(Error::Undefined(String::from("a")))
     );
 }
 
@@ -245,7 +245,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Err(Error::Undefined("x".to_string()))
+        Err(Error::Undefined(String::from("x")))
     );
 
     let mut ns = CachedCallbackNamespace::new(|_, _| Some(3.0));

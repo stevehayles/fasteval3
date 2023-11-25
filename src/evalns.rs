@@ -373,7 +373,7 @@ impl EvalNamespace for CachedCallbackNamespace<'_> {
 
         match (self.cb)(name, args) {
             Some(val) => {
-                self.cache.insert(key.to_string(), val);
+                self.cache.insert(key.to_owned(), val);
                 Some(val)
             }
             None => None,

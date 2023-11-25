@@ -12,8 +12,8 @@ fn empty() {
 fn str_to_f64() {
     {
         let mut ns = fasteval3::StringToF64Namespace::new();
-        ns.insert("a".to_string(), 1.11);
-        ns.insert("b".to_string(), 2.22);
+        ns.insert(String::from("a"), 1.11);
+        ns.insert(String::from("b"), 2.22);
 
         let val = ez_eval("a + b + 1", &mut ns).unwrap();
         assert_eq!(val, 4.33);
@@ -33,8 +33,8 @@ fn str_to_f64() {
 fn str_to_cb() {
     {
         let mut ns = fasteval3::StringToCallbackNamespace::new();
-        ns.insert("a".to_string(), Box::new(|args| args[0]));
-        ns.insert("b".to_string(), Box::new(|args| args[0] * 2.0));
+        ns.insert(String::from("a"), Box::new(|args| args[0]));
+        ns.insert(String::from("b"), Box::new(|args| args[0] * 2.0));
 
         let val = ez_eval("a(1.11) + b(1.11) + 1", &mut ns).unwrap();
         assert_eq!(val, 4.33);
@@ -54,15 +54,15 @@ fn str_to_cb() {
 fn layered_str_to_f64() {
     let mut ns = fasteval3::LayeredStringToF64Namespace::new();
     let mut layer0 = fasteval3::StringToF64Namespace::new();
-    layer0.insert("a".to_string(), 1.11);
-    layer0.insert("b".to_string(), 2.22);
+    layer0.insert(String::from("a"), 1.11);
+    layer0.insert(String::from("b"), 2.22);
     ns.push(layer0);
 
     let val = ez_eval("a + b + 1", &mut ns).unwrap();
     assert_eq!(val, 4.33);
 
     let mut layer1 = fasteval3::StringToF64Namespace::new();
-    layer1.insert("a".to_string(), 11.11);
+    layer1.insert(String::from("a"), 11.11);
     ns.push(layer1);
 
     let val = ez_eval("a + b + 1", &mut ns).unwrap();

@@ -14,7 +14,7 @@ fn main() -> Result<(), fasteval3::Error> {
         .from(&slab.ps)
         .compile(&slab.ps, &mut slab.cs, &mut EmptyNamespace);
     for deg in 0..360 {
-        map.insert("deg".to_string(), deg as f64);
+        map.insert(String::from("deg"), deg as f64);
         // When working with compiled constant expressions, you can use the
         // eval_compiled*!() macros to save a function call:
         let val = fasteval3::eval_compiled!(compiled, &slab, &mut map);

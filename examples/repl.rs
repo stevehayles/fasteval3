@@ -61,13 +61,13 @@ fn repl() {
         eprint!(">>> ");
         io::stderr().flush().unwrap();
 
-        let mut ans_key = "_".to_string();
+        let mut ans_key = String::from("_");
 
         let line = match lines.next() {
             Some(res) => res.unwrap(),
             None => break,
         };
-        let mut line = line.trim().to_string();
+        let mut line = line.trim().to_owned();
         if line.is_empty() {
             continue;
         }
@@ -78,7 +78,7 @@ fn repl() {
                 eprintln!("incorrect 'let' syntax.  Should be: let x = ...");
                 continue;
             }
-            ans_key = pieces[1].to_string();
+            ans_key = pieces[1].to_owned();
             line = pieces[3..].join(" ");
         } else if pieces[0] == "push" {
             ns_stack.push(BTreeMap::new());
