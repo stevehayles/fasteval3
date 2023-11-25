@@ -1,11 +1,11 @@
 [package]
-name = "fasteval2"
-version = "2.0.3"
+name = "fasteval3"
+version = "0.1.0"
 authors = ["Pasha Podolsky <ppodolsky@me.com>", "Christopher Sebastian <christopher@likebike.com>"]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/izihawa/fasteval2"
-documentation = "https://docs.rs/fasteval2/"
+repository = "https://github.com/OverzealousLotus/fasteval3"
+documentation = "https://docs.rs/fasteval3/"
 description = """Fast evaluation of algebraic expressions"""
 keywords = ["evaluate", "math", "algebra", "calculate", "expression"]
 categories = ["mathematics", "science", "parser-implementations"]

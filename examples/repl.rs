@@ -40,8 +40,8 @@
 //! log(100K) = 5
 //! 1.23
 
-use fasteval2::Evaler; // Import this trait for '.eval()' functionality.
-use fasteval2::{Parser, Slab};
+use fasteval3::Evaler; // Import this trait for '.eval()' functionality.
+use fasteval3::{Parser, Slab};
 
 use std::collections::BTreeMap;
 use std::io::{self, BufRead, Write};
@@ -68,7 +68,7 @@ fn repl() {
             None => break,
         };
         let mut line = line.trim().to_string();
-        if line == "" {
+        if line.is_empty() {
             continue;
         }
 

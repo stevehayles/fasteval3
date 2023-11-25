@@ -1,5 +1,5 @@
-use fasteval2::bool_to_f64;
-use fasteval2::{Cached, CachedCallbackNamespace, EmptyNamespace, Error, Evaler, Parser, Slab};
+use fasteval3::bool_to_f64;
+use fasteval3::{Cached, CachedCallbackNamespace, EmptyNamespace, Error, Evaler, Parser, Slab};
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::mem;
@@ -401,7 +401,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(2.718281828459045)
+        Ok(std::f64::consts::E) // 2.718281828459045
     );
     assert_eq!(
         Parser::new()
@@ -409,7 +409,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(3.141592653589793)
+        Ok(std::f64::consts::PI) // 3.141592653589793
     );
 
     assert_eq!(
@@ -442,7 +442,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(1.5707963267948966)
+        Ok(std::f64::consts::FRAC_PI_2)
     );
     assert_eq!(
         Parser::new()
@@ -450,7 +450,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(1.5707963267948966)
+        Ok(std::f64::consts::FRAC_PI_2) // 1.5707963267948966
     );
     assert_eq!(
         Parser::new()
@@ -458,7 +458,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(0.7853981633974483)
+        Ok(std::f64::consts::FRAC_PI_4) // 0.7853981633974483
     );
     assert_eq!(
         Parser::new()
@@ -486,7 +486,7 @@ fn aaa_basics() {
     );
 }
 
-//// Commented out until we bring CachedLayeredNamespace back.
+// Commented out until we bring CachedLayeredNamespace back.
 // #[derive(Debug)]
 // struct TestEvaler;
 // impl Evaler for TestEvaler {
@@ -566,9 +566,9 @@ fn custom_func() {
             "x" => Some(1.0),
             "y" => Some(2.0),
             "z" => Some(3.0),
-            "foo" => Some(args.get(0).unwrap_or(&std::f64::NAN) * 10.0),
+            "foo" => Some(args.first().unwrap_or(&std::f64::NAN) * 10.0),
             "bar" => {
-                Some(args.get(0).unwrap_or(&std::f64::NAN) + args.get(1).unwrap_or(&std::f64::NAN))
+                Some(args.first().unwrap_or(&std::f64::NAN) + args.get(1).unwrap_or(&std::f64::NAN))
             }
             _ => None,
         }

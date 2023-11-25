@@ -1,10 +1,10 @@
 // usage:  cargo run --release --example slab
 
-use fasteval2::Evaler;
+use fasteval3::Evaler;
 use std::collections::BTreeMap; // use this trait so we can call eval().
-fn main() -> Result<(), fasteval2::Error> {
-    let parser = fasteval2::Parser::new();
-    let mut slab = fasteval2::Slab::new();
+fn main() -> Result<(), fasteval3::Error> {
+    let parser = fasteval3::Parser::new();
+    let mut slab = fasteval3::Slab::new();
 
     // See the `parse` documentation to understand why we use `from` like this:
     let expr_ref = parser.parse("x + 1", &mut slab.ps)?.from(&slab.ps);

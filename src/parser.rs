@@ -46,7 +46,7 @@ pub struct ValueI(pub usize);
 /// An `Expression` is the top node of a parsed AST.
 ///
 /// It can be `compile()`d or `eval()`d.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Default)]
 pub struct Expression {
     pub(crate) first: Value,
     pub(crate) pairs: Vec<ExprPair>, // cap=8
@@ -63,7 +63,7 @@ pub enum Value {
     EStdFunc(StdFunc),
     EPrintFunc(PrintFunc),
 }
-use Value::{EConstant, EPrintFunc, EStdFunc, EUnaryOp};
+use self::Value::{EConstant, EPrintFunc, EStdFunc, EUnaryOp};
 
 /// Unary Operators
 #[derive(Debug, PartialEq)]
@@ -73,7 +73,7 @@ pub enum UnaryOp {
     ENot(ValueI),
     EParentheses(ExpressionI),
 }
-use UnaryOp::{ENeg, ENot, EParentheses, EPos};
+use self::UnaryOp::{ENeg, ENot, EParentheses, EPos};
 
 /// Binary Operators
 #[derive(Debug, PartialEq, PartialOrd, Copy, Clone)]
@@ -95,7 +95,7 @@ pub enum BinaryOp {
     EMod = 13,
     EExp = 14, // Highest Priority
 }
-use BinaryOp::{EAdd, EDiv, EExp, EMod, EMul, ESub, EAND, EEQ, EGT, EGTE, ELT, ELTE, ENE, EOR};
+use self::BinaryOp::{EAdd, EDiv, EExp, EMod, EMul, ESub, EAND, EEQ, EGT, EGTE, ELT, ELTE, ENE, EOR};
 
 /// A Function Call with Standard Syntax.
 #[derive(Debug, PartialEq)]
@@ -283,16 +283,23 @@ impl Parser {
         }
     }
 
+    /// Checks if a given byte matches its character counterpart.
     fn is_varname_byte(b: u8, i: usize) -> bool {
-        (b'A' <= b && b <= b'Z')
+        // Might be parser-breaking
+        /*(b'A' <= b && b <= b'Z')
             || (b'a' <= b && b <= b'z')
             || b == b'_'
-            || (i > 0 && (b'0' <= b && b <= b'9'))
+            || (i > 0 && (b'0' <= b && b <= b'9'))*/
+        
+        b.is_ascii_uppercase() || b.is_ascii_lowercase() || b == b'_' || ( i > 0 && b.is_ascii_digit())
     }
+
+    /// Checks if a given bytes matches its character counterpart, with the byte itself possibly being none.
     fn is_varname_byte_opt(bo: Option<u8>, i: usize) -> bool {
-        match bo {
-            Some(b) => Self::is_varname_byte(b, i),
-            None => false,
+        if let Some(byte) = bo {
+            Self::is_varname_byte(byte, i)
+        } else {
+            false
         }
     }
 
@@ -352,7 +359,7 @@ impl Parser {
             };
             return Err(Error::UnparsedTokensRemaining(bs_str.to_string()));
         }
-        Ok(slab.push_expr(Expression { first, pairs })?)
+        slab.push_expr(Expression { first, pairs })
     }
 
     fn read_value(
@@ -398,18 +405,18 @@ impl Parser {
             match peek_n!(bs, toklen) {
                 None => break,
                 Some(b) => {
-                    if b'0' <= b && b <= b'9' || b == b'.' {
+                    if b.is_ascii_digit() || b == b'.' {
                         saw_val = true;
                         sign_ok = false;
                         specials_ok = false;
-                        toklen = toklen + 1;
+                        toklen += 1;
                     } else if sign_ok && (b == b'-' || b == b'+') {
                         sign_ok = false;
-                        toklen = toklen + 1;
+                        toklen += 1;
                     } else if saw_val && (b == b'e' || b == b'E') {
                         suffix_ok = false;
                         sign_ok = true;
-                        toklen = toklen + 1;
+                        toklen += 1;
                     } else if specials_ok
                         && (b == b'N'
                             && peek_is!(bs, toklen + 1, b'a')
@@ -422,7 +429,7 @@ impl Parser {
                         {
                             saw_val = true;
                             suffix_ok = false;
-                            toklen = toklen + 3;
+                            toklen += 3;
                         }
                         break;
                     } else {
@@ -460,7 +467,7 @@ impl Parser {
                         slab.char_buf.push_str(&exp.to_string());
                         tok = &slab.char_buf;
 
-                        toklen = toklen + suffixlen;
+                        toklen += suffixlen;
                     }
                 }
             }
@@ -737,7 +744,7 @@ impl Parser {
 
         let mut toklen = 0;
         while Self::is_varname_byte_opt(peek_n!(bs, toklen), toklen) {
-            toklen = toklen + 1;
+            toklen += 1;
         }
 
         if toklen == 0 {
@@ -1151,7 +1158,7 @@ impl Parser {
             Some(b'"') => false,
             Some(_) => true,
         } {
-            toklen = toklen + 1;
+            toklen += 1;
         }
 
         let out = from_utf8(&bs[..toklen])
@@ -1171,14 +1178,7 @@ impl Default for Parser {
         Self::new()
     }
 }
-impl Default for Expression {
-    fn default() -> Self {
-        Expression {
-            first: Default::default(),
-            pairs: Vec::new(),
-        }
-    }
-}
+
 impl Default for Value {
     fn default() -> Self {
         EConstant(std::f64::NAN)
@@ -1215,7 +1215,7 @@ mod internal_tests {
     use super::*;
     use crate::slab::Slab;
 
-    //// Commented so I can compile with stable Rust.
+    // Commented so I can compile with stable Rust.
     // extern crate test;
     // use test::{Bencher, black_box};
 
@@ -1255,8 +1255,8 @@ mod internal_tests {
             }
         }
 
-        assert!((&[0u8; 0]).is_empty());
-        assert!(!(&[1]).is_empty());
+        assert!(([0u8; 0]).is_empty());
+        assert!(!([1]).is_empty());
         assert!((b"").is_empty());
         assert!(!(b"x").is_empty());
 

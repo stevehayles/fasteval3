@@ -1,6 +1,6 @@
 // usage:  cargo run --release --example advanced-vars
 
-fn main() -> Result<(), fasteval2::Error> {
+fn main() -> Result<(), fasteval3::Error> {
     let mut cb = |name: &str, args: Vec<f64>| -> Option<f64> {
         let mydata: [f64; 3] = [11.1, 22.2, 33.3];
         match name {
@@ -15,14 +15,14 @@ fn main() -> Result<(), fasteval2::Error> {
             // The `args.get...` code is the same as:
             //     mydata[args[0] as usize]
             // ...but it won't panic if either index is out-of-bounds.
-            "data" => args.get(0).and_then(|f| mydata.get(*f as usize).copied()),
+            "data" => args.first().and_then(|f| mydata.get(*f as usize).copied()),
 
             // A wildcard to handle all undefined names:
             _ => None,
         }
     };
 
-    let val = fasteval2::ez_eval("sum(x^2, y^2)^0.5 + data[0]", &mut cb)?;
+    let val = fasteval3::ez_eval("sum(x^2, y^2)^0.5 + data[0]", &mut cb)?;
     //                           |   |                   |
     //                           |   |                   square-brackets act like parenthesis
     //                           |   variables are like custom functions with zero args

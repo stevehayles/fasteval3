@@ -1,4 +1,4 @@
-use fasteval2::{
+use fasteval3::{
     eval_compiled_ref, CachedCallbackNamespace, Compiler, EmptyNamespace, Error, Evaler, Parser,
     Slab,
 };
@@ -136,7 +136,7 @@ fn overflow_stack() {
     // Test custom safety parse limits:
     assert_eq!(
         Parser {
-            expr_len_limit: fasteval2::parser::DEFAULT_EXPR_LEN_LIMIT,
+            expr_len_limit: fasteval3::parser::DEFAULT_EXPR_LEN_LIMIT,
             expr_depth_limit: 31
         }
         .parse(from_utf8(&[b'('; 32]).unwrap(), &mut Slab::new().ps),
@@ -146,7 +146,7 @@ fn overflow_stack() {
     assert_eq!(
         Parser {
             expr_len_limit: 8,
-            expr_depth_limit: fasteval2::parser::DEFAULT_EXPR_DEPTH_LIMIT
+            expr_depth_limit: fasteval3::parser::DEFAULT_EXPR_DEPTH_LIMIT
         }
         .parse(from_utf8(&[b'('; 32]).unwrap(), &mut Slab::new().ps),
         Err(Error::TooLong)

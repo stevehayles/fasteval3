@@ -24,6 +24,8 @@
 //! * Variable-length `Expression`/`Value` AST nodes are converted into constant-sized `Instruction` nodes.
 //! * The `IC` enumeration helps to eliminate expensive function calls.
 
+use std::cell::RefCell;
+
 #[cfg(feature = "unsafe-vars")]
 use crate::parser::StdFunc::EUnsafeVar;
 use crate::parser::{
@@ -219,15 +221,12 @@ impl<'s> ExprSlice<'s> {
         sl
     }
     fn split(&self, bop: BinaryOp, dst: &mut Vec<ExprSlice<'s>>) {
-        dst.push(ExprSlice::new(&self.first));
+        dst.push(ExprSlice::new(self.first));
         for exprpair in self.pairs.iter() {
             if exprpair.0 == bop {
                 dst.push(ExprSlice::new(&exprpair.1));
-            } else {
-                match dst.last_mut() {
-                    Some(cur) => cur.pairs.push(exprpair),
-                    None => (), // unreachable
-                }
+            } else if let Some(cur) = dst.last_mut() {
+                cur.pairs.push(exprpair);
             }
         }
     }
@@ -237,16 +236,13 @@ impl<'s> ExprSlice<'s> {
         xsdst: &mut Vec<ExprSlice<'s>>,
         opdst: &mut Vec<&'s BinaryOp>,
     ) {
-        xsdst.push(ExprSlice::new(&self.first));
+        xsdst.push(ExprSlice::new(self.first));
         for exprpair in self.pairs.iter() {
             if search.contains(&exprpair.0) {
                 xsdst.push(ExprSlice::new(&exprpair.1));
                 opdst.push(&exprpair.0);
-            } else {
-                match xsdst.last_mut() {
-                    Some(cur) => cur.pairs.push(exprpair),
-                    None => (), // unreachable
-                }
+            } else if let Some(cur) = xsdst.last_mut() {
+                cur.pairs.push(exprpair);
             }
         }
     }
@@ -321,13 +317,11 @@ fn compile_mul(instrs: Vec<Instruction>, cslab: &mut CompileSlab) -> Instruction
     for instr in instrs {
         if let IConst(c) = instr {
             const_prod *= c; // Floats don't overflow.
+        } else if out_set {
+            out = IMul(cslab.push_instr(out), IC::I(cslab.push_instr(instr)));
         } else {
-            if out_set {
-                out = IMul(cslab.push_instr(out), IC::I(cslab.push_instr(instr)));
-            } else {
-                out = instr;
+            out = instr;
                 out_set = true;
-            }
         }
     }
     if f64_ne!(const_prod, 1.0) {
@@ -346,13 +340,11 @@ fn compile_add(instrs: Vec<Instruction>, cslab: &mut CompileSlab) -> Instruction
     for instr in instrs {
         if let IConst(c) = instr {
             const_sum += c; // Floats don't overflow.
+        } else if out_set {
+            out = IAdd(cslab.push_instr(out), IC::I(cslab.push_instr(instr)));
         } else {
-            if out_set {
-                out = IAdd(cslab.push_instr(out), IC::I(cslab.push_instr(instr)));
-            } else {
-                out = instr;
-                out_set = true;
-            }
+            out = instr;
+            out_set = true;
         }
     }
     if f64_ne!(const_sum, 0.0) {
@@ -519,17 +511,13 @@ impl Compiler for ExprSlice<'_> {
                     let instr = xs.compile(pslab, cslab, ns);
                     if out_set {
                         out = IOR(cslab.push_instr(out), instr_to_ic!(cslab, instr));
-                    } else {
-                        if let IConst(c) = instr {
-                            if f64_ne!(c, 0.0) {
-                                return instr;
-                            }
-                            // out = instr;     // Skip this 0 value (mostly so I don't complicate my logic in 'if out_set' since I can assume that any set value is non-const).
-                            // out_set = true;
-                        } else {
-                            out = instr;
-                            out_set = true;
+                    } else if let IConst(c) = instr {
+                        if f64_ne!(c, 0.0) {
+                            return instr;
                         }
+                    } else {
+                        out = instr;
+                        out_set = true;
                     }
                 }
                 out
@@ -747,7 +735,7 @@ impl Compiler for Expression {
         cslab: &mut CompileSlab,
         ns: &mut impl EvalNamespace,
     ) -> Instruction {
-        let top = ExprSlice::from_expr(&self);
+        let top = ExprSlice::from_expr(self);
         top.compile(pslab, cslab, ns)
     }
 }
@@ -805,6 +793,7 @@ impl Compiler for StdFunc {
         cslab: &mut CompileSlab,
         ns: &mut impl EvalNamespace,
     ) -> Instruction {
+        let celled_pslab = RefCell::from(pslab.char_buf.clone());
         match self {
             EVar(name) => IVar(name.clone()),
             #[cfg(feature = "unsafe-vars")]
@@ -826,9 +815,7 @@ impl Compiler for StdFunc {
                     args.push(instr_to_ic!(cslab, instr));
                 }
                 if is_all_const {
-                    let computed_value = eval_var!(ns, name, f64_args, unsafe {
-                        &mut *(&pslab.char_buf as *const _ as *mut _)
-                    });
+                    let computed_value = eval_var!(ns, name, f64_args, &mut celled_pslab.borrow_mut());
                     if let Ok(value) = computed_value {
                         IConst(value)
                     } else {
@@ -953,13 +940,11 @@ impl Compiler for StdFunc {
                             const_min = f;
                             const_min_set = true;
                         }
+                    } else if out_set {
+                        out = IFuncMin(cslab.push_instr(out), IC::I(cslab.push_instr(instr)));
                     } else {
-                        if out_set {
-                            out = IFuncMin(cslab.push_instr(out), IC::I(cslab.push_instr(instr)));
-                        } else {
-                            out = instr;
-                            out_set = true;
-                        }
+                        out = instr;
+                        out_set = true;
                     }
                 }
                 if const_min_set {
@@ -1003,13 +988,11 @@ impl Compiler for StdFunc {
                             const_max = f;
                             const_max_set = true;
                         }
+                    } else if out_set {
+                        out = IFuncMax(cslab.push_instr(out), IC::I(cslab.push_instr(instr)));
                     } else {
-                        if out_set {
-                            out = IFuncMax(cslab.push_instr(out), IC::I(cslab.push_instr(instr)));
-                        } else {
-                            out = instr;
-                            out_set = true;
-                        }
+                        out = instr;
+                        out_set = true;
                     }
                 }
                 if const_max_set {

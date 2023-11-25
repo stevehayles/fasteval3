@@ -32,19 +32,19 @@
 //!
 //! Here is an example of re-using one `Slab` for multiple parse/eval cycles:
 //! ```
-//! use fasteval2::Evaler;  // import this trait so we can call eval().
-//! fn main() -> Result<(), fasteval2::Error> {
-//!     let parser = fasteval2::Parser::new();
-//!     let mut slab = fasteval2::Slab::new();
+//! use fasteval3::Evaler;  // import this trait so we can call eval().
+//! fn main() -> Result<(), fasteval3::Error> {
+//!     let parser = fasteval3::Parser::new();
+//!     let mut slab = fasteval3::Slab::new();
 //!
-//!     let val = parser.parse("1+2*3-4", &mut slab.ps)?.from(&slab.ps).eval(&slab, &mut fasteval2::EmptyNamespace)?;
+//!     let val = parser.parse("1+2*3-4", &mut slab.ps)?.from(&slab.ps).eval(&slab, &mut fasteval3::EmptyNamespace)?;
 //!     assert_eq!(val, 3.0);
 //!
 //!     // Let's re-use the same slab again to save memory operations.
 //!
 //!     // `parse()` will clear the Slab's data.  It is important that you
 //!     // do not use an old expression after the Slab has been cleared.
-//!     let val = parser.parse("5+6*7-8", &mut slab.ps)?.from(&slab.ps).eval(&slab, &mut fasteval2::EmptyNamespace)?;
+//!     let val = parser.parse("5+6*7-8", &mut slab.ps)?.from(&slab.ps).eval(&slab, &mut fasteval3::EmptyNamespace)?;
 //!     assert_eq!(val, 39.0);
 //!
 //!     Ok(())
@@ -162,12 +162,12 @@ pub struct Slab {
 /// Here is an example of correct and incorrect use of unsafe variable pointers:
 ///
 /// ```
-/// use fasteval2::Evaler;    // use this trait so we can call eval().
-/// use fasteval2::Compiler;  // use this trait so we can call compile().
+/// use fasteval3::Evaler;    // use this trait so we can call eval().
+/// use fasteval3::Compiler;  // use this trait so we can call compile().
 ///
 /// // Here is an example of INCORRECT registration.  DO NOT DO THIS!
 /// #[cfg(feature = "unsafe-vars")]
-/// fn bad_unsafe_var(slab_mut:&mut fasteval2::Slab) {
+/// fn bad_unsafe_var(slab_mut:&mut fasteval3::Slab) {
 ///     let bad : f64 = 0.0;
 ///
 ///     // Saves a pointer to 'bad':
@@ -177,12 +177,12 @@ pub struct Slab {
 ///     // This will result in undefined behavior.
 /// }
 /// #[cfg(not(feature = "unsafe-vars"))]
-/// fn main() -> Result<(), fasteval2::Error> {
+/// fn main() -> Result<(), fasteval3::Error> {
 ///     Ok(())
 /// }
 /// #[cfg(feature = "unsafe-vars")]
-/// fn main() -> Result<(), fasteval2::Error> {
-///     let mut slab = fasteval2::Slab::new();
+/// fn main() -> Result<(), fasteval3::Error> {
+///     let mut slab = fasteval3::Slab::new();
 ///
 ///     // The Unsafe Variable will use a pointer to read this memory location:
 ///     // You must make sure that this variable stays in-scope as long as the
@@ -196,8 +196,8 @@ pub struct Slab {
 ///     // bad_unsafe_var(&mut slab);  // Don't do it this way.
 ///
 ///     let expr_str = "sin(deg/360 * 2*pi())";
-///     let expr_ref = fasteval2::Parser::new().parse(expr_str, &mut slab.ps)?.from(&slab.ps);
-///     let mut ns = fasteval2::EmptyNamespace;  // We only define unsafe variables, not normal variables,
+///     let expr_ref = fasteval3::Parser::new().parse(expr_str, &mut slab.ps)?.from(&slab.ps);
+///     let mut ns = fasteval3::EmptyNamespace;  // We only define unsafe variables, not normal variables,
 ///                                             // so EmptyNamespace is fine.
 ///     // The main reason people use Unsafe Variables is to maximize performance.
 ///     // Compilation also helps performance, so it is usually used together with Unsafe Variables:
@@ -205,7 +205,7 @@ pub struct Slab {
 ///
 ///     for d in 0..360 {
 ///         deg = d as f64;
-///         let val = fasteval2::eval_compiled!(compiled, &slab, &mut ns);
+///         let val = fasteval3::eval_compiled!(compiled, &slab, &mut ns);
 ///         eprintln!("sin({}°) = {}", deg, val);
 ///     }
 ///

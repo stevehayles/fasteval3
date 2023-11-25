@@ -1,11 +1,11 @@
 // usage:  cargo run --release --example compile
 
-use fasteval2::Compiler;
-use fasteval2::{EmptyNamespace, Evaler}; // use this trait so we can call eval().
+use fasteval3::Compiler;
+use fasteval3::{EmptyNamespace, Evaler}; // use this trait so we can call eval().
 use std::collections::BTreeMap; // use this trait so we can call compile().
-fn main() -> Result<(), fasteval2::Error> {
-    let parser = fasteval2::Parser::new();
-    let mut slab = fasteval2::Slab::new();
+fn main() -> Result<(), fasteval3::Error> {
+    let parser = fasteval3::Parser::new();
+    let mut slab = fasteval3::Slab::new();
     let mut map = BTreeMap::new();
 
     let expr_str = "sin(deg/360 * 2*pi())";
@@ -17,7 +17,7 @@ fn main() -> Result<(), fasteval2::Error> {
         map.insert("deg".to_string(), deg as f64);
         // When working with compiled constant expressions, you can use the
         // eval_compiled*!() macros to save a function call:
-        let val = fasteval2::eval_compiled!(compiled, &slab, &mut map);
+        let val = fasteval3::eval_compiled!(compiled, &slab, &mut map);
         eprintln!("sin({}°) = {}", deg, val);
     }
 

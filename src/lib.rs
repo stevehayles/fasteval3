@@ -108,11 +108,11 @@
 //! ```
 //! // In case you didn't know, Rust allows `main()` to return a `Result`.
 //! // This lets us use the `?` operator inside of `main()`.  Very convenient!
-//! fn main() -> Result<(), fasteval2::Error> {
+//! fn main() -> Result<(), fasteval3::Error> {
 //!     // This example doesn't use any variables, so just use an EmptyNamespace:
-//!     let mut ns = fasteval2::EmptyNamespace;
+//!     let mut ns = fasteval3::EmptyNamespace;
 //!
-//!     let val = fasteval2::ez_eval(
+//!     let val = fasteval3::ez_eval(
 //!         "1+2*3/4^5%6 + log(100K) + log(e(),100) + [3*(3-3)/3] + (2<3) && 1.23",    &mut ns)?;
 //!     //    |            |      |    |   |          |               |   |
 //!     //    |            |      |    |   |          |               |   boolean logic with short-circuit support
@@ -138,13 +138,13 @@
 //!
 //! ```
 //! use std::collections::BTreeMap;
-//! fn main() -> Result<(), fasteval2::Error> {
+//! fn main() -> Result<(), fasteval3::Error> {
 //!     let mut map : BTreeMap<String,f64> = BTreeMap::new();
 //!     map.insert("x".to_string(), 1.0);
 //!     map.insert("y".to_string(), 2.0);
 //!     map.insert("z".to_string(), 3.0);
 //!
-//!     let val = fasteval2::ez_eval(r#"x + print("y:",y) + z"#,    &mut map)?;
+//!     let val = fasteval3::ez_eval(r#"x + print("y:",y) + z"#,    &mut map)?;
 //!     //                                 |
 //!     //                                 prints "y: 2" to stderr and then evaluates to 2.0
 //!
@@ -159,7 +159,7 @@
 //! which defines custom variables, functions, and array-like objects:
 //!
 //! ```
-//! fn main() -> Result<(), fasteval2::Error> {
+//! fn main() -> Result<(), fasteval3::Error> {
 //!     let mut cb = |name:&str, args:Vec<f64>| -> Option<f64> {
 //!         let mydata : [f64; 3] = [11.1, 22.2, 33.3];
 //!         match name {
@@ -181,7 +181,7 @@
 //!         }
 //!     };
 //!
-//!     let val = fasteval2::ez_eval("sum(x^2, y^2)^0.5 + data[0]",    &mut cb)?;
+//!     let val = fasteval3::ez_eval("sum(x^2, y^2)^0.5 + data[0]",    &mut cb)?;
 //!     //                           |   |                   |
 //!     //                           |   |                   square-brackets act like parenthesis
 //!     //                           |   variables are like custom functions with zero args
@@ -226,10 +226,10 @@
 //!
 //! ```
 //! use std::collections::BTreeMap;
-//! use fasteval2::Evaler;  // use this trait so we can call eval().
-//! fn main() -> Result<(), fasteval2::Error> {
-//!     let parser = fasteval2::Parser::new();
-//!     let mut slab = fasteval2::Slab::new();
+//! use fasteval3::Evaler;  // use this trait so we can call eval().
+//! fn main() -> Result<(), fasteval3::Error> {
+//!     let parser = fasteval3::Parser::new();
+//!     let mut slab = fasteval3::Slab::new();
 //!
 //!     // See the `parse` documentation to understand why we use `from` like this:
 //!     let expr_ref = parser.parse("x + 1", &mut slab.ps)?.from(&slab.ps);
@@ -269,12 +269,12 @@
 //! usually more than 200 times faster.
 //! ```
 //! use std::collections::BTreeMap;
-//! use fasteval2::Evaler;    // use this trait so we can call eval().
-//! use fasteval2::Compiler;  // use this trait so we can call compile().
-//! fn main() -> Result<(), fasteval2::Error> {
-//!     use fasteval2::EmptyNamespace;
-//! let parser = fasteval2::Parser::new();
-//!     let mut slab = fasteval2::Slab::new();
+//! use fasteval3::Evaler;    // use this trait so we can call eval().
+//! use fasteval3::Compiler;  // use this trait so we can call compile().
+//! fn main() -> Result<(), fasteval3::Error> {
+//!     use fasteval3::EmptyNamespace;
+//! let parser = fasteval3::Parser::new();
+//!     let mut slab = fasteval3::Slab::new();
 //!     let mut map = BTreeMap::new();
 //!
 //!     let expr_str = "sin(deg/360 * 2*pi())";
@@ -283,7 +283,7 @@
 //!         map.insert("deg".to_string(), deg as f64);
 //!         // When working with compiled constant expressions, you can use the
 //!         // eval_compiled*!() macros to save a function call:
-//!         let val = fasteval2::eval_compiled!(compiled, &slab, &mut map);
+//!         let val = fasteval3::eval_compiled!(compiled, &slab, &mut map);
 //!         eprintln!("sin({}°) = {}", deg, val);
 //!     }
 //!
@@ -299,16 +299,16 @@
 //! feature is not enabled by default because it slightly slows down other
 //! non-variable operations.
 //! ```
-//! use fasteval2::Evaler;    // use this trait so we can call eval().
-//! use fasteval2::Compiler;  // use this trait so we can call compile().
+//! use fasteval3::Evaler;    // use this trait so we can call eval().
+//! use fasteval3::Compiler;  // use this trait so we can call compile().
 //! #[cfg(not(feature = "unsafe-vars"))]
-//! fn main() -> Result<(), fasteval2::Error> {
+//! fn main() -> Result<(), fasteval3::Error> {
 //!     Ok(())
 //! }
 //! #[cfg(feature = "unsafe-vars")]
-//! fn main() -> Result<(), fasteval2::Error> {
-//!     let parser = fasteval2::Parser::new();
-//!     let mut slab = fasteval2::Slab::new();
+//! fn main() -> Result<(), fasteval3::Error> {
+//!     let parser = fasteval3::Parser::new();
+//!     let mut slab = fasteval3::Slab::new();
 //!
 //!     // The Unsafe Variable will use a pointer to read this memory location:
 //!     // You must make sure that this variable stays in-scope as long as the
@@ -318,14 +318,14 @@
 //!     // Unsafe Variables must be registered before 'parse()'.
 //!     // (Normal Variables only need definitions during the 'eval' phase.)
 //!     unsafe { slab.ps.add_unsafe_var("deg".to_string(), &deg); } // `add_unsafe_var()` only exists if the `unsafe-vars` feature is enabled: `cargo test --features unsafe-vars`
-//!     let mut ns = fasteval2::EmptyNamespace;  // We only define unsafe variables, not normal variables,
+//!     let mut ns = fasteval3::EmptyNamespace;  // We only define unsafe variables, not normal variables,
 //!                                             // so EmptyNamespace is fine.
 //!     let expr_str = "sin(deg/360 * 2*pi())";
 //!     let compiled = parser.parse(expr_str, &mut slab.ps)?.from(&slab.ps).compile(&slab.ps, &mut slab.cs, &mut ns);
 //!
 //!     for d in 0..360 {
 //!         deg = d as f64;
-//!         let val = fasteval2::eval_compiled!(compiled, &slab, &mut ns);
+//!         let val = fasteval3::eval_compiled!(compiled, &slab, &mut ns);
 //!         eprintln!("sin({}°) = {}", deg, val);
 //!     }
 //!
@@ -337,11 +337,11 @@
 //! In this advanced example, we peek into the Slab to see how expressions are
 //! represented after the 'parse' and 'compile' phases.
 //! ```
-//! use fasteval2::Compiler;  // use this trait so we can call compile().
-//! fn main() -> Result<(), fasteval2::Error> {
-//!     use fasteval2::EmptyNamespace;
-//! let parser = fasteval2::Parser::new();
-//!     let mut slab = fasteval2::Slab::new();
+//! use fasteval3::Compiler;  // use this trait so we can call compile().
+//! fn main() -> Result<(), fasteval3::Error> {
+//!     use fasteval3::EmptyNamespace;
+//! let parser = fasteval3::Parser::new();
+//!     let mut slab = fasteval3::Slab::new();
 //!
 //!     let expr_str = "sin(deg/360 * 2*pi())";
 //!     let expr_ref = parser.parse(expr_str, &mut slab.ps)?.from(&slab.ps);

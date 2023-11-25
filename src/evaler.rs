@@ -4,7 +4,7 @@
 //! `Instruction`s also have the option of using the `eval_compiled!()` macro
 //! which is much faster for common cases.
 
-use crate as fasteval2;
+use crate as fasteval3;
 
 #[cfg(feature = "unsafe-vars")]
 use crate::compiler::Instruction::IUnsafeVar;
@@ -40,7 +40,7 @@ use crate::parser::{
 };
 use crate::slab::Slab;
 
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, cell::RefCell};
 use std::f64::consts;
 use std::fmt;
 
@@ -59,12 +59,12 @@ use std::fmt;
 #[macro_export]
 macro_rules! eval_compiled {
     ($evaler:ident, $slab_ref:expr, $ns_mut:expr) => {
-        if let fasteval2::IConst(c) = $evaler {
+        if let fasteval3::IConst(c) = $evaler {
             c
         } else {
             #[cfg(feature = "unsafe-vars")]
             {
-                if let fasteval2::IUnsafeVar { ptr, .. } = $evaler {
+                if let fasteval3::IUnsafeVar { ptr, .. } = $evaler {
                     unsafe { *ptr }
                 } else {
                     $evaler.eval($slab_ref, $ns_mut)?
@@ -96,12 +96,12 @@ macro_rules! eval_compiled {
 #[macro_export]
 macro_rules! eval_compiled_ref {
     ($evaler:ident, $slab_ref:expr, $ns_mut:expr) => {
-        if let fasteval2::IConst(c) = $evaler {
+        if let fasteval3::IConst(c) = $evaler {
             *c
         } else {
             #[cfg(feature = "unsafe-vars")]
             {
-                if let fasteval2::IUnsafeVar { ptr, .. } = $evaler {
+                if let fasteval3::IUnsafeVar { ptr, .. } = $evaler {
                     unsafe { **ptr }
                 } else {
                     $evaler.eval($slab_ref, $ns_mut)?
@@ -127,7 +127,7 @@ macro_rules! eval_ic_ref {
 
                 #[cfg(feature = "unsafe-vars")]
                 {
-                    if let fasteval2::IUnsafeVar { ptr, .. } = instr_ref {
+                    if let fasteval3::IUnsafeVar { ptr, .. } = instr_ref {
                         unsafe { **ptr }
                     } else {
                         instr_ref.eval($slab_ref, $ns_mut)?
@@ -145,7 +145,7 @@ macro_rules! eval_ic_ref {
 pub trait Evaler: fmt::Debug {
     /// Evaluate this `Expression`/`Instruction` and return an `f64`.
     ///
-    /// Returns a `fasteval2::Error` if there are any problems, such as undefined variables.
+    /// Returns a `fasteval3::Error` if there are any problems, such as undefined variables.
     fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f64, Error>;
 
     /// Don't call this directly.  Use `var_names()` instead.
@@ -236,10 +236,9 @@ impl Evaler for Expression {
                 };
                 if op == search {
                     let res = op.binaryop_eval(vals.get(i), vals.get(i + 1));
-                    match vals.get_mut(i) {
-                        Some(val_ref) => *val_ref = res,
-                        None => (), // unreachable
-                    };
+                    if let Some(value_ref) = vals.get_mut(i) {
+                        *value_ref = res;
+                    }
                     remove_no_panic(vals, i + 1);
                     remove_no_panic(ops, i);
                 }
@@ -254,14 +253,13 @@ impl Evaler for Expression {
                     Some(op) => {
                         if *op == search {
                             let res = op.binaryop_eval(vals.get(i), vals.get(i + 1));
-                            match vals.get_mut(i) {
-                                Some(val_ref) => *val_ref = res,
-                                None => (), // unreachable
-                            };
+                            if let Some(value_ref) = vals.get_mut(i) {
+                                *value_ref = res;
+                            }
                             remove_no_panic(vals, i + 1);
                             remove_no_panic(ops, i);
                         } else {
-                            i = i + 1;
+                            i += 1;
                         }
                     }
                 }
@@ -276,14 +274,13 @@ impl Evaler for Expression {
                     Some(op) => {
                         if search.contains(op) {
                             let res = op.binaryop_eval(vals.get(i), vals.get(i + 1));
-                            match vals.get_mut(i) {
-                                Some(val_ref) => *val_ref = res,
-                                None => (), // unreachable
-                            };
+                            if let Some(value_ref) = vals.get_mut(i) {
+                                *value_ref = res;
+                            }
                             remove_no_panic(vals, i + 1);
                             remove_no_panic(ops, i);
                         } else {
-                            i = i + 1;
+                            i += 1
                         }
                     }
                 }
@@ -448,23 +445,20 @@ impl Evaler for StdFunc {
         };
     }
     fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f64, Error> {
+        let celled_slab = RefCell::from(slab.ps.char_buf.clone());
         match self {
             // These match arms are ordered in a way that I feel should deliver good performance.
             // (I don't think this ordering actually affects the generated code, though.)
             #[cfg(feature = "unsafe-vars")]
             EUnsafeVar { ptr, .. } => unsafe { Ok(**ptr) },
 
-            EVar(name) => eval_var!(ns, name, Vec::new(), unsafe {
-                &mut *(&slab.ps.char_buf as *const _ as *mut _)
-            }),
+            EVar(name) => eval_var!(ns, name, Vec::new(), &mut *celled_slab.borrow_mut()),
             EFunc { name, args: xis } => {
                 let mut args = Vec::with_capacity(xis.len());
                 for xi in xis {
                     args.push(get_expr!(slab.ps, xi).eval(slab, ns)?)
                 }
-                eval_var!(ns, name, args, unsafe {
-                    &mut *(&slab.ps.char_buf as *const _ as *mut _)
-                })
+                eval_var!(ns, name, args, &mut *celled_slab.borrow_mut())
             }
 
             EFuncLog {
@@ -664,6 +658,7 @@ impl Evaler for Instruction {
         }
     }
     fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f64, Error> {
+        let celled_slab = RefCell::from(slab.ps.char_buf.clone());
         match self {
             // I have manually ordered these match arms in a way that I feel should deliver good performance.
             // (I don't think this ordering actually affects the generated code, though.)
@@ -682,17 +677,13 @@ impl Evaler for Instruction {
             INeg(i) => Ok(-eval_compiled_ref!(get_instr!(slab.cs, i), slab, ns)),
             IInv(i) => Ok(1.0 / eval_compiled_ref!(get_instr!(slab.cs, i), slab, ns)),
 
-            IVar(name) => eval_var!(ns, name, Vec::new(), unsafe {
-                &mut *(&slab.ps.char_buf as *const _ as *mut _)
-            }),
+            IVar(name) => eval_var!(ns, name, Vec::new(), &mut celled_slab.borrow_mut()),
             IFunc { name, args: ics } => {
                 let mut args = Vec::with_capacity(ics.len());
                 for ic in ics {
                     args.push(eval_ic_ref!(ic, slab, ns));
                 }
-                eval_var!(ns, name, args, unsafe {
-                    &mut *(&slab.ps.char_buf as *const _ as *mut _)
-                })
+                eval_var!(ns, name, args, &mut celled_slab.borrow_mut())
             }
 
             IFuncLog {

@@ -1,13 +1,13 @@
-# fasteval
+# fasteval3
 Fast and safe evaluation of algebraic expressions
 
-`fasteval` is a library for parsing, compiling, and evaluating algebraic expressions.
+`fasteval3` is a library for parsing, compiling, and evaluating algebraic expressions.
 It can be used directly as a calculator language (much like `python`), and it is
 an excellent foundation for building higher-level-languages.
 
 Documentation:
 
-* [API Reference (docs.rs)](https://docs.rs/fasteval/)
+* [API Reference (docs.rs)](https://docs.rs/fasteval3/)
 
 
 ## Usage
@@ -15,7 +15,7 @@ Documentation:
 Add this to your Cargo.toml:
 
     [dependencies]
-    fasteval2 = "0.2.4"
+    fasteval3 = "0.2.4"
 
 
 You can use [`codegen-units=1`](https://doc.rust-lang.org/stable/cargo/reference/manifest.html#the-profile-sections) for better run-time performance. In some cases [it will greatly improves LLVM's compile-time optimizations](http://likebike.com/posts/How_To_Write_Fast_Rust_Code.html#emit-asm).
@@ -24,7 +24,7 @@ If you are using a 'nightly' Rust compiler, you can build with `--features night
 
 You can build with `--no-default-features` to disable alphabetical keywords like `and`, `or`, `NaN`, `inf`.  (These words might be important to your applications.)
 
-You can build with `--features unsafe-vars` to enable [Unsafe Variables](https://docs.rs/fasteval/#unsafe-variables).
+You can build with `--features unsafe-vars` to enable [Unsafe Variables](https://docs.rs/fasteval3/#unsafe-variables).
 
 
 ## Features
@@ -33,7 +33,7 @@ You can build with `--features unsafe-vars` to enable [Unsafe Variables](https:/
 * Works with stable Rust.
 * Supports interpretation (i.e. parse & eval) as well as compiled execution (i.e. parse, compile, eval).
 * Supports Variables and Custom Functions.
-* `fasteval` is a good base for building higher-level languages.
+* `fasteval3` is a good base for building higher-level languages.
 * Supports many built-in functions and constants.
 * Supports all the standard algebraic unary and binary operators (+ - * / ^ %),
   as well as comparisons (< <= == != >= >) and logical operators (&& ||) with
@@ -44,18 +44,18 @@ You can build with `--features unsafe-vars` to enable [Unsafe Variables](https:/
 
 ## Easy Example
 
-Here is one simple example.  See the [API Reference](https://docs.rs/fasteval/#examples) for many more!
+Here is one simple example.  See the [API Reference](https://docs.rs/fasteval3/#examples) for many more!
 
 The `ez_eval()` function performs the entire allocation-parse-eval process
 for you.  It is slightly inefficient because it always allocates a
-fresh [`Slab`](https://docs.rs/fasteval/latest/fasteval/slab/index.html), but it is very simple to use:
+fresh [`Slab`](https://docs.rs/fasteval/latest/fasteval3/slab/index.html), but it is very simple to use:
 
 ```rust
-fn main() -> Result<(), fasteval2::Error> {
+fn main() -> Result<(), fasteval3::Error> {
     // This example doesn't use any variables, so just use an EmptyNamespace:
-    let mut ns = fasteval2::EmptyNamespace;
+    let mut ns = fasteval3::EmptyNamespace;
 
-    let val = fasteval2::ez_eval(
+    let val = fasteval3::ez_eval(
         "1+2*3/4^5%6 + log(100K) + log(e(),100) + [3*(3-3)/3] + (2<3) && 1.23",    &mut ns)?;
     //    |            |      |    |   |          |               |   |
     //    |            |      |    |   |          |               |   boolean logic with short-circuit support
@@ -117,7 +117,7 @@ log(100K) = 5
 
 ## Safety
 
-`fasteval` is designed to evaluate untrusted expressions safely.  By
+`fasteval3` is designed to evaluate untrusted expressions safely.  By
 default, an expression can only perform math operations; there is no way
 for it to access other types of operations (like network or filesystem or
 external commands).  Additionally, we guard against malicious expressions:
@@ -128,8 +128,8 @@ external commands).  Additionally, we guard against malicious expressions:
 * Expressions with too many sub-expressions (greater than 64).
 
 All limits can be customized at parse time.  If any limits are exceeded,
-[`parse()`](https://docs.rs/fasteval/latest/fasteval/parser/struct.Parser.html#method.parse) will return an
-[Error](https://docs.rs/fasteval/latest/fasteval/error/enum.Error.html).
+[`parse()`](https://docs.rs/fasteval3/latest/fasteval3/parser/struct.Parser.html#method.parse) will return an
+[Error](https://docs.rs/fasteval3/latest/fasteval3/error/enum.Error.html).
 
 Note that it *is* possible for you (the developer) to define custom functions
 which might perform dangerous operations.  It is your responsibility to make
@@ -138,7 +138,7 @@ sure that all custom functionality is safe.
 
 ## Performance Benchmarks
 
-Here is a short summary of the performance benchmarks.  For a more complete report and anlysis, see the [official documentation](https://docs.rs/fasteval/#performance-benchmarks).
+Here is a short summary of the performance benchmarks.  For a more complete report and anlysis, see the [official documentation](https://docs.rs/fasteval3/#performance-benchmarks).
 
 ### Charts
 Note that the following charts use logarithmic scales.  Therefore, tiny
@@ -161,19 +161,19 @@ only other library in our test set that supports this mode):**
 
 ### Summary
 
-The impressive thing about these results is that `fasteval` consistently
+The impressive thing about these results is that `fasteval3` consistently
 achieves the fastest times across every benchmark and in every mode of
 operation (interpreted, compiled, and unsafe).  It's easy to create a
 design to claim the #1 spot in any one of these metrics by sacrificing
 performance in another, but it is difficult to create a design that can be
 #1 across-the-board.
 
-Because of the broad and robust performance advantages, `fasteval` is very
+Because of the broad and robust performance advantages, `fasteval3` is very
 likely to be an excellent choice for your dynamic evaluation needs.
 
 
 ## License
-`fasteval` is distributed under the terms the MIT license.
+`fasteval3` is distributed under the terms the MIT license.
 
-See [LICENSE](https://github.com/likebike/fasteval/blob/master/LICENSE) for details.
+See [LICENSE](https://github.com/likebike/fasteval3/blob/master/LICENSE) for details.
 
