@@ -1222,10 +1222,10 @@ mod internal_tests {
     #[test]
     fn rem_no_panic() {
         let mut v = vec![1u8, 2, 3];
-        assert_eq!(format!("{:?}", v), "[1, 2, 3]");
+        assert_eq!(format!("{v:?}"), "[1, 2, 3]");
         assert_eq!(remove_no_panic(&mut v, 1), Some(2));
         assert_eq!(remove_no_panic(&mut v, 10), None);
-        assert_eq!(format!("{:?}", v), "[1, 3]");
+        assert_eq!(format!("{v:?}"), "[1, 3]");
     }
 
     #[test]

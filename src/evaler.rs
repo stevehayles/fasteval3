@@ -585,7 +585,7 @@ impl Evaler for PrintFunc {
                 EStr(s) => out.push_str(&process_str(s)),
             }
         }
-        eprintln!("{}", out);
+        eprintln!("{out}");
 
         Ok(val)
     }

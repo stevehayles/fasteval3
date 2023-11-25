@@ -26,8 +26,8 @@ fn chk_ok(expr_str: &str, expect_compile_str: &str, expect_slab_str: &str, expec
         .from(&slab.ps);
     let instr = expr.compile(&slab.ps, &mut slab.cs, &mut EmptyNamespace);
 
-    assert_eq!(format!("{:?}", instr), expect_compile_str);
-    assert_eq!(format!("{:?}", slab), expect_slab_str);
+    assert_eq!(format!("{instr:?}"), expect_compile_str);
+    assert_eq!(format!("{slab:?}"), expect_slab_str);
 
     (|| -> Result<(), Error> {
         let mut ns = CachedCallbackNamespace::new(evalns_cb);

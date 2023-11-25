@@ -18,7 +18,7 @@ fn main() -> Result<(), fasteval3::Error> {
         // When working with compiled constant expressions, you can use the
         // eval_compiled*!() macros to save a function call:
         let val = fasteval3::eval_compiled!(compiled, &slab, &mut map);
-        eprintln!("sin({}°) = {}", deg, val);
+        eprintln!("sin({deg}°) = {val}");
     }
 
     Ok(())

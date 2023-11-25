@@ -38,7 +38,7 @@ fn main() -> Result<(), fasteval3::Error> {
     //                       IMul(...) represents the multiplication operator.
     //                       'C(0.017...)' represents a constant value of 0.017... .
     //                       IVar("deg") represents a variable named "deg".
-    assert_eq!(format!("{:?}", compiled), "IFuncSin(InstructionI(1))");
+    assert_eq!(format!("{compiled:?}"), "IFuncSin(InstructionI(1))");
     assert_eq!(
         format!("{:?}", slab.cs),
         r#"CompileSlab{ instrs:{ 0:IVar("deg"), 1:IMul(InstructionI(0), C(0.017453292519943295)) } }"#

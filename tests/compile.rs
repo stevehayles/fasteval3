@@ -25,21 +25,21 @@ fn slab_overflow() {
         Parser::new().parse("1 + 2 + -3 + ( +4 )", &mut slab.ps),
         Ok(ExpressionI(1))
     );
-    assert_eq!(format!("{:?}", slab),
+    assert_eq!(format!("{slab:?}"),
 "Slab{ exprs:{ 0:Expression { first: EConstant(4.0), pairs: [] }, 1:Expression { first: EConstant(1.0), pairs: [ExprPair(EAdd, EConstant(2.0)), ExprPair(EAdd, EConstant(-3.0)), ExprPair(EAdd, EUnaryOp(EParentheses(ExpressionI(0))))] } }, vals:{}, instrs:{} }");
 
     assert_eq!(
         Parser::new().parse("1 + 2 + -3 + ( ++4 )", &mut slab.ps),
         Ok(ExpressionI(1))
     );
-    assert_eq!(format!("{:?}", slab),
+    assert_eq!(format!("{slab:?}"),
 "Slab{ exprs:{ 0:Expression { first: EUnaryOp(EPos(ValueI(0))), pairs: [] }, 1:Expression { first: EConstant(1.0), pairs: [ExprPair(EAdd, EConstant(2.0)), ExprPair(EAdd, EConstant(-3.0)), ExprPair(EAdd, EUnaryOp(EParentheses(ExpressionI(0))))] } }, vals:{ 0:EConstant(4.0) }, instrs:{} }");
 
     assert_eq!(
         Parser::new().parse("1 + 2 + -3 + ( +++4 )", &mut slab.ps),
         Ok(ExpressionI(1))
     );
-    assert_eq!(format!("{:?}", slab),
+    assert_eq!(format!("{slab:?}"),
 "Slab{ exprs:{ 0:Expression { first: EUnaryOp(EPos(ValueI(1))), pairs: [] }, 1:Expression { first: EConstant(1.0), pairs: [ExprPair(EAdd, EConstant(2.0)), ExprPair(EAdd, EConstant(-3.0)), ExprPair(EAdd, EUnaryOp(EParentheses(ExpressionI(0))))] } }, vals:{ 0:EConstant(4.0), 1:EUnaryOp(EPos(ValueI(0))) }, instrs:{} }");
 
     assert_eq!(
@@ -57,7 +57,7 @@ fn basics() {
     let expr_ref = slab.ps.get_expr(expr_i);
     let instr = expr_ref.compile(&slab.ps, &mut slab.cs, &mut ns);
     assert_eq!(instr, IConst(9.0));
-    assert_eq!(format!("{:?}", slab),
+    assert_eq!(format!("{slab:?}"),
 "Slab{ exprs:{ 0:Expression { first: EConstant(3.0), pairs: [ExprPair(EMul, EConstant(3.0)), ExprPair(ESub, EConstant(3.0)), ExprPair(EDiv, EConstant(3.0)), ExprPair(EAdd, EConstant(1.0))] } }, vals:{}, instrs:{} }");
 
     (|| -> Result<(), Error> {
@@ -189,7 +189,7 @@ fn comp_chk_str(expr_str: &str, expect_instr: &str, expect_fmt: &str, expect_eva
         .from(&slab.ps);
     let instr = expr.compile(&slab.ps, &mut slab.cs, &mut EmptyNamespace);
 
-    assert_eq!(format!("{:?}", instr), expect_instr);
+    assert_eq!(format!("{instr:?}"), expect_instr);
     assert_eq!(format!("{:?}", slab.cs), expect_fmt);
 
     let mut ns = CachedCallbackNamespace::new(|name, args| match name {

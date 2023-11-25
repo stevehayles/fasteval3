@@ -108,7 +108,7 @@ fn repl() {
         let expr_ref = match parser.parse(&line, &mut slab.ps) {
             Ok(expr_i) => slab.ps.get_expr(expr_i),
             Err(err) => {
-                eprintln!("parse error: {}", err);
+                eprintln!("parse error: {err}");
                 continue;
             }
         };
@@ -116,12 +116,12 @@ fn repl() {
         let ans = match expr_ref.eval(&slab, &mut ns_stack) {
             Ok(val) => val,
             Err(err) => {
-                eprintln!("eval error: {}", err);
+                eprintln!("eval error: {err}");
                 continue;
             }
         };
 
-        println!("{}", ans);
+        println!("{ans}");
         ns_stack.last_mut().unwrap().insert(ans_key, ans);
     }
 

@@ -561,7 +561,7 @@ fn evalns_cb_ownership() {
 fn custom_func() {
     let mut slab = Slab::new();
     let mut ns = CachedCallbackNamespace::new(|name, args| {
-        eprintln!("In CB: {}", name);
+        eprintln!("In CB: {name}");
         match name {
             "x" => Some(1.0),
             "y" => Some(2.0),

@@ -397,7 +397,7 @@ where
             write!(f, ",")?;
         }
         nonempty = true;
-        write!(f, " {}:{:?}", i, x)?;
+        write!(f, " {i}:{x:?}")?;
     }
     if nonempty {
         write!(f, " ")?;
