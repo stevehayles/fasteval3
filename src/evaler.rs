@@ -210,7 +210,7 @@ impl Evaler for Expression {
         let mut vals = Vec::<f64>::with_capacity(self.pairs.len() + 1);
         let mut ops = Vec::<BinaryOp>::with_capacity(self.pairs.len());
         vals.push(self.first.eval(slab, ns)?);
-        for pair in self.pairs.iter() {
+        for pair in &self.pairs {
             ops.push(pair.0);
             vals.push(pair.1.eval(slab, ns)?);
         }
@@ -508,7 +508,7 @@ impl Evaler for StdFunc {
             } => {
                 let mut min = get_expr!(slab.ps, first_i).eval(slab, ns)?;
                 let mut saw_nan = min.is_nan();
-                for x_i in rest.iter() {
+                for x_i in rest {
                     min = min.min(get_expr!(slab.ps, x_i).eval(slab, ns)?);
                     saw_nan = saw_nan || min.is_nan();
                 }
@@ -524,7 +524,7 @@ impl Evaler for StdFunc {
             } => {
                 let mut max = get_expr!(slab.ps, first_i).eval(slab, ns)?;
                 let mut saw_nan = max.is_nan();
-                for x_i in rest.iter() {
+                for x_i in rest {
                     max = max.max(get_expr!(slab.ps, x_i).eval(slab, ns)?);
                     saw_nan = saw_nan || max.is_nan();
                 }

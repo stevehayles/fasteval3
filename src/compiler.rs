@@ -215,14 +215,14 @@ impl<'s> ExprSlice<'s> {
     }
     fn from_expr(expr: &Expression) -> ExprSlice<'_> {
         let mut sl = ExprSlice::new(&expr.first);
-        for exprpairref in expr.pairs.iter() {
+        for exprpairref in &expr.pairs {
             sl.pairs.push(exprpairref)
         }
         sl
     }
     fn split(&self, bop: BinaryOp, dst: &mut Vec<ExprSlice<'s>>) {
         dst.push(ExprSlice::new(self.first));
-        for exprpair in self.pairs.iter() {
+        for exprpair in &self.pairs {
             if exprpair.0 == bop {
                 dst.push(ExprSlice::new(&exprpair.1));
             } else if let Some(cur) = dst.last_mut() {
@@ -237,7 +237,7 @@ impl<'s> ExprSlice<'s> {
         opdst: &mut Vec<&'s BinaryOp>,
     ) {
         xsdst.push(ExprSlice::new(self.first));
-        for exprpair in self.pairs.iter() {
+        for exprpair in &self.pairs {
             if search.contains(&exprpair.0) {
                 xsdst.push(ExprSlice::new(&exprpair.1));
                 opdst.push(&exprpair.0);
@@ -448,7 +448,7 @@ impl Compiler for ExprSlice<'_> {
             Some(p0) => p0.0,
             None => return self.first.compile(pslab, cslab, ns),
         };
-        for exprpair in self.pairs.iter() {
+        for exprpair in &self.pairs {
             if exprpair.0 < lowest_op {
                 lowest_op = exprpair.0
             }
@@ -507,7 +507,7 @@ impl Compiler for ExprSlice<'_> {
                 self.split(EOR, &mut xss);
                 let mut out = IConst(0.0);
                 let mut out_set = false;
-                for xs in xss.iter() {
+                for xs in &xss {
                     let instr = xs.compile(pslab, cslab, ns);
                     if out_set {
                         out = IOR(cslab.push_instr(out), instr_to_ic!(cslab, instr));
@@ -527,7 +527,7 @@ impl Compiler for ExprSlice<'_> {
                 self.split(EAND, &mut xss);
                 let mut out = IConst(1.0);
                 let mut out_set = false;
-                for xs in xss.iter() {
+                for xs in &xss {
                     let instr = xs.compile(pslab, cslab, ns);
                     if let IConst(c) = instr {
                         if f64_eq!(c, 0.0) {
@@ -656,7 +656,7 @@ impl Compiler for ExprSlice<'_> {
                 self.split(EMod, &mut xss);
                 let mut out = IConst(0.0);
                 let mut out_set = false;
-                for xs in xss.iter() {
+                for xs in &xss {
                     let instr = xs.compile(pslab, cslab, ns);
                     if out_set {
                         if let IConst(dividend) = out {

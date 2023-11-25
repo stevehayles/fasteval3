@@ -172,7 +172,7 @@ use ExpressionOrString::{EExpr, EStr};
 impl Clone for PrintFunc {
     fn clone(&self) -> Self {
         let mut vec = Vec::<ExpressionOrString>::with_capacity(self.0.len());
-        for x_or_s in self.0.iter() {
+        for x_or_s in &self.0 {
             vec.push(match x_or_s {
                 EExpr(i) => EExpr(*i),
                 EStr(s) => EStr(s.clone()),
