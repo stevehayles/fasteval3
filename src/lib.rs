@@ -614,6 +614,7 @@
 // #![cfg_attr(feature="nightly", feature(slice_index_methods))]
 
 pub mod error;
+pub(crate) mod util;
 #[macro_use]
 pub mod slab;
 pub mod parser;
