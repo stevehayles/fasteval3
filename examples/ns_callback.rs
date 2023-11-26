@@ -11,7 +11,7 @@ fn main() -> Result<(), fasteval3::Error> {
     };
 
     let val = fasteval3::ez_eval("x * (x + 1)", &mut cb)?;
-    assert_eq!(val, 6.0);
+    assert!((val - 6.0).abs() < f64::EPSILON);
     assert_eq!(num_lookups, 2); // Notice that 'x' was looked-up twice.
 
     Ok(())

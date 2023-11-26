@@ -19,7 +19,7 @@ fn main() -> Result<(), fasteval3::Error> {
 
         fasteval3::ez_eval("x * (x + 1)", &mut ns)?
     };
-    assert_eq!(val, 6.0);
+    assert!((val - 6.0).abs() < f64::EPSILON);
     assert_eq!(num_lookups, 1); // Notice that only 1 lookup occurred.
                                 // The second 'x' value was cached.
 

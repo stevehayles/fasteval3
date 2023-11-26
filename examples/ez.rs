@@ -20,7 +20,7 @@ fn main() -> Result<(), fasteval3::Error> {
     //    |            many built-in functions: print, int, ceil, floor, abs, sign, log, round, min, max, sin, asin, ...
     //    standard binary operators
 
-    assert_eq!(val, 1.23);
+    assert!((val - 1.23).abs() < f64::EPSILON);
 
     Ok(())
 }

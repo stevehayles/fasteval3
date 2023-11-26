@@ -18,6 +18,10 @@ use fasteval3::{
     Evaler, ExpressionI, InstructionI, Parser, Slab,
 };
 
+pub(crate) mod common;
+
+use common::assert_error_margin;
+
 #[test]
 fn slab_overflow() {
     let mut slab = Slab::with_capacity(2);
@@ -61,8 +65,8 @@ fn basics() {
 "Slab{ exprs:{ 0:Expression { first: EConstant(3.0), pairs: [ExprPair(EMul, EConstant(3.0)), ExprPair(ESub, EConstant(3.0)), ExprPair(EDiv, EConstant(3.0)), ExprPair(EAdd, EConstant(1.0))] } }, vals:{}, instrs:{} }");
 
     (|| -> Result<(), Error> {
-        assert_eq!(eval_compiled_ref!(&instr, &slab, &mut ns), 9.0);
-        assert_eq!(eval_compiled_ref!(&instr, &slab, &mut ns), 9.0);
+        assert_error_margin(eval_compiled_ref!(&instr, &slab, &mut ns), 9.0);
+        assert_error_margin(eval_compiled_ref!(&instr, &slab, &mut ns), 9.0);
         Ok(())
     })()
     .unwrap();
@@ -102,10 +106,10 @@ fn comp_chk(expr_str: &str, expect_instr: Instruction, expect_fmt: &str, expect_
     assert_eq!(format!("{:?}", slab.cs), expect_fmt);
 
     (|| -> Result<(), Error> {
-        assert_eq!(eval_compiled_ref!(&instr, &slab, &mut ns), expect_eval);
+        assert_error_margin(eval_compiled_ref!(&instr, &slab, &mut ns), expect_eval);
 
         // Make sure Instruction eval matches normal eval:
-        assert_eq!(
+        assert_error_margin(
             eval_compiled_ref!(&instr, &slab, &mut ns),
             expr.eval(&slab, &mut ns).unwrap()
         );
@@ -210,10 +214,10 @@ fn comp_chk_str(expr_str: &str, expect_instr: &str, expect_fmt: &str, expect_eva
             assert!(eval_compiled_ref!(&instr, &slab, &mut ns).is_nan());
             assert!(expr.eval(&slab, &mut ns).unwrap().is_nan());
         } else {
-            assert_eq!(eval_compiled_ref!(&instr, &slab, &mut ns), expect_eval);
+            assert_error_margin(eval_compiled_ref!(&instr, &slab, &mut ns), expect_eval);
 
             // Make sure Instruction eval matches normal eval:
-            assert_eq!(
+            assert_error_margin(
                 eval_compiled_ref!(&instr, &slab, &mut ns),
                 expr.eval(&slab, &mut ns).unwrap()
             );
@@ -1386,13 +1390,13 @@ fn eval_macro() {
             .unwrap()
             .from(&slab.ps);
         let instr = expr.compile(&slab.ps, &mut slab.cs, &mut ns);
-        assert_eq!(eval_compiled_ref!(&instr, &slab, &mut ns), 5.0);
+        assert!((eval_compiled_ref!(&instr, &slab, &mut ns) - 5.0).abs() < f64::EPSILON);
         (|| -> Result<(), Error> {
-            assert_eq!(eval_compiled_ref!(&instr, &slab, &mut ns), 5.0);
+            assert!((eval_compiled_ref!(&instr, &slab, &mut ns) - 5.0).abs() < f64::EPSILON);
             Ok(())
         })()
         .unwrap();
-        assert_eq!(eval_compiled!(instr, &slab, &mut ns), 5.0);
+        assert!((eval_compiled!(instr, &slab, &mut ns) - 5.0).abs() < f64::EPSILON);
 
         #[cfg(feature = "unsafe-vars")]
         {

@@ -1,6 +1,10 @@
 // This is a battery of unit tests taken directly from my original Go project.
 // I know the test names suck, but I'm not going to change them because I want line-for-line compatibility with the Go tests.
 
+pub(crate) mod common;
+
+use common::assert_error_margin;
+
 use fasteval3::{
     CachedCallbackNamespace, EmptyNamespace, Error, Evaler, ExpressionI, Parser, Slab,
 };
@@ -166,86 +170,78 @@ fn aaa_test_d1() {
 
 #[test]
 fn aaa_test_e() {
-    assert_eq!(do_eval("3"), 3.0);
-    assert_eq!(do_eval("3+4+5+6"), 18.0);
-    assert_eq!(do_eval("3-4-5-6"), -12.0);
-    assert_eq!(do_eval("3*4*5*6"), 360.0);
-    assert_eq!(do_eval("3/4/5/6"), 0.024_999_999_999_999_998); // Fragile!
-    assert_eq!(do_eval("2^3^4"), 2_417_851_639_229_258_349_412_352.0);
-    assert_eq!(do_eval("3*3-3/3"), 8.0);
-    assert_eq!(do_eval("(1+1)^3"), 8.0);
-    assert_eq!(do_eval("(1+(-1)^4)^3"), 8.0);
-    assert_eq!(do_eval("(1+1)^(1+1+1)"), 8.0);
-    assert_eq!(do_eval("(8^(1/3))^(3)"), 8.0); // Fragile!  Go is 7.999999999999997
-    assert_eq!(do_eval("round( (8^(1/3))^(3) )"), 8.0);
+    assert_error_margin(do_eval("3"), 3.0);
+    assert_error_margin(do_eval("3+4+5+6"), 18.0);
+    assert_error_margin(do_eval("3-4-5-6"), -12.0);
+    assert_error_margin(do_eval("3*4*5*6"), 360.0);
+    assert_error_margin(do_eval("3/4/5/6"), 0.024_999_999_999_999_998); // Fragile!
+    assert_error_margin(do_eval("2^3^4"), 2_417_851_639_229_258_349_412_352.0);
+    assert_error_margin(do_eval("3*3-3/3"), 8.0);
+    assert_error_margin(do_eval("(1+1)^3"), 8.0);
+    assert_error_margin(do_eval("(1+(-1)^4)^3"), 8.0);
+    assert_error_margin(do_eval("(1+1)^(1+1+1)"), 8.0);
+    assert_error_margin(do_eval("(8^(1/3))^(3)"), 8.0); // Fragile!  Go is 7.999999999999997 
+    assert_error_margin(do_eval("round( (8^(1/3))^(3) )"), 8.0);
 
-    assert_eq!(do_eval("5%2"), 1.0);
-    assert_eq!(do_eval("5%3"), 2.0);
-    assert_eq!(do_eval("5.1%3.2"), 1.899_999_999_999_999_5);
-    assert_eq!(do_eval("5.1%2.5"), 0.099_999_999_999_999_64);
-    assert_eq!(do_eval("5.1%2.499999999"), 0.100_000_001_999_999_81);
-    assert_eq!(do_eval("-5%2"), -1.0);
-    assert_eq!(do_eval("-5%3"), -2.0);
-    assert_eq!(do_eval("-5.1%3.2"), -1.899_999_999_999_999_5);
-    assert_eq!(do_eval("-5.1%2.5"), -0.099_999_999_999_999_64);
-    assert_eq!(do_eval("-5.1%2.499999999"), -0.100_000_001_999_999_81);
-    assert_eq!(do_eval("5%-2"), 1.0);
-    assert_eq!(do_eval("5%-3"), 2.0);
-    assert_eq!(do_eval("5.1%-3.2"), 1.899_999_999_999_999_5);
-    assert_eq!(do_eval("5.1%-2.5"), 0.099_999_999_999_999_64);
-    assert_eq!(do_eval("5.1%-2.499999999"), 0.100_000_001_999_999_81);
-    assert_eq!(do_eval("int(5)%int(2)"), 1.0);
-    assert_eq!(do_eval("int(5)%int(3)"), 2.0);
-    assert_eq!(do_eval("int(5.1)%round(3.2)"), 2.0);
-    assert_eq!(do_eval("int(5.1)%round(2.5)"), 2.0);
-    assert_eq!(do_eval("int(5.1)%round(2.499999999)"), 1.0);
-    assert_eq!(do_eval("int(5)%int(-2)"), 1.0);
-    assert_eq!(do_eval("int(5)%int(-3)"), 2.0);
-    assert_eq!(do_eval("int(5.1)%round(-3.2)"), 2.0);
-    assert_eq!(do_eval("int(5.1)%round(-2.5)"), 2.0);
-    assert_eq!(do_eval("int(5.1)%round(-2.499999999)"), 1.0);
+    assert_error_margin(do_eval("5%2"), 1.0);
+    assert_error_margin(do_eval("5%3"), 2.0);
+    assert_error_margin(do_eval("5.1%3.2"), 1.899_999_999_999_999_5);
+    assert_error_margin(do_eval("5.1%2.5"), 0.099_999_999_999_999_64);
+    assert_error_margin(do_eval("5.1%2.499999999"), 0.100_000_001_999_999_81);
+    assert_error_margin(do_eval("-5%2"), -1.0);
+    assert_error_margin(do_eval("-5%3"), -2.0);
+    assert_error_margin(do_eval("-5.1%3.2"), -1.899_999_999_999_999_5);
+    assert_error_margin(do_eval("-5.1%2.5"), -0.099_999_999_999_999_64);
+    assert_error_margin(do_eval("-5.1%2.499999999"), -0.100_000_001_999_999_81);
+    assert_error_margin(do_eval("5%-2"), 1.0);
+    assert_error_margin(do_eval("5%-3"), 2.0);
+    assert_error_margin(do_eval("5.1%-3.2"), 1.899_999_999_999_999_5);
+    assert_error_margin(do_eval("5.1%-2.5"), 0.099_999_999_999_999_64);
+    assert_error_margin(do_eval("5.1%-2.499999999"), 0.100_000_001_999_999_81);
+    assert_error_margin(do_eval("int(5)%int(2)"), 1.0);
+    assert_error_margin(do_eval("int(5)%int(3)"), 2.0);
+    assert_error_margin(do_eval("int(5.1)%round(3.2)"), 2.0);
+    assert_error_margin(do_eval("int(5.1)%round(2.5)"), 2.0);
+    assert_error_margin(do_eval("int(5.1)%round(2.499999999)"), 1.0);
+    assert_error_margin(do_eval("int(5)%int(-2)"), 1.0);
+    assert_error_margin(do_eval("int(5)%int(-3)"), 2.0);
+    assert_error_margin(do_eval("int(5.1)%round(-3.2)"), 2.0);
+    assert_error_margin(do_eval("int(5.1)%round(-2.5)"), 2.0);
+    assert_error_margin(do_eval("int(5.1)%round(-2.499999999)"), 1.0);
 
-    assert_eq!(do_eval("int(123.456/78)*78 + 123.456%78"), 123.456);
-    assert_eq!(do_eval("int(-123.456/78)*78 + -123.456%78"), -123.456);
-    assert_eq!(do_eval("int(-123.456/-78)*-78 + -123.456%-78"), -123.456);
+    assert_error_margin(do_eval("int(123.456/78)*78 + 123.456%78"), 123.456);
+    assert_error_margin(do_eval("int(-123.456/78)*78 + -123.456%78"), -123.456);
+    assert_error_margin(do_eval("int(-123.456/-78)*-78 + -123.456%-78"), -123.456);
 }
 
 #[test]
 fn aaa_test_f() {
     let mut slab = Slab::new();
 
-    assert_eq!(
-        ok_parse("(x)^(3)", &mut slab)
-            .from(&slab.ps)
-            .eval(
-                &slab,
-                &mut CachedCallbackNamespace::new(|n, _| {
-                    [("x", 2.0)]
-                        .iter()
-                        .cloned()
-                        .collect::<BTreeMap<&str, f64>>()
-                        .get(n)
-                        .cloned()
-                })
-            )
-            .unwrap(),
+    assert_error_margin(ok_parse("(x)^(3)", &mut slab)
+        .from(&slab.ps)
+        .eval(&slab, &mut CachedCallbackNamespace::new(|n, _| {
+            [("x", 2.0)]
+                .iter()
+                .cloned()
+                .collect::<BTreeMap<&str, f64>>()
+                .get(n)
+                .cloned()
+        })
+    ).unwrap(),
         8.0
     );
-    assert_eq!(
-        ok_parse("(x)^(y)", &mut slab)
-            .from(&slab.ps)
-            .eval(
-                &slab,
-                &mut CachedCallbackNamespace::new(|n, _| {
-                    [("x", 2.0), ("y", 3.0)]
-                        .iter()
-                        .cloned()
-                        .collect::<BTreeMap<&str, f64>>()
-                        .get(n)
-                        .cloned()
-                })
-            )
-            .unwrap(),
+    assert_error_margin(ok_parse("(x)^(y)", &mut slab)
+        .from(&slab.ps)
+        .eval(&slab, &mut CachedCallbackNamespace::new(|n, _| {
+            [("x", 2.0), ("y", 3.0)]
+                .iter()
+                .cloned()
+                .collect::<BTreeMap<&str, f64>>()
+                .get(n)
+                .cloned()
+        })
+    ).unwrap(),
         8.0
     );
     assert_eq!(
@@ -289,81 +285,81 @@ fn aaa_test_f() {
 
 #[test]
 fn aaa_test_g() {
-    assert_eq!(do_eval("2k"), 2000.0);
-    assert_eq!(do_eval("2K"), 2000.0);
-    assert_eq!(do_eval("2.10M"), 2.1e+06);
-    assert_eq!(do_eval("2.10G"), 2.1e+09);
-    assert_eq!(do_eval("2.10T"), 2.1e+12);
-    assert_eq!(do_eval("2.10m"), 2.1e-03);
-    assert_eq!(do_eval("2.10u"), 2.1e-06);
-    assert_eq!(do_eval("2.10µ"), 2.1e-06);
-    assert_eq!(do_eval("2.10n"), 2.1e-09);
-    assert_eq!(do_eval("2.10p"), 2.1e-12);
+    assert_error_margin(do_eval("2k"), 2000.0);
+    assert_error_margin(do_eval("2K"), 2000.0);
+    assert_error_margin(do_eval("2.10M"), 2.1e+06);
+    assert_error_margin(do_eval("2.10G"), 2.1e+09);
+    assert_error_margin(do_eval("2.10T"), 2.1e+12);
+    assert_error_margin(do_eval("2.10m"), 2.1e-03);
+    assert_error_margin(do_eval("2.10u"), 2.1e-06);
+    assert_error_margin(do_eval("2.10µ"), 2.1e-06);
+    assert_error_margin(do_eval("2.10n"), 2.1e-09);
+    assert_error_margin(do_eval("2.10p"), 2.1e-12);
 }
 
 #[test]
 fn aaa_test_h() {
-    assert_eq!(do_eval("!100"), 0.0);
-    assert_eq!(do_eval("!0"), 1.0);
-    assert_eq!(do_eval("!(1-1)"), 1.0);
+    assert_error_margin(do_eval("!100"), 0.0);
+    assert_error_margin(do_eval("!0"), 1.0);
+    assert_error_margin(do_eval("!(1-1)"), 1.0);
 }
 
 #[test]
 fn aaa_test_i() {
-    assert_eq!(do_eval("1<2"), 1.0);
-    assert_eq!(do_eval("(1+2)<2"), 0.0);
-    assert_eq!(do_eval("2<=2"), 1.0);
-    assert_eq!(do_eval("2<=(2-0.1)"), 0.0);
-    assert_eq!(do_eval("2k==2K"), 1.0);
-    assert_eq!(do_eval("2k==2000"), 1.0);
-    assert_eq!(do_eval("2k==2000.0000001"), 0.0);
-    assert_eq!(do_eval("2k!=2000.0000001"), 1.0);
-    assert_eq!(do_eval("2k!=3G"), 1.0);
-    assert_eq!(do_eval("1000*2k!=2M"), 0.0);
-    assert_eq!(do_eval("3>=2"), 1.0);
-    assert_eq!(do_eval("3>=2^2"), 0.0);
-    assert_eq!(do_eval("3>2"), 1.0);
-    assert_eq!(do_eval("3>2^2"), 0.0);
-    assert_eq!(do_eval("1 or 1"), 1.0);
-    assert_eq!(do_eval("1 || 1"), 1.0);
-    assert_eq!(do_eval("1 or 0"), 1.0);
-    assert_eq!(do_eval("1 || 0"), 1.0);
-    assert_eq!(do_eval("0 or 1"), 1.0);
-    assert_eq!(do_eval("0 || 1"), 1.0);
-    assert_eq!(do_eval("0 or 0"), 0.0);
-    assert_eq!(do_eval("0 || 0"), 0.0);
-    assert_eq!(do_eval("0 and 0"), 0.0);
-    assert_eq!(do_eval("0 && 0"), 0.0);
-    assert_eq!(do_eval("0 and 1"), 0.0);
-    assert_eq!(do_eval("0 && 1"), 0.0);
-    assert_eq!(do_eval("1 and 0"), 0.0);
-    assert_eq!(do_eval("1 && 0"), 0.0);
-    assert_eq!(do_eval("1 and 1"), 1.0);
-    assert_eq!(do_eval("1 && 1"), 1.0);
-    assert_eq!(do_eval("(2k*1k==2M and 3/2<2 or 0^2) and !(1-1)"), 1.0);
-    assert_eq!(do_eval("(2k*1k==2M && 3/2<2 || 0^2) && !(1-1)"), 1.0);
+    assert_error_margin(do_eval("1<2"), 1.0);
+    assert_error_margin(do_eval("(1+2)<2"), 0.0);
+    assert_error_margin(do_eval("2<=2"), 1.0);
+    assert_error_margin(do_eval("2<=(2-0.1)"), 0.0);
+    assert_error_margin(do_eval("2k==2K"), 1.0);
+    assert_error_margin(do_eval("2k==2000"), 1.0);
+    assert_error_margin(do_eval("2k==2000.0000001"), 0.0);
+    assert_error_margin(do_eval("2k!=2000.0000001"), 1.0);
+    assert_error_margin(do_eval("2k!=3G"), 1.0);
+    assert_error_margin(do_eval("1000*2k!=2M"), 0.0);
+    assert_error_margin(do_eval("3>=2"), 1.0);
+    assert_error_margin(do_eval("3>=2^2"), 0.0);
+    assert_error_margin(do_eval("3>2"), 1.0);
+    assert_error_margin(do_eval("3>2^2"), 0.0);
+    assert_error_margin(do_eval("1 or 1"), 1.0);
+    assert_error_margin(do_eval("1 || 1"), 1.0);
+    assert_error_margin(do_eval("1 or 0"), 1.0);
+    assert_error_margin(do_eval("1 || 0"), 1.0);
+    assert_error_margin(do_eval("0 or 1"), 1.0);
+    assert_error_margin(do_eval("0 || 1"), 1.0);
+    assert_error_margin(do_eval("0 or 0"), 0.0);
+    assert_error_margin(do_eval("0 || 0"), 0.0);
+    assert_error_margin(do_eval("0 and 0"), 0.0);
+    assert_error_margin(do_eval("0 && 0"), 0.0);
+    assert_error_margin(do_eval("0 and 1"), 0.0);
+    assert_error_margin(do_eval("0 && 1"), 0.0);
+    assert_error_margin(do_eval("1 and 0"), 0.0);
+    assert_error_margin(do_eval("1 && 0"), 0.0);
+    assert_error_margin(do_eval("1 and 1"), 1.0);
+    assert_error_margin(do_eval("1 && 1"), 1.0);
+    assert_error_margin(do_eval("(2k*1k==2M and 3/2<2 or 0^2) and !(1-1)"), 1.0);
+    assert_error_margin(do_eval("(2k*1k==2M && 3/2<2 || 0^2) && !(1-1)"), 1.0);
 
     // Ternary ability:
-    assert_eq!(do_eval("2 and 3"), 3.0);
-    assert_eq!(do_eval("2 && 3"), 3.0);
-    assert_eq!(do_eval("2 or 3"), 2.0);
-    assert_eq!(do_eval("2 || 3"), 2.0);
-    assert_eq!(do_eval("2 and 3 or 4"), 3.0);
-    assert_eq!(do_eval("2 && 3 || 4"), 3.0);
-    assert_eq!(do_eval("0 and 3 or 4"), 4.0);
-    assert_eq!(do_eval("0 && 3 || 4"), 4.0);
-    assert_eq!(do_eval("2 and 0 or 4"), 4.0);
-    assert_eq!(do_eval("2 && 0 || 4"), 4.0);
-    assert_eq!(do_eval("0 and 3 or 0 and 5 or 6"), 6.0);
-    assert_eq!(do_eval("0 && 3 || 0 && 5 || 6"), 6.0);
+    assert_error_margin(do_eval("2 and 3"), 3.0);
+    assert_error_margin(do_eval("2 && 3"), 3.0);
+    assert_error_margin(do_eval("2 or 3"), 2.0);
+    assert_error_margin(do_eval("2 || 3"), 2.0);
+    assert_error_margin(do_eval("2 and 3 or 4"), 3.0);
+    assert_error_margin(do_eval("2 && 3 || 4"), 3.0);
+    assert_error_margin(do_eval("0 and 3 or 4"), 4.0);
+    assert_error_margin(do_eval("0 && 3 || 4"), 4.0);
+    assert_error_margin(do_eval("2 and 0 or 4"), 4.0);
+    assert_error_margin(do_eval("2 && 0 || 4"), 4.0);
+    assert_error_margin(do_eval("0 and 3 or 0 and 5 or 6"), 6.0);
+    assert_error_margin(do_eval("0 && 3 || 0 && 5 || 6"), 6.0);
 }
 
 #[test]
 fn aaa_test_j() {
-    assert_eq!(do_eval("2/3*3/2"), 1.0);
-    assert_eq!(do_eval("2%3*3/2"), 3.0);
-    assert_eq!(do_eval("3^2%2^2*2^2/3^2"), 0.444_444_444_444_444_4);
-    assert_eq!(do_eval("1+2-3+4"), 4.0);
+    assert_error_margin(do_eval("2/3*3/2"), 1.0);
+    assert_error_margin(do_eval("2%3*3/2"), 3.0);
+    assert_error_margin(do_eval("3^2%2^2*2^2/3^2"), 0.444_444_444_444_444_4);
+    assert_error_margin(do_eval("1+2-3+4"), 4.0);
 }
 
 #[test]

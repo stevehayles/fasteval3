@@ -49,9 +49,9 @@ use crate::Error;
 macro_rules! bool_to_f64 {
     ($b:expr) => {
         if $b {
-            1.0
+            1.0_f64
         } else {
-            0.0
+            0.0_f64
         }
     };
 }

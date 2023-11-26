@@ -1,3 +1,7 @@
+pub(crate) mod common;
+
+use common::assert_error_margin;
+
 use fasteval3::ez_eval;
 
 #[test]
@@ -5,7 +9,7 @@ fn empty() {
     let mut ns = fasteval3::EmptyNamespace;
 
     let val = ez_eval("1 + 1", &mut ns).unwrap();
-    assert_eq!(val, 2.0);
+    assert_error_margin(val, 2.0);
 }
 
 #[test]
@@ -16,7 +20,7 @@ fn str_to_f64() {
         ns.insert(String::from("b"), 2.22);
 
         let val = ez_eval("a + b + 1", &mut ns).unwrap();
-        assert_eq!(val, 4.33);
+        assert_error_margin(val, 4.33);
     }
 
     {
@@ -25,7 +29,7 @@ fn str_to_f64() {
         ns.insert("b", 2.22);
 
         let val = ez_eval("a + b + 1", &mut ns).unwrap();
-        assert_eq!(val, 4.33);
+        assert_error_margin(val, 4.33);
     }
 }
 
@@ -37,7 +41,7 @@ fn str_to_cb() {
         ns.insert(String::from("b"), Box::new(|args| args[0] * 2.0));
 
         let val = ez_eval("a(1.11) + b(1.11) + 1", &mut ns).unwrap();
-        assert_eq!(val, 4.33);
+        assert_error_margin(val, 4.33);
     }
 
     {
@@ -46,7 +50,7 @@ fn str_to_cb() {
         ns.insert("b", Box::new(|args| args[0] * 2.0));
 
         let val = ez_eval("a(1.11) + b(1.11) + 1", &mut ns).unwrap();
-        assert_eq!(val, 4.33);
+        assert_error_margin(val, 4.33);
     }
 }
 
@@ -59,19 +63,19 @@ fn layered_str_to_f64() {
     ns.push(layer0);
 
     let val = ez_eval("a + b + 1", &mut ns).unwrap();
-    assert_eq!(val, 4.33);
+    assert_error_margin(val, 4.33);
 
     let mut layer1 = fasteval3::StringToF64Namespace::new();
     layer1.insert(String::from("a"), 11.11);
     ns.push(layer1);
 
     let val = ez_eval("a + b + 1", &mut ns).unwrap();
-    assert_eq!(val, 14.33);
+    assert_error_margin(val, 14.33);
 
     ns.pop();
 
     let val = ez_eval("a + b + 1", &mut ns).unwrap();
-    assert_eq!(val, 4.33);
+    assert_error_margin(val, 4.33);
 }
 
 #[test]
@@ -84,7 +88,7 @@ fn cb() {
     };
 
     let val = ez_eval("a + b + 1", &mut ns).unwrap();
-    assert_eq!(val, 4.33);
+    assert_error_margin(val, 4.33);
 }
 
 #[test]
@@ -100,7 +104,7 @@ fn cached_cb() {
     });
 
     let val = ez_eval("a + b + 1", &mut ns).unwrap();
-    assert_eq!(val, 4.33);
+    assert_error_margin(val, 4.33);
     ez_eval("a + b + 1", &mut ns).unwrap();
     ez_eval("a + b + 1", &mut ns).unwrap();
     ez_eval("a + b + 1", &mut ns).unwrap();
@@ -138,5 +142,5 @@ fn custom_vector_funcs() {
     );
 
     let val = ez_eval("vec_sum(vec_store(1.1, x, 3.3)) + vec_sum(0)", &mut ns).unwrap();
-    assert_eq!(val, 12.8);
+    assert_error_margin(val, 12.8);
 }

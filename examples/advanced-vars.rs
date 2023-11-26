@@ -30,7 +30,7 @@ fn main() -> Result<(), fasteval3::Error> {
     //                           |   variables are like custom functions with zero args
     //                           custom function
 
-    assert_eq!(val, 16.1);
+    assert!((val - 16.1).abs() < f64::EPSILON);
 
     // Let's explore some of the hidden complexities of variables:
     //

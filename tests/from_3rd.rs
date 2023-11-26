@@ -31,12 +31,12 @@ fn chk_ok(expr_str: &str, expect_compile_str: &str, expect_slab_str: &str, expec
 
     (|| -> Result<(), Error> {
         let mut ns = CachedCallbackNamespace::new(evalns_cb);
-        assert_eq!(eval_compiled_ref!(&instr, &slab, &mut ns), expect_eval);
+        assert!((eval_compiled_ref!(&instr, &slab, &mut ns) - expect_eval).abs() < f64::EPSILON);
 
         // Make sure Instruction eval matches normal eval:
-        assert_eq!(
-            eval_compiled_ref!(&instr, &slab, &mut ns),
-            expr.eval(&slab, &mut ns).unwrap()
+        assert!(
+            (eval_compiled_ref!(&instr, &slab, &mut ns) - 
+            expr.eval(&slab, &mut ns).unwrap()).abs() < f64::EPSILON
         );
 
         Ok(())

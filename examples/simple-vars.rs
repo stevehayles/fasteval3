@@ -11,7 +11,7 @@ fn main() -> Result<(), fasteval3::Error> {
     //                                 |
     //                                 prints "y: 2" to stderr and then evaluates to 2.0
 
-    assert_eq!(val, 6.0);
+    assert!((val - 6.0).abs() < f64::EPSILON);
 
     Ok(())
 }

@@ -9,7 +9,7 @@ fn main() -> Result<(), fasteval3::Error> {
     let mut layers: Vec<BTreeMap<String, f64>> = vec![layer1];
 
     let val = fasteval3::ez_eval("x * y", &mut layers)?;
-    assert_eq!(val, 6.0);
+    assert!((val - 6.0).abs() < f64::EPSILON);
 
     // Let's add another layer which shadows the previous one:
     let mut layer2 = BTreeMap::new();
@@ -17,13 +17,13 @@ fn main() -> Result<(), fasteval3::Error> {
     layers.push(layer2);
 
     let val = fasteval3::ez_eval("x * y", &mut layers)?;
-    assert_eq!(val, 9.0);
+    assert!((val - 9.0).abs() < f64::EPSILON);
 
     // Remove the top layer and we'll be back to what we had before:
     layers.pop();
 
     let val = fasteval3::ez_eval("x * y", &mut layers)?;
-    assert_eq!(val, 6.0);
+    assert!((val - 6.0).abs() < f64::EPSILON);
 
     Ok(())
 }

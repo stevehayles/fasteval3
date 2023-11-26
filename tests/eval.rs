@@ -13,24 +13,22 @@ fn eval() {
     ns.insert(String::from("z"), 3.0);
 
     // Sanity check:
-    assert_eq!(
-        Parser::new()
+    assert!(
+        (Parser::new()
             .parse("3+3-3/3", &mut slab.ps)
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns)
-            .unwrap(),
-        5.0
+            .unwrap() - 5.0).abs() < f64::EPSILON
     );
 
-    assert_eq!(
-        Parser::new()
+    assert!(
+        (Parser::new()
             .parse("x+y+z", &mut slab.ps)
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns)
-            .unwrap(),
-        6.0
+            .unwrap() - 6.0).abs() < f64::EPSILON
     );
 
     assert_eq!(
@@ -45,8 +43,8 @@ fn eval() {
 
 #[test]
 fn aaa_util() {
-    assert_eq!(bool_to_f64!(true), 1.0);
-    assert_eq!(bool_to_f64!(false), 0.0);
+    assert!((bool_to_f64!(true) - 1.0).abs() < f64::EPSILON);
+    assert!((bool_to_f64!(false) - 0.0).abs() < f64::EPSILON);
 }
 
 #[test]
@@ -59,14 +57,13 @@ fn aaa_aaa_sizes() {
 fn aaa_aab_single() {
     let mut slab = Slab::new();
     let mut ns = EmptyNamespace;
-    assert_eq!(
-        Parser::new()
+    assert!(
+        (Parser::new()
             .parse("123.456", &mut slab.ps)
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns)
-            .unwrap(),
-        123.456f64
+            .unwrap() - 123.456f64).abs() < f64::EPSILON
     );
 }
 
