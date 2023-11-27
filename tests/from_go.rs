@@ -223,10 +223,10 @@ fn aaa_test_f() {
         .eval(&slab, &mut CachedCallbackNamespace::new(|n, _| {
             [("x", 2.0)]
                 .iter()
-                .cloned()
+                .copied()
                 .collect::<BTreeMap<&str, f64>>()
                 .get(n)
-                .cloned()
+                .copied()
         })
     ).unwrap(),
         8.0
@@ -236,10 +236,10 @@ fn aaa_test_f() {
         .eval(&slab, &mut CachedCallbackNamespace::new(|n, _| {
             [("x", 2.0), ("y", 3.0)]
                 .iter()
-                .cloned()
+                .copied()
                 .collect::<BTreeMap<&str, f64>>()
                 .get(n)
-                .cloned()
+                .copied()
         })
     ).unwrap(),
         8.0
