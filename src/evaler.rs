@@ -163,6 +163,7 @@ pub trait Evaler: fmt::Debug {
     }
 }
 
+#[allow(clippy::inline_always)] // TODO: Check to see if `always inlining here is ok.
 impl Evaler for Expression {
     fn _var_names(&self, slab: &Slab, dst: &mut BTreeSet<String>) {
         self.first._var_names(slab, dst);
