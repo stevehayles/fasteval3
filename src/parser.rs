@@ -284,7 +284,7 @@ impl Parser {
     }
 
     /// Checks if a given byte matches its character counterpart.
-    fn is_varname_byte(b: u8, i: usize) -> bool {
+    const fn is_varname_byte(b: u8, i: usize) -> bool {
         // Might be parser-breaking
         /*(b'A' <= b && b <= b'Z')
             || (b'a' <= b && b <= b'z')
