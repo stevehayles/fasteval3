@@ -82,6 +82,7 @@ fn comp(expr_str: &str) -> (Slab, Instruction) {
     (slab, instr)
 }
 
+#[allow(clippy::needless_pass_by_value)] // The amount of work it would take to fix this... Is immeasurable.
 fn comp_chk(expr_str: &str, expect_instr: Instruction, expect_fmt: &str, expect_eval: f64) {
     let mut slab = Slab::new();
 

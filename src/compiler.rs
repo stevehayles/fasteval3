@@ -372,14 +372,14 @@ fn push_mul_leaves(
     instrs: &mut Vec<Instruction>,
     cslab: &mut CompileSlab,
     li: InstructionI,
-    ric: IC,
+    ric: &IC,
 ) {
     // Take 'r' before 'l' for a chance for more efficient memory usage:
-    match ric {
+    match *ric {
         IC::I(ri) => {
             let instr = cslab.take_instr(ri);
             if let IMul(rli, rric) = instr {
-                push_mul_leaves(instrs, cslab, rli, rric);
+                push_mul_leaves(instrs, cslab, rli, &rric);
             } else {
                 instrs.push(instr);
             }
@@ -389,7 +389,7 @@ fn push_mul_leaves(
 
     let instr = cslab.take_instr(li);
     if let IMul(lli, lric) = instr {
-        push_mul_leaves(instrs, cslab, lli, lric);
+        push_mul_leaves(instrs, cslab, lli, &lric);
     } else {
         instrs.push(instr);
     }
@@ -398,14 +398,14 @@ fn push_add_leaves(
     instrs: &mut Vec<Instruction>,
     cslab: &mut CompileSlab,
     li: InstructionI,
-    ric: IC,
+    ric: &IC,
 ) {
     // Take 'r' before 'l' for a chance for more efficient memory usage:
-    match ric {
+    match *ric {
         IC::I(ri) => {
             let instr = cslab.take_instr(ri);
             if let IAdd(rli, rric) = instr {
-                push_add_leaves(instrs, cslab, rli, rric);
+                push_add_leaves(instrs, cslab, rli, &rric);
             } else {
                 instrs.push(instr);
             }
@@ -415,7 +415,7 @@ fn push_add_leaves(
 
     let instr = cslab.take_instr(li);
     if let IAdd(lli, lric) = instr {
-        push_add_leaves(instrs, cslab, lli, lric);
+        push_add_leaves(instrs, cslab, lli, &lric);
     } else {
         instrs.push(instr);
     }
@@ -555,7 +555,7 @@ impl Compiler for ExprSlice<'_> {
                 for xs in xss {
                     let instr = xs.compile(parsed_slab, compiled_slab, ns);
                     if let IAdd(li, ric) = instr {
-                        push_add_leaves(&mut instrs, compiled_slab, li, ric); // Flatten nested structures like "x - 1 + 2 - 3".
+                        push_add_leaves(&mut instrs, compiled_slab, li, &ric); // Flatten nested structures like "x - 1 + 2 - 3".
                     } else {
                         instrs.push(instr);
                     }
@@ -585,7 +585,7 @@ impl Compiler for ExprSlice<'_> {
                 for xs in xss {
                     let instr = xs.compile(parsed_slab, compiled_slab, ns);
                     if let IMul(li, ric) = instr {
-                        push_mul_leaves(&mut instrs, compiled_slab, li, ric); // Flatten nested structures like "deg/360 * 2*pi()".
+                        push_mul_leaves(&mut instrs, compiled_slab, li, &ric); // Flatten nested structures like "deg/360 * 2*pi()".
                     } else {
                         instrs.push(instr);
                     }

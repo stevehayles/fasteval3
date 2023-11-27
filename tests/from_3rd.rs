@@ -5,6 +5,7 @@ use fasteval3::{
 
 use std::str::from_utf8;
 
+#[allow(clippy::needless_pass_by_value)] // This type is explicitly required by our namespace.
 fn evalns_cb(name: &str, args: Vec<f64>) -> Option<f64> {
     match name {
         "w" => Some(0.0),
