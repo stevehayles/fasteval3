@@ -50,24 +50,26 @@ fn main() {
     repl();
 }
 
+// #[allow(clippy::significant_drop_in_scrutinee, clippy::significant_drop_tightening)]
 fn repl() {
     let parser = Parser::new();
     let mut slab = Slab::new();
     let mut ns_stack = vec![BTreeMap::new()];
 
     let stdin = io::stdin();
-    let mut lines = stdin.lock().lines();
+    
     loop {
         eprint!(">>> ");
         io::stderr().flush().unwrap();
 
         let mut ans_key = String::from("_");
 
-        let line = match lines.next() {
-            Some(res) => res.unwrap(),
-            None => break,
+        let mut line: String = if let Some(Ok(string)) = stdin.lock().lines().next() {
+            string.trim().to_owned()
+        } else {
+            break
         };
-        let mut line = line.trim().to_owned();
+
         if line.is_empty() {
             continue;
         }
