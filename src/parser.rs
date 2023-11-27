@@ -1236,7 +1236,7 @@ mod internal_tests {
 
             Ok(())
         })() {
-            Ok(_) => {}
+            Ok(()) => {}
             Err(_) => {
                 unimplemented!();
             }
