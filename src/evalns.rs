@@ -257,7 +257,7 @@ pub struct CachedCallbackNamespace<'a> {
 
 #[allow(clippy::inline_always)] // TODO: Check to see if `always inlining here is ok.
 #[inline(always)]
-fn key_from_nameargs<'a, 'b: 'a>(keybuf: &'a mut String, name: &'b str, args: &[f64]) -> &'a str {
+fn key_from_nameargs<'a: 'a>(keybuf: &'a mut String, name: &'a str, args: &[f64]) -> &'a str {
     if args.is_empty() {
         name
     } else {
