@@ -30,4 +30,5 @@ unreachable_pub = "warn"
 [lints.clippy]
 str_to_string = "warn"
 pedantic = "warn"
+must_use_candidate = "allow" # Caused quite a few false-positives.
 nursery = "warn"
