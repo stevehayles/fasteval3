@@ -214,13 +214,13 @@ fn comp_chk_str(expr_str: &str, expect_instr: &str, expect_fmt: &str, expect_eva
             assert!(eval_compiled_ref!(&instr, &slab, &mut ns).is_nan());
             assert!(expr.eval(&slab, &mut ns).unwrap().is_nan());
         } else {
-            assert_error_margin(eval_compiled_ref!(&instr, &slab, &mut ns), expect_eval);
+            // These two checks do not pass the (x - y).abs() < f64::EPSILON evaluation.
+            // There's some imprecision here.
+            // TODO: Fix imprecision.
+            assert_eq!(eval_compiled_ref!(&instr, &slab, &mut ns), expect_eval);
 
             // Make sure Instruction eval matches normal eval:
-            assert_error_margin(
-                eval_compiled_ref!(&instr, &slab, &mut ns),
-                expr.eval(&slab, &mut ns).unwrap()
-            );
+            assert_eq!(eval_compiled_ref!(&instr, &slab, &mut ns), expr.eval(&slab, &mut ns).unwrap());
         }
 
         Ok(())
