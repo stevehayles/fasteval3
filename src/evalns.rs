@@ -3,24 +3,24 @@
 //! Several Evaluation Namespace types are defined, each with their own advantages:
 //! * [`EmptyNamespace`](#emptynamespace) -- Useful when you know that your
 //!   expressions don't need to look up any variables.
-//! * BTreeMap -- A simple way to define variables and functions with a map.
-//!   Type aliases: [StringToF64Namespace](#stringtof64namespace),
-//!   [StrToF64Namespace](#strtof64namespace),
-//!   [StringToCallbackNamespace](#stringtocallbacknamespace),
-//!   [StrToCallbackNamespace](#strtocallbacknamespace)
+//! * `BTreeMap` -- A simple way to define variables and functions with a map.
+//!   Type aliases: [`StringToF64Namespace`](#stringtof64namespace),
+//!   [`StrToF64Namespace`](#strtof64namespace),
+//!   [`StringToCallbackNamespace`](#stringtocallbacknamespace),
+//!   [`StrToCallbackNamespace`](#strtocallbacknamespace)
 //! * [`FnMut(&str,Vec<f64>) -> Option<f64>`](#callback-fnmutstrvec---option) --
 //!   Define variables and custom functions using a callback function.
 //! * [`CachedCallbackNamespace`](#cachedcallbacknamespace) -- Like the above
 //!   callback-based Namespace, but results are cached so the callback is not
 //!   queried more than once for a given variable.
-//! * Vec<BTreeMap<String,f64>> -- Define variables with layered maps.
+//! * `Vec<BTreeMap<String,f64>>` -- Define variables with layered maps.
 //!   Each layer is a separate 'scope'.  Higher layers take precedence
 //!   over lower layers.  Very useful for creating scoped higher-level-languages.
-//!   Type alias: [LayeredStringToF64Namespace](#layeredstringtof64namespace)
+//!   Type alias: [`LayeredStringToF64Namespace`](#layeredstringtof64namespace)
 //!
 //! # Examples
 //!
-//! ## EmptyNamespace
+//! ## `EmptyNamespace`
 //! ```
 //! fn main() -> Result<(), fasteval3::Error> {
 //!     let mut ns = fasteval3::EmptyNamespace;
@@ -32,7 +32,7 @@
 //! }
 //! ```
 //!
-//! ## StringToF64Namespace
+//! ## `StringToF64Namespace`
 //! ```
 //! fn main() -> Result<(), fasteval3::Error> {
 //!     let mut ns = fasteval3::StringToF64Namespace::new();
@@ -45,7 +45,7 @@
 //! }
 //! ```
 //!
-//! ## StrToF64Namespace
+//! ## `StrToF64Namespace`
 //! ```
 //! fn main() -> Result<(), fasteval3::Error> {
 //!     let mut ns = fasteval3::StrToF64Namespace::new();
@@ -78,7 +78,7 @@
 //! }
 //! ```
 //!
-//! ## StringToCallbackNamespace
+//! ## `StringToCallbackNamespace`
 //! ```
 //! fn main() -> Result<(), fasteval3::Error> {
 //!     let mut ns = fasteval3::StringToCallbackNamespace::new();
@@ -94,7 +94,7 @@
 //! }
 //! ```
 //!
-//! ## StrToCallbackNamespace
+//! ## `StrToCallbackNamespace`
 //! ```
 //! fn main() -> Result<(), fasteval3::Error> {
 //!     let mut ns = fasteval3::StrToCallbackNamespace::new();
@@ -110,7 +110,7 @@
 //! }
 //! ```
 //!
-//! ## CachedCallbackNamespace
+//! ## `CachedCallbackNamespace`
 //! ```
 //! fn main() -> Result<(), fasteval3::Error> {
 //!     let mut num_lookups = 0;
@@ -139,7 +139,7 @@
 //! }
 //! ```
 //!
-//! ## LayeredStringToF64Namespace
+//! ## `LayeredStringToF64Namespace`
 //! ```
 //! fn main() -> Result<(), fasteval3::Error> {
 //!     let mut layer1 = fasteval3::StringToF64Namespace::new();
@@ -182,7 +182,7 @@
 //! * Vec<Fn(&str,Vec<f64>)->Option<f64>>  --  This would be a `Layered`
 //!   namespace, with each layer having its own callback.  Really powerful!
 //!
-//! * CachedCallbacksNamespace  --  Same as above, but with a cache for each
+//! * `CachedCallbacksNamespace`  --  Same as above, but with a cache for each
 //!   layer.  Good for expensive look-ups.
 
 use crate::error::Error;

@@ -92,7 +92,7 @@ macro_rules! get_instr {
 }
 
 impl ExpressionI {
-    /// Gets an Expression reference from the ParseSlab.
+    /// Gets an Expression reference from the `ParseSlab`.
     ///
     /// This is actually just a convenience function built on top of
     /// `ParseSlab.get_expr`, but it enables you to perform the entire
@@ -106,9 +106,9 @@ impl ExpressionI {
     }
 }
 impl ValueI {
-    /// Gets a Value reference from the ParseSlab.
+    /// Gets a Value reference from the `ParseSlab`.
     ///
-    /// See the comments on [ExpressionI::from](struct.ExpressionI.html#method.from).
+    /// See the comments on [`ExpressionI::from`](struct.ExpressionI.html#method.from).
     ///
     #[inline]
     pub fn from(self, ps: &ParseSlab) -> &Value {

@@ -55,7 +55,7 @@ pub struct Expression {
 #[derive(Debug, PartialEq)]
 pub(crate) struct ExprPair(pub BinaryOp, pub Value);
 
-/// A `Value` can be a Constant, a UnaryOp, a StdFunc, or a PrintFunc.
+/// A `Value` can be a Constant, a `UnaryOp`, a `StdFunc`, or a `PrintFunc`.
 #[derive(Debug, PartialEq)]
 pub enum Value {
     EConstant(f64),
@@ -311,7 +311,7 @@ impl Parser {
     /// already have an empty `Slab`.
     ///
     /// This function cannot return Result<&Expression> because it would
-    /// prolong the mut ref.  / That's why we return an ExpressionI instead.
+    /// prolong the mut ref.  / That's why we return an `ExpressionI` instead.
     #[inline]
     pub fn parse_noclear(
         &self,
