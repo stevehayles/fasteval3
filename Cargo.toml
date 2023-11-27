@@ -31,4 +31,7 @@ unreachable_pub = "warn"
 str_to_string = "warn"
 pedantic = "warn"
 must_use_candidate = "allow" # Caused quite a few false-positives.
+cast_precision_loss = "allow" # Unsure how to resolve. Help wanted.
+cast_sign_loss = "allow" # Unsure how to resolve. Help wanted.
+cast_possible_truncation = "allow" # Unsure how to resolve. Help wanted.
 nursery = "warn"
