@@ -619,28 +619,28 @@ impl Evaler for Instruction {
                 get_instr!(slab.cs, ii)._var_names(slab, dst)
             }
 
-            ILT(lic, ric)
-            | ILTE(lic, ric)
-            | IEQ(lic, ric)
-            | INE(lic, ric)
-            | IGTE(lic, ric)
-            | IGT(lic, ric)
+            ILT(left_ic, right_ic)
+            | ILTE(left_ic, right_ic)
+            | IEQ(left_ic, right_ic)
+            | INE(left_ic, right_ic)
+            | IGTE(left_ic, right_ic)
+            | IGT(left_ic, right_ic)
             | IMod {
-                dividend: lic,
-                divisor: ric,
+                dividend: left_ic,
+                divisor: right_ic,
             }
             | IExp {
-                base: lic,
-                power: ric,
+                base: left_ic,
+                power: right_ic,
             }
-            | IFuncLog { base: lic, of: ric }
+            | IFuncLog { base: left_ic, of: right_ic }
             | IFuncRound {
-                modulus: lic,
-                of: ric,
+                modulus: left_ic,
+                of: right_ic,
             } => {
                 let mut iconst: Self;
-                ic_to_instr!(slab.cs, iconst, lic)._var_names(slab, dst);
-                ic_to_instr!(slab.cs, iconst, ric)._var_names(slab, dst);
+                ic_to_instr!(slab.cs, iconst, left_ic)._var_names(slab, dst);
+                ic_to_instr!(slab.cs, iconst, right_ic)._var_names(slab, dst);
             }
 
             IAdd(li, ric)
