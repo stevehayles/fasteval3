@@ -1141,8 +1141,7 @@ impl Parser {
 
         let mut toklen = 0;
         while match peek_n!(bs, toklen) {
-            None => false,
-            Some(b'"') => false,
+            None | Some(b'"') => false,
             Some(_) => true,
         } {
             toklen += 1;
@@ -1153,9 +1152,8 @@ impl Parser {
         skip_n!(bs, toklen);
         match read!(bs) {
             Err(Error::EOF) => Err(Error::EofWhileParsing(String::from("string"))),
-            Err(_) => Err(Error::Unreachable),
             Ok(b'"') => Ok(Bite(out.to_owned())),
-            Ok(_) => Err(Error::Unreachable),
+            Err(_) | Ok(_) => Err(Error::Unreachable),
         }
     }
 }
