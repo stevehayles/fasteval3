@@ -465,17 +465,17 @@ impl Compiler for ExprSlice<'_> {
             let mut ops = Vec::<&BinaryOp>::with_capacity(4);
             let mut xss = Vec::<ExprSlice>::with_capacity(ops.len() + 1);
             self.split_multi(&[EEQ, ENE, ELT, EGT, ELTE, EGTE], &mut xss, &mut ops);
-            let mut out = match xss.first() {
-                Some(xs) => xs.compile(parsed_slab, compiled_slab, ns),
-                None => IConst(std::f64::NAN), // unreachable
-            };
+            let mut out: Instruction = xss.first().map_or(IConst(std::f64::NAN), |xs| {
+                xs.compile(parsed_slab, compiled_slab, ns)
+            });
+
             for (i, op) in ops.into_iter().enumerate() {
-                let instr = match xss.get(i + 1) {
-                    Some(xs) => xs.compile(parsed_slab, compiled_slab, ns),
-                    None => IConst(std::f64::NAN), // unreachable
-                };
+                let instruction: Instruction = xss.get(i + 1).map_or(IConst(f64::NAN), |xs| {
+                    xs.compile(parsed_slab, compiled_slab, ns)
+                });
+
                 if let IConst(l) = out {
-                    if let IConst(r) = instr {
+                    if let IConst(r) = instruction {
                         out = match op {
                             EEQ => IConst(bool_to_f64!(f64_eq!(l, r))),
                             ENE => IConst(bool_to_f64!(f64_ne!(l, r))),
@@ -489,12 +489,12 @@ impl Compiler for ExprSlice<'_> {
                     }
                 }
                 out = match op {
-                    EEQ => IEQ(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instr)),
-                    ENE => INE(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instr)),
-                    ELT => ILT(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instr)),
-                    EGT => IGT(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instr)),
-                    ELTE => ILTE(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instr)),
-                    EGTE => IGTE(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instr)),
+                    EEQ => IEQ(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instruction)),
+                    ENE => INE(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instruction)),
+                    ELT => ILT(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instruction)),
+                    EGT => IGT(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instruction)),
+                    ELTE => ILTE(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instruction)),
+                    EGTE => IGTE(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instruction)),
                     _ => IConst(std::f64::NAN), // unreachable
                 };
             }
@@ -816,14 +816,15 @@ impl Compiler for StdFunc {
                 }
                 if is_all_const {
                     let computed_value = eval_var!(ns, name, f64_args, &mut celled_pslab.borrow_mut());
-                    if let Ok(value) = computed_value {
+                    computed_value.map_or_else(|_| IFunc { name: name.clone(), args }, |value| IConst(value))
+                    /*if let Ok(value) = computed_value {
                         IConst(value)
                     } else {
                         IFunc {
                             name: name.clone(),
                             args,
                         }
-                    }
+                    }*/
                 } else {
                     IFunc {
                         name: name.clone(),
@@ -876,10 +877,7 @@ impl Compiler for StdFunc {
                 base: baseopt,
                 expr: i,
             } => {
-                let base = match baseopt {
-                    Some(bi) => get_expr!(parsed_slab, bi).compile(parsed_slab, compiled_slab, ns),
-                    None => IConst(10.0),
-                };
+                let base: Instruction = baseopt.as_ref().map_or(IConst(10.0), |bi| get_expr!(parsed_slab, bi).compile(parsed_slab, compiled_slab, ns));
                 let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
                 if let IConst(b) = base {
                     if let IConst(n) = instr {
@@ -895,10 +893,7 @@ impl Compiler for StdFunc {
                 modulus: modopt,
                 expr: i,
             } => {
-                let modulus = match modopt {
-                    Some(mi) => get_expr!(parsed_slab, mi).compile(parsed_slab, compiled_slab, ns),
-                    None => IConst(1.0),
-                };
+                let modulus: Instruction = modopt.as_ref().map_or(IConst(1.0), |mi| get_expr!(parsed_slab, mi).compile(parsed_slab, compiled_slab, ns));
                 let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
                 if let IConst(m) = modulus {
                     if let IConst(n) = instr {

@@ -296,11 +296,7 @@ impl Parser {
 
     /// Checks if a given bytes matches its character counterpart, with the byte itself possibly being none.
     fn is_varname_byte_opt(bo: Option<u8>, i: usize) -> bool {
-        if let Some(byte) = bo {
-            Self::is_varname_byte(byte, i)
-        } else {
-            false
-        }
+        bo.map_or(false, |byte| Self::is_varname_byte(byte, i))
     }
 
     /// Use this function to parse an expression String.  The `Slab` will be cleared first.
@@ -618,80 +614,77 @@ impl Parser {
 
     fn read_binaryop(&self, bs: &mut &[u8]) -> Result<Token<BinaryOp>, Error> {
         spaces!(bs);
-        match peek!(bs) {
-            None => Ok(Pass), // Err(KErr::new("EOF")), -- EOF is usually OK in a BinaryOp position.
-            Some(b) => match b {
-                b'+' => {
+        peek!(bs).map_or(Ok(Pass), |b| match b {
+            b'+' => {
+                skip!(bs);
+                Ok(Bite(EAdd))
+            }
+            b'-' => {
+                skip!(bs);
+                Ok(Bite(ESub))
+            }
+            b'*' => {
+                skip!(bs);
+                Ok(Bite(EMul))
+            }
+            b'/' => {
+                skip!(bs);
+                Ok(Bite(EDiv))
+            }
+            b'%' => {
+                skip!(bs);
+                Ok(Bite(EMod))
+            }
+            b'^' => {
+                skip!(bs);
+                Ok(Bite(EExp))
+            }
+            b'<' => {
+                skip!(bs);
+                if peek_is!(bs, 0, b'=') {
                     skip!(bs);
-                    Ok(Bite(EAdd))
+                    Ok(Bite(ELTE))
+                } else {
+                    Ok(Bite(ELT))
                 }
-                b'-' => {
+            }
+            b'>' => {
+                skip!(bs);
+                if peek_is!(bs, 0, b'=') {
                     skip!(bs);
-                    Ok(Bite(ESub))
+                    Ok(Bite(EGTE))
+                } else {
+                    Ok(Bite(EGT))
                 }
-                b'*' => {
-                    skip!(bs);
-                    Ok(Bite(EMul))
-                }
-                b'/' => {
-                    skip!(bs);
-                    Ok(Bite(EDiv))
-                }
-                b'%' => {
-                    skip!(bs);
-                    Ok(Bite(EMod))
-                }
-                b'^' => {
-                    skip!(bs);
-                    Ok(Bite(EExp))
-                }
-                b'<' => {
-                    skip!(bs);
-                    if peek_is!(bs, 0, b'=') {
-                        skip!(bs);
-                        Ok(Bite(ELTE))
-                    } else {
-                        Ok(Bite(ELT))
-                    }
-                }
-                b'>' => {
-                    skip!(bs);
-                    if peek_is!(bs, 0, b'=') {
-                        skip!(bs);
-                        Ok(Bite(EGTE))
-                    } else {
-                        Ok(Bite(EGT))
-                    }
-                }
-                b'=' if peek_is!(bs, 1, b'=') => {
-                    skip_n!(bs, 2);
-                    Ok(Bite(EEQ))
-                }
-                b'!' if peek_is!(bs, 1, b'=') => {
-                    skip_n!(bs, 2);
-                    Ok(Bite(ENE))
-                }
-                #[cfg(feature = "alpha-keywords")]
-                b'o' if peek_is!(bs, 1, b'r') => {
-                    skip_n!(bs, 2);
-                    Ok(Bite(EOR))
-                }
-                b'|' if peek_is!(bs, 1, b'|') => {
-                    skip_n!(bs, 2);
-                    Ok(Bite(EOR))
-                }
-                #[cfg(feature = "alpha-keywords")]
-                b'a' if peek_is!(bs, 1, b'n') && peek_is!(bs, 2, b'd') => {
-                    skip_n!(bs, 3);
-                    Ok(Bite(EAND))
-                }
-                b'&' if peek_is!(bs, 1, b'&') => {
-                    skip_n!(bs, 2);
-                    Ok(Bite(EAND))
-                }
-                _ => Ok(Pass),
-            },
-        }
+            }
+            b'=' if peek_is!(bs, 1, b'=') => {
+                skip_n!(bs, 2);
+                Ok(Bite(EEQ))
+            }
+            b'!' if peek_is!(bs, 1, b'=') => {
+                skip_n!(bs, 2);
+                Ok(Bite(ENE))
+            }
+            #[cfg(feature = "alpha-keywords")]
+            b'o' if peek_is!(bs, 1, b'r') => {
+                skip_n!(bs, 2);
+                Ok(Bite(EOR))
+            }
+            b'|' if peek_is!(bs, 1, b'|') => {
+                skip_n!(bs, 2);
+                Ok(Bite(EOR))
+            }
+            #[cfg(feature = "alpha-keywords")]
+            b'a' if peek_is!(bs, 1, b'n') && peek_is!(bs, 2, b'd') => {
+                skip_n!(bs, 3);
+                Ok(Bite(EAND))
+            }
+            b'&' if peek_is!(bs, 1, b'&') => {
+                skip_n!(bs, 2);
+                Ok(Bite(EAND))
+            }
+            _ => Ok(Pass),
+        })
     }
 
     fn read_callable(
@@ -911,10 +904,7 @@ impl Parser {
             }
             "min" => {
                 if !args.is_empty() {
-                    match remove_no_panic(&mut args, 0) {
-                        Some(first) => Ok(EFuncMin { first, rest: args }),
-                        None => Err(Error::Unreachable),
-                    }
+                    remove_no_panic(&mut args, 0).map_or(Err(Error::Unreachable), |first| Ok(EFuncMin { first, rest: args }))
                 } else {
                     Err(Error::WrongArgs(
                         String::from("min: expected one or more args"),
@@ -923,10 +913,7 @@ impl Parser {
             }
             "max" => {
                 if !args.is_empty() {
-                    match remove_no_panic(&mut args, 0) {
-                        Some(first) => Ok(EFuncMax { first, rest: args }),
-                        None => Err(Error::Unreachable),
-                    }
+                    remove_no_panic(&mut args, 0).map_or(Err(Error::Unreachable), |first| Ok(EFuncMax { first, rest: args }))
                 } else {
                     Err(Error::WrongArgs(
                         String::from("max: expected one or more args"),

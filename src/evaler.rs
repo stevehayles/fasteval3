@@ -230,10 +230,7 @@ impl Evaler for Expression {
         #[inline(always)]
         fn rtol(vals: &mut Vec<f64>, ops: &mut Vec<BinaryOp>, search: BinaryOp) {
             for i in (0..ops.len()).rev() {
-                let op = match ops.get(i) {
-                    Some(op) => *op,
-                    None => EOR, // unreachable
-                };
+                let op = ops.get(i).map_or(EOR, |op| *op);
                 if op == search {
                     let res = op.binaryop_eval(vals.get(i), vals.get(i + 1));
                     if let Some(value_ref) = vals.get_mut(i) {
@@ -304,10 +301,8 @@ impl Evaler for Expression {
         if vals.len() != 1 {
             return Err(Error::Unreachable);
         }
-        match vals.first() {
-            Some(val) => Ok(*val),
-            None => Err(Error::Unreachable),
-        }
+
+        vals.first().map_or(Err(Error::Unreachable), |val| Ok(*val))
     }
 }
 
@@ -430,10 +425,7 @@ impl Evaler for StdFunc {
 
             EFuncE | EFuncPi => (),
             EFuncLog { base: opt, expr } | EFuncRound { modulus: opt, expr } => {
-                match opt {
-                    Some(xi) => get_expr!(slab.ps, xi)._var_names(slab, dst),
-                    None => (),
-                }
+                if let Some(xi) = opt.as_ref() { get_expr!(slab.ps, xi)._var_names(slab, dst) }
                 get_expr!(slab.ps, expr)._var_names(slab, dst);
             }
             EFuncMin { first, rest } | EFuncMax { first, rest } => {

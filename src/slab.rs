@@ -238,10 +238,7 @@ impl ParseSlab {
     #[inline]
     pub fn get_expr(&self, expr_i: ExpressionI) -> &Expression {
         // I'm using this non-panic match structure to boost performance:
-        match self.exprs.get(expr_i.0) {
-            Some(expr_ref) => expr_ref,
-            None => &self.def_expr,
-        }
+        self.exprs.get(expr_i.0).map_or(&self.def_expr, |expr_ref| expr_ref)
     }
 
     /// Returns a reference to the [`Value`](../parser/enum.Value.html)
@@ -251,10 +248,7 @@ impl ParseSlab {
     ///
     #[inline]
     pub fn get_val(&self, val_i: ValueI) -> &Value {
-        match self.vals.get(val_i.0) {
-            Some(val_ref) => val_ref,
-            None => &self.def_val,
-        }
+        self.vals.get(val_i.0).map_or(&self.def_val, |val_ref| val_ref)
     }
 
     /// Appends an `Expression` to `ParseSlab.exprs`.
@@ -312,10 +306,7 @@ impl CompileSlab {
     ///
     #[inline]
     pub fn get_instr(&self, instr_i: InstructionI) -> &Instruction {
-        match self.instrs.get(instr_i.0) {
-            Some(instr_ref) => instr_ref,
-            None => &self.def_instr,
-        }
+        self.instrs.get(instr_i.0).map_or(&self.def_instr, |instr_ref| instr_ref)
     }
 
     /// Appends an `Instruction` to `CompileSlab.instrs`.
@@ -331,15 +322,9 @@ impl CompileSlab {
     /// Removes an `Instruction` from `CompileSlab.instrs` as efficiently as possible.
     pub(crate) fn take_instr(&mut self, i: InstructionI) -> Instruction {
         if i.0 == self.instrs.len() - 1 {
-            match self.instrs.pop() {
-                Some(instr) => instr,
-                None => IConst(std::f64::NAN),
-            }
+            self.instrs.pop().map_or(IConst(std::f64::NAN), |instr| instr)
         } else {
-            match self.instrs.get_mut(i.0) {
-                Some(instr_ref) => mem::replace(instr_ref, IConst(std::f64::NAN)), // Replace with a conspicuous value in case we use it by accident.
-                None => IConst(std::f64::NAN),
-            }
+            self.instrs.get_mut(i.0).map_or(IConst(std::f64::NAN), |instr_ref| mem::replace(instr_ref, IConst(std::f64::NAN)))
         }
     }
 
