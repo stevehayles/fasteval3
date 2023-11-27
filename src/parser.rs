@@ -903,21 +903,21 @@ impl Parser {
                 }
             }
             "min" => {
-                if !args.is_empty() {
-                    remove_no_panic(&mut args, 0).map_or(Err(Error::Unreachable), |first| Ok(EFuncMin { first, rest: args }))
-                } else {
+                if args.is_empty() {
                     Err(Error::WrongArgs(
                         String::from("min: expected one or more args"),
                     ))
+                } else {
+                    remove_no_panic(&mut args, 0).map_or(Err(Error::Unreachable), |first| Ok(EFuncMin { first, rest: args }))
                 }
             }
             "max" => {
-                if !args.is_empty() {
-                    remove_no_panic(&mut args, 0).map_or(Err(Error::Unreachable), |first| Ok(EFuncMax { first, rest: args }))
-                } else {
+                if args.is_empty() {
                     Err(Error::WrongArgs(
                         String::from("max: expected one or more args"),
                     ))
+                } else {
+                    remove_no_panic(&mut args, 0).map_or(Err(Error::Unreachable), |first| Ok(EFuncMax { first, rest: args }))
                 }
             }
 
