@@ -300,6 +300,10 @@ impl Parser {
     }
 
     /// Use this function to parse an expression String.  The `Slab` will be cleared first.
+    /// 
+    /// # Errors
+    /// 
+    /// Will return `Err` if length of `expr_str` exceeds limit.
     #[inline]
     pub fn parse(&self, expr_str: &str, slab: &mut ParseSlab) -> Result<ExpressionI, Error> {
         slab.clear();
@@ -312,6 +316,10 @@ impl Parser {
     ///
     /// This function cannot return Result<&Expression> because it would
     /// prolong the mut ref.  / That's why we return an `ExpressionI` instead.
+    /// 
+    /// # Errors
+    /// 
+    /// Will return `Err` if length of `expr_str` exceeds limit.
     #[inline]
     pub fn parse_noclear(
         &self,

@@ -145,6 +145,8 @@ macro_rules! eval_ic_ref {
 pub trait Evaler: fmt::Debug {
     /// Evaluate this `Expression`/`Instruction` and return an `f64`.
     ///
+    /// # Errors
+    /// 
     /// Returns a `fasteval3::Error` if there are any problems, such as undefined variables.
     fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f64, Error>;
 
@@ -163,7 +165,7 @@ pub trait Evaler: fmt::Debug {
     }
 }
 
-#[allow(clippy::inline_always)] // TODO: Check to see if `always inlining here is ok.
+#[allow(clippy::inline_always)] // TODO: Check to see if always inlining here is ok.
 impl Evaler for Expression {
     fn _var_names(&self, slab: &Slab, dst: &mut BTreeSet<String>) {
         self.first._var_names(slab, dst);

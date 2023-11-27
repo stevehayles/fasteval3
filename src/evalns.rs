@@ -203,7 +203,11 @@ pub trait EvalNamespace {
 ///
 /// Implement this trait if your Namespace type uses a cache.
 pub trait Cached {
-    /// Creates a new cached entry.  If an entry with the same name already
+    /// Creates a new cached entry. 
+    /// 
+    /// # Errors
+    /// 
+    /// If an entry with the same name already
     /// exists, an [`AlreadyExists` Error](../error/enum.Error.html#variant.AlreadyExists) is returned.
     fn cache_create(&mut self, name: String, val: f64) -> Result<(), Error>;
 
