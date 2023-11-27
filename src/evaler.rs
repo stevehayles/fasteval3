@@ -277,7 +277,7 @@ impl Evaler for Expression {
                             remove_no_panic(vals, i + 1);
                             remove_no_panic(ops, i);
                         } else {
-                            i += 1
+                            i += 1;
                         }
                     }
                 }
@@ -329,7 +329,7 @@ impl Evaler for UnaryOp {
     fn _var_names(&self, slab: &Slab, dst: &mut BTreeSet<String>) {
         match self {
             EPos(val_i) | ENeg(val_i) | ENot(val_i) => {
-                get_val!(slab.ps, val_i)._var_names(slab, dst)
+                get_val!(slab.ps, val_i)._var_names(slab, dst);
             }
             EParentheses(expr_i) => get_expr!(slab.ps, expr_i)._var_names(slab, dst),
         }
@@ -448,7 +448,7 @@ impl Evaler for StdFunc {
             EFunc { name, args: xis } => {
                 let mut args = Vec::with_capacity(xis.len());
                 for xi in xis {
-                    args.push(get_expr!(slab.ps, xi).eval(slab, ns)?)
+                    args.push(get_expr!(slab.ps, xi).eval(slab, ns)?);
                 }
                 eval_var!(ns, name, args, &mut *celled_slab.borrow_mut())
             }
@@ -608,7 +608,7 @@ impl Evaler for Instruction {
             | IFuncAbs(ii) | IFuncSign(ii) | IFuncSin(ii) | IFuncCos(ii) | IFuncTan(ii)
             | IFuncASin(ii) | IFuncACos(ii) | IFuncATan(ii) | IFuncSinH(ii) | IFuncCosH(ii)
             | IFuncTanH(ii) | IFuncASinH(ii) | IFuncACosH(ii) | IFuncATanH(ii) => {
-                get_instr!(slab.cs, ii)._var_names(slab, dst)
+                get_instr!(slab.cs, ii)._var_names(slab, dst);
             }
 
             ILT(left_ic, right_ic)

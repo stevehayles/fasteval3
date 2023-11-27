@@ -216,7 +216,7 @@ impl<'s> ExprSlice<'s> {
     fn from_expr(expr: &Expression) -> ExprSlice<'_> {
         let mut sl = ExprSlice::new(&expr.first);
         for exprpairref in &expr.pairs {
-            sl.pairs.push(exprpairref)
+            sl.pairs.push(exprpairref);
         }
         sl
     }
@@ -450,7 +450,7 @@ impl Compiler for ExprSlice<'_> {
         };
         for exprpair in &self.pairs {
             if exprpair.0 < lowest_op {
-                lowest_op = exprpair.0
+                lowest_op = exprpair.0;
             }
         }
 
@@ -808,7 +808,7 @@ impl Compiler for StdFunc {
                 for xi in xis {
                     let instr = get_expr!(parsed_slab, xi).compile(parsed_slab, compiled_slab, ns);
                     if let IConst(c) = instr {
-                        f64_args.push(c)
+                        f64_args.push(c);
                     } else {
                         is_all_const = false;
                     }
