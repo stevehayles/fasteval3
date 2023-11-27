@@ -349,15 +349,15 @@ impl Slab {
             ps: ParseSlab {
                 exprs: Vec::with_capacity(cap),
                 vals: Vec::with_capacity(cap),
-                def_expr: Default::default(),
-                def_val: Default::default(),
+                def_expr: Expression::default(),
+                def_val: Value::default(),
                 char_buf: String::with_capacity(64),
                 #[cfg(feature = "unsafe-vars")]
                 unsafe_vars: BTreeMap::new(),
             },
             cs: CompileSlab {
                 instrs: Vec::new(), // Don't pre-allocate for compilation.
-                def_instr: Default::default(),
+                def_instr: Instruction::default(),
             },
         }
     }
