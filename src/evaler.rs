@@ -174,62 +174,6 @@ impl Evaler for Expression {
         }
     }
     fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f64, Error> {
-        // Order of operations: 1) ^  2) */  3) +-
-        // Exponentiation should be processed right-to-left.  Think of what 2^3^4 should mean:
-        //     2^(3^4)=2417851639229258349412352   <--- I choose this one.  https://codeplea.com/exponentiation-associativity-options
-        //     (2^3)^4=4096
-        // Direction of processing doesn't matter for Addition and Multiplication:
-        //     (((3+4)+5)+6)==(3+(4+(5+6))), (((3*4)*5)*6)==(3*(4*(5*6)))
-        // ...But Subtraction and Division must be processed left-to-right:
-        //     (((6-5)-4)-3)!=(6-(5-(4-3))), (((6/5)/4)/3)!=(6/(5/(4/3)))
-
-        // // ---- Go code, for comparison ----
-        // // vals,ops:=make([]float64, len(e)/2+1),make([]BinaryOp, len(e)/2)
-        // // for i:=0; i<len(e); i+=2 {
-        // //     vals[i/2]=ns.EvalBubble(e[i].(evaler))
-        // //     if i<len(e)-1 { ops[i/2]=e[i+1].(BinaryOp) }
-        // // }
-
-        // if self.0.len()%2!=1 { return Err(KErr::new("Expression len should always be odd")) }
-        // let mut vals : Vec<f64>      = Vec::with_capacity(self.0.len()/2+1);
-        // let mut ops  : Vec<BinaryOp> = Vec::with_capacity(self.0.len()/2  );
-        // for (i,tok) in self.0.iter().enumerate() {
-        //     match tok {
-        //         EValue(val) => {
-        //             if i%2==1 { return Err(KErr::new("Found value at odd index")) }
-        //             match ns.eval_bubble(val) {
-        //                 Ok(f) => vals.push(f),
-        //                 Err(e) => return Err(e.pre(&format!("eval_bubble({:?})",val))),
-        //             }
-        //         }
-        //         EBinaryOp(bop) => {
-        //             if i%2==0 { return Err(KErr::new("Found binaryop at even index")) }
-        //             ops.push(*bop);
-        //         }
-        //     }
-        // }
-
-        // Code for new Expression data structure:
-        let mut vals = Vec::<f64>::with_capacity(self.pairs.len() + 1);
-        let mut ops = Vec::<BinaryOp>::with_capacity(self.pairs.len());
-        vals.push(self.first.eval(slab, ns)?);
-        for pair in &self.pairs {
-            ops.push(pair.0);
-            vals.push(pair.1.eval(slab, ns)?);
-        }
-
-        // ---- Go code, for comparison ----
-        // evalOp:=func(i int) {
-        //     result:=ops[i]._Eval(vals[i], vals[i+1])
-        //     vals=append(append(vals[:i], result), vals[i+2:]...)
-        //     ops=append(ops[:i], ops[i+1:]...)
-        // }
-        // rtol:=func(s BinaryOp) { for i:=len(ops)-1; i>=0; i-- { if ops[i]==s { evalOp(i) } } }
-        // ltor:=func(s BinaryOp) {
-        //     loop:
-        //     for i:=0; i<len(ops); i++ { if ops[i]==s { evalOp(i); goto loop } }  // Need to restart processing when modifying from the left.
-        // }
-
         #[inline(always)]
         fn rtol(vals: &mut Vec<f64>, ops: &mut Vec<BinaryOp>, search: BinaryOp) {
             for i in (0..ops.len()).rev() {
@@ -286,6 +230,62 @@ impl Evaler for Expression {
                 }
             }
         }
+
+        // Order of operations: 1) ^  2) */  3) +-
+        // Exponentiation should be processed right-to-left.  Think of what 2^3^4 should mean:
+        //     2^(3^4)=2417851639229258349412352   <--- I choose this one.  https://codeplea.com/exponentiation-associativity-options
+        //     (2^3)^4=4096
+        // Direction of processing doesn't matter for Addition and Multiplication:
+        //     (((3+4)+5)+6)==(3+(4+(5+6))), (((3*4)*5)*6)==(3*(4*(5*6)))
+        // ...But Subtraction and Division must be processed left-to-right:
+        //     (((6-5)-4)-3)!=(6-(5-(4-3))), (((6/5)/4)/3)!=(6/(5/(4/3)))
+
+        // // ---- Go code, for comparison ----
+        // // vals,ops:=make([]float64, len(e)/2+1),make([]BinaryOp, len(e)/2)
+        // // for i:=0; i<len(e); i+=2 {
+        // //     vals[i/2]=ns.EvalBubble(e[i].(evaler))
+        // //     if i<len(e)-1 { ops[i/2]=e[i+1].(BinaryOp) }
+        // // }
+
+        // if self.0.len()%2!=1 { return Err(KErr::new("Expression len should always be odd")) }
+        // let mut vals : Vec<f64>      = Vec::with_capacity(self.0.len()/2+1);
+        // let mut ops  : Vec<BinaryOp> = Vec::with_capacity(self.0.len()/2  );
+        // for (i,tok) in self.0.iter().enumerate() {
+        //     match tok {
+        //         EValue(val) => {
+        //             if i%2==1 { return Err(KErr::new("Found value at odd index")) }
+        //             match ns.eval_bubble(val) {
+        //                 Ok(f) => vals.push(f),
+        //                 Err(e) => return Err(e.pre(&format!("eval_bubble({:?})",val))),
+        //             }
+        //         }
+        //         EBinaryOp(bop) => {
+        //             if i%2==0 { return Err(KErr::new("Found binaryop at even index")) }
+        //             ops.push(*bop);
+        //         }
+        //     }
+        // }
+
+        // Code for new Expression data structure:
+        let mut vals = Vec::<f64>::with_capacity(self.pairs.len() + 1);
+        let mut ops = Vec::<BinaryOp>::with_capacity(self.pairs.len());
+        vals.push(self.first.eval(slab, ns)?);
+        for pair in &self.pairs {
+            ops.push(pair.0);
+            vals.push(pair.1.eval(slab, ns)?);
+        }
+
+        // ---- Go code, for comparison ----
+        // evalOp:=func(i int) {
+        //     result:=ops[i]._Eval(vals[i], vals[i+1])
+        //     vals=append(append(vals[:i], result), vals[i+2:]...)
+        //     ops=append(ops[:i], ops[i+1:]...)
+        // }
+        // rtol:=func(s BinaryOp) { for i:=len(ops)-1; i>=0; i-- { if ops[i]==s { evalOp(i) } } }
+        // ltor:=func(s BinaryOp) {
+        //     loop:
+        //     for i:=0; i<len(ops); i++ { if ops[i]==s { evalOp(i); goto loop } }  // Need to restart processing when modifying from the left.
+        // }
 
         // Keep the order of these statements in-sync with parser.rs BinaryOp priority values:
         rtol(&mut vals, &mut ops, EExp); // https://codeplea.com/exponentiation-associativity-options
@@ -546,11 +546,11 @@ impl Evaler for PrintFunc {
         }
     }
     fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f64, Error> {
-        let mut val = 0f64;
-
         fn process_str(s: &str) -> String {
             s.replace("\\n", "\n").replace("\\t", "\t")
         }
+        
+        let mut val = 0f64;
 
         if let Some(EStr(fmtstr)) = self.0.first() {
             if fmtstr.contains('%') {
