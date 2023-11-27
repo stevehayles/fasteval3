@@ -753,7 +753,7 @@ impl Parser {
         spaces!(bs);
 
         match peek!(bs) {
-            Some(b'(') | Some(b'[') => Ok(Bite(match read!(bs) {
+            Some(b'(' | b'[') => Ok(Bite(match read!(bs) {
                 Ok(b) => b,
                 Err(..) => return Err(Error::Unreachable),
             })),
@@ -789,7 +789,7 @@ impl Parser {
             if !args.is_empty() {
                 match read!(bs) {
                     // I accept ',' or ';' because the TV API disallows the ',' char in symbols... so I'm using ';' as a compromise.
-                    Ok(b',') | Ok(b';') => {}
+                    Ok(b',' | b';') => {}
                     _ => return Err(Error::Expected(String::from("',' or ';'"))),
                 }
             }
@@ -1092,7 +1092,7 @@ impl Parser {
             }
             if !args.is_empty() {
                 match read!(bs) {
-                    Ok(b',') | Ok(b';') => {}
+                    Ok(b',' | b';') => {}
                     _ => {
                         return Err(Error::Expected(String::from("',' or ';'")));
                     }
