@@ -858,10 +858,7 @@ impl Parser {
                         },
                     })
                 } else if args.len() == 2 {
-                    let expr = match args.pop() {
-                        Some(xi) => xi,
-                        None => return Err(Error::Unreachable),
-                    };
+                    let Some(expr) = args.pop() else { return Err(Error::Unreachable) };
                     Ok(EFuncLog {
                         base: Some(match args.pop() {
                             Some(xi) => xi,
@@ -885,10 +882,7 @@ impl Parser {
                         },
                     })
                 } else if args.len() == 2 {
-                    let expr = match args.pop() {
-                        Some(xi) => xi,
-                        None => return Err(Error::Unreachable),
-                    };
+                    let Some(expr) = args.pop() else { return Err(Error::Unreachable) };
                     Ok(EFuncRound {
                         modulus: Some(match args.pop() {
                             Some(xi) => xi,
