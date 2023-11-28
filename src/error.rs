@@ -7,7 +7,7 @@ use std::fmt;
 ///
 /// For performance reasons, `fasteval` makes an effort to always return `Error`s
 /// instead of using `panic!()`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Error {
     /// Too many Expressions/Values/Instructions were stored in the Slab.
     ///

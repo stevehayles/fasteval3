@@ -60,7 +60,7 @@ macro_rules! bool_to_f64 {
 ///
 /// It behaves much like a pointer or reference, but it is 'safe' (unlike a raw
 /// pointer) and is not managed by the Rust borrow checker (unlike a reference).
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub struct InstructionI(pub usize);
 
 /// This enumeration boosts performance because it eliminates expensive function calls for constant values.

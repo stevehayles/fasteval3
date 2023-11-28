@@ -33,14 +33,14 @@ use std::str::{from_utf8, from_utf8_unchecked};
 ///
 /// It behaves much like a pointer or reference, but it is 'safe' (unlike a raw
 /// pointer) and is not managed by the Rust borrow checker (unlike a reference).
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub struct ExpressionI(pub usize);
 
 /// A `ValueI` represents an index into `Slab.ps.vals`.
 ///
 /// It behaves much like a pointer or reference, but it is 'safe' (unlike a raw
 /// pointer) and is not managed by the Rust borrow checker (unlike a reference).
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub struct ValueI(pub usize);
 
 /// An `Expression` is the top node of a parsed AST.
@@ -66,7 +66,7 @@ pub enum Value {
 use self::Value::{EConstant, EPrintFunc, EStdFunc, EUnaryOp};
 
 /// Unary Operators
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum UnaryOp {
     EPos(ValueI),
     ENeg(ValueI),
@@ -76,7 +76,7 @@ pub enum UnaryOp {
 use self::UnaryOp::{ENeg, ENot, EParentheses, EPos};
 
 /// Binary Operators
-#[derive(Debug, PartialEq, PartialOrd, Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Copy, Clone)]
 pub enum BinaryOp {
     // Sorted in order of precedence (low-priority to high-priority):
     // Keep this order in-sync with evaler.rs.  (Search for 'rtol' and 'ltor'.)
@@ -98,7 +98,7 @@ pub enum BinaryOp {
 use self::BinaryOp::{EAdd, EDiv, EExp, EMod, EMul, ESub, EAND, EEQ, EGT, EGTE, ELT, ELTE, ENE, EOR};
 
 /// A Function Call with Standard Syntax.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum StdFunc {
     EVar(String),
     #[cfg(feature = "unsafe-vars")]
@@ -158,11 +158,11 @@ use StdFunc::{
 };
 
 /// Represents a `print()` function call in the `fasteval` expression AST.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct PrintFunc(pub Vec<ExpressionOrString>); // cap=8
 
 /// Used by the `print()` function.  Can hold an `Expression` or a `String`.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum ExpressionOrString {
     EExpr(ExpressionI),
     EStr(String), // cap=64
