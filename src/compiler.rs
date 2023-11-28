@@ -28,7 +28,7 @@ use std::cell::RefCell;
 
 #[cfg(feature = "unsafe-vars")]
 use crate::parser::StdFunc::EUnsafeVar;
-use crate::parser::{
+use crate::{parser::{
     BinaryOp::{
         self, EAdd, EDiv, EExp, EMod, EMul, ESub, EAND, EEQ, EGT, EGTE, ELT, ELTE, ENE, EOR,
     },
@@ -40,7 +40,7 @@ use crate::parser::{
     },
     UnaryOp::{self, ENeg, ENot, EParentheses, EPos},
     Value,
-};
+}, ExpressionI};
 use crate::slab::{CompileSlab, ParseSlab};
 use crate::Error;
 
@@ -206,6 +206,7 @@ struct ExprSlice<'s> {
     first: &'s Value,
     pairs: Vec<&'s ExprPair>,
 }
+
 impl<'s> ExprSlice<'s> {
     fn new(first: &Value) -> ExprSlice<'_> {
         ExprSlice {
@@ -213,6 +214,7 @@ impl<'s> ExprSlice<'s> {
             pairs: Vec::with_capacity(8),
         }
     }
+
     fn from_expr(expr: &Expression) -> ExprSlice<'_> {
         let mut sl = ExprSlice::new(&expr.first);
         for exprpairref in &expr.pairs {
@@ -220,6 +222,7 @@ impl<'s> ExprSlice<'s> {
         }
         sl
     }
+
     fn split(&self, bop: BinaryOp, dst: &mut Vec<ExprSlice<'s>>) {
         dst.push(ExprSlice::new(self.first));
         for exprpair in &self.pairs {
@@ -230,6 +233,7 @@ impl<'s> ExprSlice<'s> {
             }
         }
     }
+
     fn split_multi(
         &self,
         search: &[BinaryOp],
@@ -246,6 +250,200 @@ impl<'s> ExprSlice<'s> {
             }
         }
     }
+
+    /// Comparison processing step during compilation
+    #[inline]
+    fn process_comparisons(
+        &self,
+        parsed_slab: &ParseSlab,
+        compiled_slab: &mut CompileSlab,
+        namespace: &mut impl EvalNamespace
+    ) -> Instruction {
+        let mut ops = Vec::<&BinaryOp>::with_capacity(4);
+        let mut xss = Vec::<ExprSlice>::with_capacity(ops.len() + 1);
+        self.split_multi(&[EEQ, ENE, ELT, EGT, ELTE, EGTE], &mut xss, &mut ops);
+        let mut out: Instruction = xss.first().map_or(IConst(std::f64::NAN), |xs| {
+            xs.compile(parsed_slab, compiled_slab, namespace)
+        });
+
+        for (i, op) in ops.into_iter().enumerate() {
+            let instruction: Instruction = xss.get(i + 1).map_or(IConst(f64::NAN), |xs| {
+                xs.compile(parsed_slab, compiled_slab, namespace)
+            });
+
+            if let IConst(l) = out {
+                if let IConst(r) = instruction {
+                    out = match op {
+                        EEQ => IConst(bool_to_f64!(crate::f64_eq!(l, r))),
+                        ENE => IConst(bool_to_f64!(crate::f64_ne!(l, r))),
+                        ELT => IConst(bool_to_f64!(l < r)),
+                        EGT => IConst(bool_to_f64!(l > r)),
+                        ELTE => IConst(bool_to_f64!(l <= r)),
+                        EGTE => IConst(bool_to_f64!(l >= r)),
+                        _ => IConst(std::f64::NAN), // unreachable
+                    };
+                    continue;
+                }
+            }
+            out = match op {
+                EEQ => IEQ(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instruction)),
+                ENE => INE(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instruction)),
+                ELT => ILT(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instruction)),
+                EGT => IGT(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instruction)),
+                ELTE => ILTE(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instruction)),
+                EGTE => IGTE(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instruction)),
+                _ => IConst(std::f64::NAN), // unreachable
+            };
+        }
+        out
+    }
+
+    /// OR processing step during compilation
+    #[inline]
+    fn process_or(
+        &self,
+        parsed_slab: &ParseSlab,
+        compiled_slab: &mut CompileSlab,
+        namespace: &mut impl EvalNamespace
+    ) -> Instruction {
+        let mut xss = Vec::<ExprSlice>::with_capacity(4);
+        self.split(EOR, &mut xss);
+        let mut out = IConst(0.0);
+        let mut out_set = false;
+        for xs in &xss {
+            let instr = xs.compile(parsed_slab, compiled_slab, namespace);
+            if out_set {
+                out = IOR(compiled_slab.push_instr(out), instr_to_ic!(compiled_slab, instr));
+            } else if let IConst(c) = instr {
+                if crate::f64_ne!(c, 0.0) {
+                    return instr;
+                }
+            } else {
+                out = instr;
+                out_set = true;
+            }
+        }
+        out
+    }
+
+    /// AND processing step during compilation
+    #[inline]
+    fn process_and(
+        &self, 
+        parsed_slab: &ParseSlab, 
+        compiled_slab: &mut CompileSlab, 
+        namespace: &mut impl EvalNamespace
+    ) -> Instruction {
+        let mut xss = Vec::<ExprSlice>::with_capacity(4);
+        self.split(EAND, &mut xss);
+        let mut out = IConst(1.0);
+        let mut out_set = false;
+        for xs in &xss {
+            let instr = xs.compile(parsed_slab, compiled_slab, namespace);
+            if let IConst(c) = instr {
+                if crate::f64_eq!(c, 0.0) {
+                    return instr;
+                }
+            }
+            if out_set {
+                if let IConst(_) = out {
+                    // If we get here, we know that the const is non-zero.
+                    out = instr;
+                } else {
+                    out = IAND(compiled_slab.push_instr(out), instr_to_ic!(compiled_slab, instr));
+                }
+            } else {
+                out = instr;
+                out_set = true;
+            }
+        }
+        out
+    }
+
+    /// Addition processing step during compilation
+    #[inline]
+    fn process_addition(
+        &self,
+        parsed_slab: &ParseSlab,
+        compiled_slab: &mut CompileSlab,
+        namespace: &mut impl EvalNamespace
+    ) -> Instruction {
+        let mut xss = Vec::<ExprSlice>::with_capacity(4);
+        self.split(EAdd, &mut xss);
+        let mut instrs = Vec::<Instruction>::with_capacity(xss.len());
+        for xs in xss {
+            let instr = xs.compile(parsed_slab, compiled_slab, namespace);
+            if let IAdd(li, ric) = instr {
+                push_add_leaves(&mut instrs, compiled_slab, li, &ric); // Flatten nested structures like "x - 1 + 2 - 3".
+            } else {
+                instrs.push(instr);
+            }
+        }
+        compile_add(instrs, compiled_slab)
+    }
+
+    /// Subtraction processing step during compilation
+    #[inline]
+    fn process_subtraction(&self, parsed_slab: &ParseSlab, compiled_slab: &mut CompileSlab, namespace: &mut impl EvalNamespace) -> Instruction {
+        // Note: We don't need to push_add_leaves from here because Sub has a higher precedence than Add.
+
+        let mut xss = Vec::<ExprSlice>::with_capacity(4);
+        self.split(ESub, &mut xss);
+        let mut instrs = Vec::<Instruction>::with_capacity(xss.len());
+        for (i, xs) in xss.into_iter().enumerate() {
+            let instr = xs.compile(parsed_slab, compiled_slab, namespace);
+            if i == 0 {
+                instrs.push(instr);
+            } else {
+                instrs.push(neg_wrap(instr, compiled_slab));
+            }
+        }
+        compile_add(instrs, compiled_slab)
+    }
+
+    /// Multiplication processing step during compilation.
+    #[inline]
+    fn process_multiplication(
+        &self,
+        parsed_slab: &ParseSlab,
+        compiled_slab: &mut CompileSlab,
+        namespace: &mut impl EvalNamespace
+    ) -> Instruction {
+        let mut xss = Vec::<ExprSlice>::with_capacity(4);
+        self.split(EMul, &mut xss);
+        let mut instrs = Vec::<Instruction>::with_capacity(xss.len());
+        for xs in xss {
+            let instr = xs.compile(parsed_slab, compiled_slab, namespace);
+            if let IMul(li, ric) = instr {
+                push_mul_leaves(&mut instrs, compiled_slab, li, &ric); // Flatten nested structures like "deg/360 * 2*pi()".
+            } else {
+                instrs.push(instr);
+            }
+        }
+        compile_mul(instrs, compiled_slab)
+    }
+}
+
+/// Creates process functions dynamically.
+/// Each match arm provides different variations of similar function styles.
+/// The first is used to define Trigonometric functions.
+macro_rules! process_fn {
+    ($name:ident, $operation:ident, $fallback:ident) => {
+        #[inline]
+        fn $name(
+            parsed_slab: &ParseSlab,
+            compiled_slab: &mut CompileSlab,
+            namespace: &mut impl EvalNamespace,
+            expr: ExpressionI
+        ) -> Instruction {
+            let instruction = get_expr!(parsed_slab, expr).compile(parsed_slab, compiled_slab, namespace);
+            if let IConst(target) = instruction {
+                IConst(target.$operation())
+            } else {
+                $fallback(compiled_slab.push_instr(instruction))
+            }
+        }
+    };
 }
 
 /// Uses [`EPSILON`](https://doc.rust-lang.org/core/f64/constant.EPSILON.html) to determine equality of two `f64`s.
@@ -426,7 +624,7 @@ impl Compiler for ExprSlice<'_> {
         &self,
         parsed_slab: &ParseSlab,
         compiled_slab: &mut CompileSlab,
-        ns: &mut impl EvalNamespace,
+        namespace: &mut impl EvalNamespace,
     ) -> Instruction {
         // Associative:  (2+3)+4 = 2+(3+4)
         // Commutative:  1+2 = 2+1
@@ -446,7 +644,7 @@ impl Compiler for ExprSlice<'_> {
         // Find the lowest-priority BinaryOp:
         let mut lowest_op = match self.pairs.first() {
             Some(p0) => p0.0,
-            None => return self.first.compile(parsed_slab, compiled_slab, ns),
+            None => return self.first.compile(parsed_slab, compiled_slab, namespace),
         };
         for exprpair in &self.pairs {
             if exprpair.0 < lowest_op {
@@ -462,136 +660,15 @@ impl Compiler for ExprSlice<'_> {
             || lowest_op == ELTE
             || lowest_op == EGTE
         {
-            let mut ops = Vec::<&BinaryOp>::with_capacity(4);
-            let mut xss = Vec::<ExprSlice>::with_capacity(ops.len() + 1);
-            self.split_multi(&[EEQ, ENE, ELT, EGT, ELTE, EGTE], &mut xss, &mut ops);
-            let mut out: Instruction = xss.first().map_or(IConst(std::f64::NAN), |xs| {
-                xs.compile(parsed_slab, compiled_slab, ns)
-            });
-
-            for (i, op) in ops.into_iter().enumerate() {
-                let instruction: Instruction = xss.get(i + 1).map_or(IConst(f64::NAN), |xs| {
-                    xs.compile(parsed_slab, compiled_slab, ns)
-                });
-
-                if let IConst(l) = out {
-                    if let IConst(r) = instruction {
-                        out = match op {
-                            EEQ => IConst(bool_to_f64!(f64_eq!(l, r))),
-                            ENE => IConst(bool_to_f64!(f64_ne!(l, r))),
-                            ELT => IConst(bool_to_f64!(l < r)),
-                            EGT => IConst(bool_to_f64!(l > r)),
-                            ELTE => IConst(bool_to_f64!(l <= r)),
-                            EGTE => IConst(bool_to_f64!(l >= r)),
-                            _ => IConst(std::f64::NAN), // unreachable
-                        };
-                        continue;
-                    }
-                }
-                out = match op {
-                    EEQ => IEQ(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instruction)),
-                    ENE => INE(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instruction)),
-                    ELT => ILT(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instruction)),
-                    EGT => IGT(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instruction)),
-                    ELTE => ILTE(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instruction)),
-                    EGTE => IGTE(instr_to_ic!(compiled_slab, out), instr_to_ic!(compiled_slab, instruction)),
-                    _ => IConst(std::f64::NAN), // unreachable
-                };
-            }
-            return out;
+            return self.process_comparisons(parsed_slab, compiled_slab, namespace)
         }
 
         match lowest_op {
-            EOR => {
-                let mut xss = Vec::<ExprSlice>::with_capacity(4);
-                self.split(EOR, &mut xss);
-                let mut out = IConst(0.0);
-                let mut out_set = false;
-                for xs in &xss {
-                    let instr = xs.compile(parsed_slab, compiled_slab, ns);
-                    if out_set {
-                        out = IOR(compiled_slab.push_instr(out), instr_to_ic!(compiled_slab, instr));
-                    } else if let IConst(c) = instr {
-                        if f64_ne!(c, 0.0) {
-                            return instr;
-                        }
-                    } else {
-                        out = instr;
-                        out_set = true;
-                    }
-                }
-                out
-            }
-            EAND => {
-                let mut xss = Vec::<ExprSlice>::with_capacity(4);
-                self.split(EAND, &mut xss);
-                let mut out = IConst(1.0);
-                let mut out_set = false;
-                for xs in &xss {
-                    let instr = xs.compile(parsed_slab, compiled_slab, ns);
-                    if let IConst(c) = instr {
-                        if f64_eq!(c, 0.0) {
-                            return instr;
-                        }
-                    }
-                    if out_set {
-                        if let IConst(_) = out {
-                            // If we get here, we know that the const is non-zero.
-                            out = instr;
-                        } else {
-                            out = IAND(compiled_slab.push_instr(out), instr_to_ic!(compiled_slab, instr));
-                        }
-                    } else {
-                        out = instr;
-                        out_set = true;
-                    }
-                }
-                out
-            }
-            EAdd => {
-                let mut xss = Vec::<ExprSlice>::with_capacity(4);
-                self.split(EAdd, &mut xss);
-                let mut instrs = Vec::<Instruction>::with_capacity(xss.len());
-                for xs in xss {
-                    let instr = xs.compile(parsed_slab, compiled_slab, ns);
-                    if let IAdd(li, ric) = instr {
-                        push_add_leaves(&mut instrs, compiled_slab, li, &ric); // Flatten nested structures like "x - 1 + 2 - 3".
-                    } else {
-                        instrs.push(instr);
-                    }
-                }
-                compile_add(instrs, compiled_slab)
-            }
-            ESub => {
-                // Note: We don't need to push_add_leaves from here because Sub has a higher precedence than Add.
-
-                let mut xss = Vec::<ExprSlice>::with_capacity(4);
-                self.split(ESub, &mut xss);
-                let mut instrs = Vec::<Instruction>::with_capacity(xss.len());
-                for (i, xs) in xss.into_iter().enumerate() {
-                    let instr = xs.compile(parsed_slab, compiled_slab, ns);
-                    if i == 0 {
-                        instrs.push(instr);
-                    } else {
-                        instrs.push(neg_wrap(instr, compiled_slab));
-                    }
-                }
-                compile_add(instrs, compiled_slab)
-            }
-            EMul => {
-                let mut xss = Vec::<ExprSlice>::with_capacity(4);
-                self.split(EMul, &mut xss);
-                let mut instrs = Vec::<Instruction>::with_capacity(xss.len());
-                for xs in xss {
-                    let instr = xs.compile(parsed_slab, compiled_slab, ns);
-                    if let IMul(li, ric) = instr {
-                        push_mul_leaves(&mut instrs, compiled_slab, li, &ric); // Flatten nested structures like "deg/360 * 2*pi()".
-                    } else {
-                        instrs.push(instr);
-                    }
-                }
-                compile_mul(instrs, compiled_slab)
-            }
+            EOR => self.process_or(parsed_slab, compiled_slab, namespace),
+            EAND => self.process_and(parsed_slab, compiled_slab, namespace),
+            EAdd => self.process_addition(parsed_slab, compiled_slab, namespace),
+            ESub => self.process_subtraction(parsed_slab, compiled_slab, namespace),
+            EMul => self.process_multiplication(parsed_slab, compiled_slab, namespace),
             EDiv => {
                 // Note: We don't need to push_mul_leaves from here because Div has a higher precedence than Mul.
 
@@ -599,7 +676,7 @@ impl Compiler for ExprSlice<'_> {
                 self.split(EDiv, &mut xss);
                 let mut instrs = Vec::<Instruction>::with_capacity(xss.len());
                 for (i, xs) in xss.into_iter().enumerate() {
-                    let instr = xs.compile(parsed_slab, compiled_slab, ns);
+                    let instr = xs.compile(parsed_slab, compiled_slab, namespace);
                     if i == 0 {
                         instrs.push(instr);
                     } else {
@@ -657,7 +734,7 @@ impl Compiler for ExprSlice<'_> {
                 let mut out = IConst(0.0);
                 let mut out_set = false;
                 for xs in &xss {
-                    let instr = xs.compile(parsed_slab, compiled_slab, ns);
+                    let instr = xs.compile(parsed_slab, compiled_slab, namespace);
                     if out_set {
                         if let IConst(dividend) = out {
                             if let IConst(divisor) = instr {
@@ -683,7 +760,7 @@ impl Compiler for ExprSlice<'_> {
                 let mut out = IConst(0.0);
                 let mut out_set = false;
                 for xs in xss.into_iter().rev() {
-                    let instr = xs.compile(parsed_slab, compiled_slab, ns);
+                    let instr = xs.compile(parsed_slab, compiled_slab, namespace);
                     if out_set {
                         if let IConst(power) = out {
                             if let IConst(base) = instr {
@@ -786,14 +863,288 @@ impl Compiler for UnaryOp {
     }
 }
 
+impl StdFunc {
+    /// Custom Function processing step during compilation.
+    #[inline]
+    fn process_custom_fn(
+        parsed_slab: &ParseSlab,
+        compiled_slab: &mut CompileSlab,
+        namespace: &mut impl EvalNamespace,
+        name: &String,
+        expressions: &Vec<ExpressionI>,
+        celled_parsed_slab: &RefCell<String>
+    ) -> Instruction {
+        let mut args = Vec::<IC>::with_capacity(expressions.len());
+        let mut f64_args = Vec::<f64>::with_capacity(expressions.len());
+        let mut is_all_const = true;
+        for expr in expressions {
+            let instr = get_expr!(parsed_slab, expr).compile(parsed_slab, compiled_slab, namespace);
+            if let IConst(c) = instr {
+                f64_args.push(c);
+            } else {
+                is_all_const = false;
+            }
+            args.push(instr_to_ic!(compiled_slab, instr));
+        }
+        if is_all_const {
+            let computed_value = eval_var!(namespace, name, f64_args, &mut celled_parsed_slab.borrow_mut());
+            computed_value.map_or_else(|_| IFunc { name: name.clone(), args }, |value| IConst(value))
+        } else {
+            IFunc {
+                name: name.clone(),
+                args,
+            }
+        }
+    }
+
+    /// Integer Function processing step during compilation.
+    #[inline]
+    fn process_int_fn(
+        parsed_slab: &ParseSlab,
+        compiled_slab: &mut CompileSlab,
+        namespace: &mut impl EvalNamespace,
+        expression: ExpressionI
+    ) -> Instruction {
+        let instr = get_expr!(parsed_slab, expression).compile(parsed_slab, compiled_slab, namespace);
+        if let IConst(c) = instr {
+            IConst(c.trunc())
+        } else {
+            IFuncInt(compiled_slab.push_instr(instr))
+        }
+    }
+
+    /// Ceiling processing step during compilation.
+    #[inline]
+    fn process_ceil_fn(
+        parsed_slab: &ParseSlab,
+        compiled_slab: &mut CompileSlab,
+        namespace: &mut impl EvalNamespace,
+        expr: ExpressionI
+    ) -> Instruction {
+        let instr = get_expr!(parsed_slab, expr).compile(parsed_slab, compiled_slab, namespace);
+        if let IConst(c) = instr {
+            IConst(c.ceil())
+        } else {
+            IFuncCeil(compiled_slab.push_instr(instr))
+        }
+    }
+
+    /// Flooring processing step during compilation.
+    #[inline]
+    fn process_floor_fn(
+        parsed_slab: &ParseSlab,
+        compiled_slab: &mut CompileSlab,
+        namespace: &mut impl EvalNamespace,
+        expr: ExpressionI
+    ) -> Instruction {
+        let instr = get_expr!(parsed_slab, expr).compile(parsed_slab, compiled_slab, namespace);
+        if let IConst(c) = instr {
+            IConst(c.floor())
+        } else {
+            IFuncFloor(compiled_slab.push_instr(instr))
+        }
+    }
+
+    /// Absolute Value processing step during compilation.
+    #[inline]
+    fn process_abs_fn(
+        parsed_slab: &ParseSlab,
+        compiled_slab: &mut CompileSlab,
+        namespace: &mut impl EvalNamespace,
+        expr: ExpressionI
+    ) -> Instruction {
+        let instr = get_expr!(parsed_slab, expr).compile(parsed_slab, compiled_slab, namespace);
+        if let IConst(c) = instr {
+            IConst(c.abs())
+        } else {
+            IFuncAbs(compiled_slab.push_instr(instr))
+        }
+    }
+
+    /// Sign processing step during compilation
+    #[inline]
+    fn process_signum(
+        parsed_slab: &ParseSlab,
+        compiled_slab: &mut CompileSlab,
+        namespace: &mut impl EvalNamespace,
+        expr: ExpressionI
+    ) -> Instruction {
+        let instr = get_expr!(parsed_slab, expr).compile(parsed_slab, compiled_slab, namespace);
+        if let IConst(c) = instr {
+            IConst(c.signum())
+        } else {
+            IFuncSign(compiled_slab.push_instr(instr))
+        }
+    }
+
+    /// Logarithm processing step during compilation.
+    #[inline]
+    fn process_log(
+        parsed_slab: &ParseSlab,
+        compiled_slab: &mut CompileSlab,
+        namespace: &mut impl EvalNamespace,
+        base_options: &Option<ExpressionI>,
+        expr: ExpressionI
+    ) -> Instruction {
+        let base: Instruction = base_options.as_ref().map_or(IConst(10.0), |bi| get_expr!(parsed_slab, bi).compile(parsed_slab, compiled_slab, namespace));
+        let instr = get_expr!(parsed_slab, expr).compile(parsed_slab, compiled_slab, namespace);
+        if let IConst(b) = base {
+            if let IConst(n) = instr {
+                return IConst(log(b, n));
+            }
+        }
+        IFuncLog {
+            base: instr_to_ic!(compiled_slab, base),
+            of: instr_to_ic!(compiled_slab, instr),
+        }
+    }
+
+    /// Rounding processing step during compilation.
+    #[inline]
+    fn process_round(
+        parsed_slab: &ParseSlab,
+        compiled_slab: &mut CompileSlab,
+        namespace: &mut impl EvalNamespace,
+        mod_option: &Option<ExpressionI>,
+        expr: ExpressionI
+    ) -> Instruction {
+        let modulus: Instruction = mod_option.as_ref().map_or(IConst(1.0), |mi| get_expr!(parsed_slab, mi).compile(parsed_slab, compiled_slab, namespace));
+        let instr = get_expr!(parsed_slab, expr).compile(parsed_slab, compiled_slab, namespace);
+        if let IConst(m) = modulus {
+            if let IConst(n) = instr {
+                return IConst((n / m).round() * m); // Floats don't overflow.
+            }
+        }
+        IFuncRound {
+            modulus: instr_to_ic!(compiled_slab, modulus),
+            of: instr_to_ic!(compiled_slab, instr),
+        }
+    }
+
+    /// Min processing step during compilation.
+    #[inline]
+    fn process_min(
+        parsed_slab: &ParseSlab,
+        compiled_slab: &mut CompileSlab,
+        namespace: &mut impl EvalNamespace,
+        fi: ExpressionI,
+        is: &Vec<ExpressionI>
+    ) -> Instruction {
+        let first = get_expr!(parsed_slab, fi).compile(parsed_slab, compiled_slab, namespace);
+        let mut rest = Vec::<Instruction>::with_capacity(is.len());
+        for i in is {
+            rest.push(get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, namespace));
+        }
+        let mut out = IConst(0.0);
+        let mut out_set = false;
+        let mut const_min = 0.0;
+        let mut const_min_set = false;
+        if let IConst(f) = first {
+            const_min = f;
+            const_min_set = true;
+        } else {
+            out = first;
+            out_set = true;
+        }
+        for instr in rest {
+            if let IConst(f) = instr {
+                if const_min_set {
+                    if f < const_min {
+                        const_min = f;
+                    }
+                } else {
+                    const_min = f;
+                    const_min_set = true;
+                }
+            } else if out_set {
+                out = IFuncMin(compiled_slab.push_instr(out), IC::I(compiled_slab.push_instr(instr)));
+            } else {
+                out = instr;
+                out_set = true;
+            }
+        }
+        if const_min_set {
+            if out_set {
+                out = IFuncMin(compiled_slab.push_instr(out), IC::C(const_min));
+            } else {
+                out = IConst(const_min);
+                // out_set = true;  // Comment out so the compiler doesn't complain about unused assignments.
+            }
+        }
+        //assert!(out_set);
+        out
+    }
+
+    /// Max processing step during compilation.
+    #[inline]
+    fn process_max(
+        parsed_slab: &ParseSlab,
+        compiled_slab: &mut CompileSlab,
+        namespace: &mut impl EvalNamespace,
+        fi: ExpressionI,
+        is: &Vec<ExpressionI>
+    ) -> Instruction {
+        let first = get_expr!(parsed_slab, fi).compile(parsed_slab, compiled_slab, namespace);
+        let mut rest = Vec::<Instruction>::with_capacity(is.len());
+        for i in is {
+            rest.push(get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, namespace));
+        }
+        let mut out = IConst(0.0);
+        let mut out_set = false;
+        let mut const_max = 0.0;
+        let mut const_max_set = false;
+        if let IConst(f) = first {
+            const_max = f;
+            const_max_set = true;
+        } else {
+            out = first;
+            out_set = true;
+        }
+        for instr in rest {
+            if let IConst(f) = instr {
+                if const_max_set {
+                    if f > const_max {
+                        const_max = f;
+                    }
+                } else {
+                    const_max = f;
+                    const_max_set = true;
+                }
+            } else if out_set {
+                out = IFuncMax(compiled_slab.push_instr(out), IC::I(compiled_slab.push_instr(instr)));
+            } else {
+                out = instr;
+                out_set = true;
+            }
+        }
+        if const_max_set {
+            if out_set {
+                out = IFuncMax(compiled_slab.push_instr(out), IC::C(const_max));
+            } else {
+                out = IConst(const_max);
+                // out_set = true;  // Comment out so the compiler doesn't complain about unused assignments.
+            }
+        }
+        //assert!(out_set);
+        out
+    }
+
+    process_fn!(process_sin, sin, IFuncSin);
+    process_fn!(process_cos, cos, IFuncCos);
+    process_fn!(process_tan, tan, IFuncTan);
+    process_fn!(process_asin, asin, IFuncASin);
+    process_fn!(process_acos, acos, IFuncACos);
+    process_fn!(process_atan, atan, IFuncATan);
+}
+
 impl Compiler for StdFunc {
     fn compile(
         &self,
         parsed_slab: &ParseSlab,
         compiled_slab: &mut CompileSlab,
-        ns: &mut impl EvalNamespace,
+        namespace: &mut impl EvalNamespace,
     ) -> Instruction {
-        let celled_pslab = RefCell::from(parsed_slab.char_buf.clone());
+        let celled_parsed_slab = RefCell::from(parsed_slab.char_buf.clone());
         match self {
             EVar(name) => IVar(name.clone()),
             #[cfg(feature = "unsafe-vars")]
@@ -801,260 +1152,49 @@ impl Compiler for StdFunc {
                 name: name.clone(),
                 ptr: *ptr,
             },
-            EFunc { name, args: xis } => {
-                let mut args = Vec::<IC>::with_capacity(xis.len());
-                let mut f64_args = Vec::<f64>::with_capacity(xis.len());
-                let mut is_all_const = true;
-                for xi in xis {
-                    let instr = get_expr!(parsed_slab, xi).compile(parsed_slab, compiled_slab, ns);
-                    if let IConst(c) = instr {
-                        f64_args.push(c);
-                    } else {
-                        is_all_const = false;
-                    }
-                    args.push(instr_to_ic!(compiled_slab, instr));
-                }
-                if is_all_const {
-                    let computed_value = eval_var!(ns, name, f64_args, &mut celled_pslab.borrow_mut());
-                    computed_value.map_or_else(|_| IFunc { name: name.clone(), args }, |value| IConst(value))
-                    /*if let Ok(value) = computed_value {
-                        IConst(value)
-                    } else {
-                        IFunc {
-                            name: name.clone(),
-                            args,
-                        }
-                    }*/
-                } else {
-                    IFunc {
-                        name: name.clone(),
-                        args,
-                    }
-                }
-            }
+            EFunc { name, args } => Self::process_custom_fn(parsed_slab, compiled_slab, namespace, name, args, &celled_parsed_slab),
 
-            EFuncInt(i) => {
-                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
-                if let IConst(c) = instr {
-                    IConst(c.trunc())
-                } else {
-                    IFuncInt(compiled_slab.push_instr(instr))
-                }
-            }
-            EFuncCeil(i) => {
-                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
-                if let IConst(c) = instr {
-                    IConst(c.ceil())
-                } else {
-                    IFuncCeil(compiled_slab.push_instr(instr))
-                }
-            }
-            EFuncFloor(i) => {
-                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
-                if let IConst(c) = instr {
-                    IConst(c.floor())
-                } else {
-                    IFuncFloor(compiled_slab.push_instr(instr))
-                }
-            }
-            EFuncAbs(i) => {
-                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
-                if let IConst(c) = instr {
-                    IConst(c.abs())
-                } else {
-                    IFuncAbs(compiled_slab.push_instr(instr))
-                }
-            }
-            EFuncSign(i) => {
-                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
-                if let IConst(c) = instr {
-                    IConst(c.signum())
-                } else {
-                    IFuncSign(compiled_slab.push_instr(instr))
-                }
-            }
+            EFuncInt(expr) => Self::process_int_fn(parsed_slab, compiled_slab, namespace, *expr),
+            EFuncCeil(expr) => Self::process_ceil_fn(parsed_slab, compiled_slab, namespace, *expr),
+            EFuncFloor(expr) => Self::process_floor_fn(parsed_slab, compiled_slab, namespace, *expr),
+            EFuncAbs(expr) => Self::process_abs_fn(parsed_slab, compiled_slab, namespace, *expr),
+            EFuncSign(expr) => Self::process_signum(parsed_slab, compiled_slab, namespace, *expr),
             EFuncLog {
-                base: baseopt,
-                expr: i,
+                base: base_option,
+                expr,
             } => {
-                let base: Instruction = baseopt.as_ref().map_or(IConst(10.0), |bi| get_expr!(parsed_slab, bi).compile(parsed_slab, compiled_slab, ns));
-                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
-                if let IConst(b) = base {
-                    if let IConst(n) = instr {
-                        return IConst(log(b, n));
-                    }
-                }
-                IFuncLog {
-                    base: instr_to_ic!(compiled_slab, base),
-                    of: instr_to_ic!(compiled_slab, instr),
-                }
+                Self::process_log(parsed_slab, compiled_slab, namespace, base_option, *expr)
             }
             EFuncRound {
-                modulus: modopt,
-                expr: i,
+                modulus: mod_option,
+                expr,
             } => {
-                let modulus: Instruction = modopt.as_ref().map_or(IConst(1.0), |mi| get_expr!(parsed_slab, mi).compile(parsed_slab, compiled_slab, ns));
-                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
-                if let IConst(m) = modulus {
-                    if let IConst(n) = instr {
-                        return IConst((n / m).round() * m); // Floats don't overflow.
-                    }
-                }
-                IFuncRound {
-                    modulus: instr_to_ic!(compiled_slab, modulus),
-                    of: instr_to_ic!(compiled_slab, instr),
-                }
+                Self::process_round(parsed_slab, compiled_slab, namespace, mod_option, *expr)
             }
             EFuncMin {
                 first: fi,
                 rest: is,
             } => {
-                let first = get_expr!(parsed_slab, fi).compile(parsed_slab, compiled_slab, ns);
-                let mut rest = Vec::<Instruction>::with_capacity(is.len());
-                for i in is {
-                    rest.push(get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns));
-                }
-                let mut out = IConst(0.0);
-                let mut out_set = false;
-                let mut const_min = 0.0;
-                let mut const_min_set = false;
-                if let IConst(f) = first {
-                    const_min = f;
-                    const_min_set = true;
-                } else {
-                    out = first;
-                    out_set = true;
-                }
-                for instr in rest {
-                    if let IConst(f) = instr {
-                        if const_min_set {
-                            if f < const_min {
-                                const_min = f;
-                            }
-                        } else {
-                            const_min = f;
-                            const_min_set = true;
-                        }
-                    } else if out_set {
-                        out = IFuncMin(compiled_slab.push_instr(out), IC::I(compiled_slab.push_instr(instr)));
-                    } else {
-                        out = instr;
-                        out_set = true;
-                    }
-                }
-                if const_min_set {
-                    if out_set {
-                        out = IFuncMin(compiled_slab.push_instr(out), IC::C(const_min));
-                    } else {
-                        out = IConst(const_min);
-                        // out_set = true;  // Comment out so the compiler doesn't complain about unused assignments.
-                    }
-                }
-                //assert!(out_set);
-                out
+                Self::process_min(parsed_slab, compiled_slab, namespace, *fi, is)
             }
             EFuncMax {
                 first: fi,
                 rest: is,
             } => {
-                let first = get_expr!(parsed_slab, fi).compile(parsed_slab, compiled_slab, ns);
-                let mut rest = Vec::<Instruction>::with_capacity(is.len());
-                for i in is {
-                    rest.push(get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns));
-                }
-                let mut out = IConst(0.0);
-                let mut out_set = false;
-                let mut const_max = 0.0;
-                let mut const_max_set = false;
-                if let IConst(f) = first {
-                    const_max = f;
-                    const_max_set = true;
-                } else {
-                    out = first;
-                    out_set = true;
-                }
-                for instr in rest {
-                    if let IConst(f) = instr {
-                        if const_max_set {
-                            if f > const_max {
-                                const_max = f;
-                            }
-                        } else {
-                            const_max = f;
-                            const_max_set = true;
-                        }
-                    } else if out_set {
-                        out = IFuncMax(compiled_slab.push_instr(out), IC::I(compiled_slab.push_instr(instr)));
-                    } else {
-                        out = instr;
-                        out_set = true;
-                    }
-                }
-                if const_max_set {
-                    if out_set {
-                        out = IFuncMax(compiled_slab.push_instr(out), IC::C(const_max));
-                    } else {
-                        out = IConst(const_max);
-                        // out_set = true;  // Comment out so the compiler doesn't complain about unused assignments.
-                    }
-                }
-                //assert!(out_set);
-                out
+                Self::process_max(parsed_slab, compiled_slab, namespace, *fi, is)
             }
 
             EFuncE => IConst(std::f64::consts::E),
             EFuncPi => IConst(std::f64::consts::PI),
 
-            EFuncSin(i) => {
-                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
-                if let IConst(c) = instr {
-                    IConst(c.sin())
-                } else {
-                    IFuncSin(compiled_slab.push_instr(instr))
-                }
-            }
-            EFuncCos(i) => {
-                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
-                if let IConst(c) = instr {
-                    IConst(c.cos())
-                } else {
-                    IFuncCos(compiled_slab.push_instr(instr))
-                }
-            }
-            EFuncTan(i) => {
-                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
-                if let IConst(c) = instr {
-                    IConst(c.tan())
-                } else {
-                    IFuncTan(compiled_slab.push_instr(instr))
-                }
-            }
-            EFuncASin(i) => {
-                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
-                if let IConst(c) = instr {
-                    IConst(c.asin())
-                } else {
-                    IFuncASin(compiled_slab.push_instr(instr))
-                }
-            }
-            EFuncACos(i) => {
-                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
-                if let IConst(c) = instr {
-                    IConst(c.acos())
-                } else {
-                    IFuncACos(compiled_slab.push_instr(instr))
-                }
-            }
-            EFuncATan(i) => {
-                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
-                if let IConst(c) = instr {
-                    IConst(c.atan())
-                } else {
-                    IFuncATan(compiled_slab.push_instr(instr))
-                }
-            }
+            EFuncSin(expr) => Self::process_sin(parsed_slab, compiled_slab, namespace, *expr),
+            EFuncCos(expr) => Self::process_cos(parsed_slab, compiled_slab, namespace, *expr),
+            EFuncTan(expr) => Self::process_tan(parsed_slab, compiled_slab, namespace, *expr),
+            EFuncASin(expr) => Self::process_asin(parsed_slab, compiled_slab, namespace, *expr),
+            EFuncACos(expr) => Self::process_acos(parsed_slab, compiled_slab, namespace, *expr),
+            EFuncATan(expr) => Self::process_atan(parsed_slab, compiled_slab, namespace, *expr),
             EFuncSinH(i) => {
-                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
+                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, namespace);
                 if let IConst(c) = instr {
                     IConst(c.sinh())
                 } else {
@@ -1062,7 +1202,7 @@ impl Compiler for StdFunc {
                 }
             }
             EFuncCosH(i) => {
-                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
+                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, namespace);
                 if let IConst(c) = instr {
                     IConst(c.cosh())
                 } else {
@@ -1070,7 +1210,7 @@ impl Compiler for StdFunc {
                 }
             }
             EFuncTanH(i) => {
-                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
+                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, namespace);
                 if let IConst(c) = instr {
                     IConst(c.tanh())
                 } else {
@@ -1078,7 +1218,7 @@ impl Compiler for StdFunc {
                 }
             }
             EFuncASinH(i) => {
-                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
+                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, namespace);
                 if let IConst(c) = instr {
                     IConst(c.asinh())
                 } else {
@@ -1086,7 +1226,7 @@ impl Compiler for StdFunc {
                 }
             }
             EFuncACosH(i) => {
-                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
+                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, namespace);
                 if let IConst(c) = instr {
                     IConst(c.acosh())
                 } else {
@@ -1094,7 +1234,7 @@ impl Compiler for StdFunc {
                 }
             }
             EFuncATanH(i) => {
-                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, ns);
+                let instr = get_expr!(parsed_slab, i).compile(parsed_slab, compiled_slab, namespace);
                 if let IConst(c) = instr {
                     IConst(c.atanh())
                 } else {

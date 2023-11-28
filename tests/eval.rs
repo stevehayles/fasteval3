@@ -67,6 +67,7 @@ fn aaa_aab_single() {
     );
 }
 
+#[allow(clippy::cognitive_complexity, clippy::too_many_lines)] // Another revisit
 #[test]
 fn aaa_basics() {
     let mut slab = Slab::new();

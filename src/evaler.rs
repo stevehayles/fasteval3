@@ -439,6 +439,8 @@ impl Evaler for StdFunc {
             }
         };
     }
+
+    #[allow(clippy::cognitive_complexity)]
     fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f64, Error> {
         let celled_slab = RefCell::from(slab.ps.char_buf.clone());
         match self {
@@ -652,6 +654,8 @@ impl Evaler for Instruction {
             IPrintFunc(pf) => pf._var_names(slab, dst),
         }
     }
+
+    #[allow(clippy::too_many_lines, clippy::cognitive_complexity)] // This is pretty simple on its own.
     fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f64, Error> {
         let celled_slab = RefCell::from(slab.ps.char_buf.clone());
         match self {

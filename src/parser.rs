@@ -769,6 +769,7 @@ impl Parser {
         }
     }
 
+    #[allow(clippy::cognitive_complexity, clippy::too_many_lines)] // Might revisit later.
     fn read_func(
         &self,
         fname: String,

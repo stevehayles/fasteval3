@@ -44,6 +44,7 @@ fn basics() {
 "Slab{ exprs:{ 0:Expression { first: EConstant(3.0), pairs: [ExprPair(EMul, EConstant(4.0))] }, 1:Expression { first: EConstant(2.0), pairs: [ExprPair(ESub, EUnaryOp(EParentheses(ExpressionI(0)))), ExprPair(EDiv, EConstant(5.0))] }, 2:Expression { first: EConstant(1.0), pairs: [ExprPair(EAdd, EUnaryOp(EParentheses(ExpressionI(1)))), ExprPair(EExp, EConstant(6.0))] }, 3:Expression { first: EUnaryOp(EParentheses(ExpressionI(2))), pairs: [ExprPair(EMod, EConstant(7.0))] } }, vals:{}, instrs:{} }");
 }
 
+#[allow(clippy::cognitive_complexity, clippy::too_many_lines)] // Revisit
 #[test]
 fn consts() {
     let mut slab = Slab::new();
