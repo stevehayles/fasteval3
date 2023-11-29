@@ -8,7 +8,7 @@ use fasteval3::compiler::Instruction::{
 };
 use fasteval3::compiler::IC;
 #[cfg(feature = "eval-builtin")]
-use fasteval2::parser::{EvalFunc, KWArg};
+use fasteval3::parser::{EvalFunc, KWArg};
 use fasteval3::parser::{
     ExpressionOrString::{EExpr, EStr},
     PrintFunc,
