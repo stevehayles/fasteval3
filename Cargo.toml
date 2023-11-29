@@ -1,6 +1,6 @@
 [package]
 name = "fasteval3"
-version = "0.1.0"
+version = "3.0.0"
 authors = ["Pasha Podolsky <ppodolsky@me.com>", "Christopher Sebastian <christopher@likebike.com>", "Overzealous Lotus"]
 license = "MIT"
 readme = "README.md"
