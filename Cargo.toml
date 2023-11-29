@@ -1,7 +1,7 @@
 [package]
 name = "fasteval3"
 version = "0.1.0"
-authors = ["Pasha Podolsky <ppodolsky@me.com>", "Christopher Sebastian <christopher@likebike.com>"]
+authors = ["Pasha Podolsky <ppodolsky@me.com>", "Christopher Sebastian <christopher@likebike.com>", "Overzealous Lotus"]
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/OverzealousLotus/fasteval3"
