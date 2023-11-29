@@ -888,7 +888,7 @@ impl StdFunc {
         }
         if is_all_const {
             let computed_value = eval_var!(namespace, name, f64_args, &mut celled_parsed_slab.borrow_mut());
-            computed_value.map_or_else(|_| IFunc { name: name.clone(), args }, |value| IConst(value))
+            computed_value.map_or_else(|_| IFunc { name: name.clone(), args }, IConst)
         } else {
             IFunc {
                 name: name.clone(),

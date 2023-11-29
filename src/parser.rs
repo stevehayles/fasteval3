@@ -53,7 +53,7 @@ pub struct Expression {
 }
 
 #[derive(Debug, PartialEq)]
-pub(crate) struct ExprPair(pub BinaryOp, pub Value);
+pub(crate) struct ExprPair(pub(crate) BinaryOp, pub(crate) Value);
 
 /// A `Value` can be a Constant, a `UnaryOp`, a `StdFunc`, or a `PrintFunc`.
 #[derive(Debug, PartialEq)]
@@ -347,7 +347,7 @@ impl Parser {
         let first = self.read_value(slab, bs, depth)?;
         let mut pairs = Vec::<ExprPair>::with_capacity(8);
         loop {
-            match self.read_binaryop(bs)? {
+            match Self::read_binaryop(bs)? {
                 Pass => break,
                 Bite(bop) => {
                     let val = self.read_value(slab, bs, depth)?;
@@ -620,7 +620,7 @@ impl Parser {
         }
     }
 
-    fn read_binaryop(&self, bs: &mut &[u8]) -> Result<Token<BinaryOp>, Error> {
+    fn read_binaryop(bs: &mut &[u8]) -> Result<Token<BinaryOp>, Error> {
         spaces!(bs);
         peek!(bs).map_or(Ok(Pass), |b| match b {
             b'+' => {

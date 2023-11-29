@@ -1,4 +1,0 @@
-#[inline]
-const fn noop() {
-    
-}

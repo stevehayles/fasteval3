@@ -555,6 +555,7 @@ fn evalns_cb_ownership() {
     //             just the implementation matters!
 }
 
+#[allow(clippy::too_many_lines)]
 #[test]
 fn custom_func() {
     let mut slab = Slab::new();

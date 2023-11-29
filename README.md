@@ -138,6 +138,7 @@ sure that all custom functionality is safe.
 
 ## Performance Benchmarks
 
+NOTE: These benchmarks are outdated and were taken years ago during the original projects creation!
 Here is a short summary of the performance benchmarks.  For a more complete report and anlysis, see the [official documentation](https://docs.rs/fasteval3/#performance-benchmarks).
 
 ### Charts
