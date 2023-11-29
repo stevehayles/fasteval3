@@ -20,7 +20,7 @@ use crate::slab::Slab;
 ///
 /// # Examples
 ///
-/// [See the `fasteval` top-level documentation for examples.](../index.html#easy-evaluation)
+/// [See the `fasteval3` top-level documentation for examples.](../index.html#easy-evaluation)
 pub fn ez_eval(expr_str: &str, ns: &mut impl EvalNamespace) -> Result<f64, Error> {
     let mut slab = Slab::new(); // A big block of memory, so we don't need to perform many tiny (and slow!) allocations.
 

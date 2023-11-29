@@ -14,7 +14,7 @@
 //! * Easy integration into many different types of applications, including scoped evaluation.
 //! * Very fast performance.
 //!
-//! # The `fasteval` Expression "Mini-Language"
+//! # The `fasteval3` Expression "Mini-Language"
 //!
 //! ## Built-in Functions and Constants
 //!

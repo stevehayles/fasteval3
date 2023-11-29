@@ -5,14 +5,14 @@
 //! beginning of the parse-compile-eval process, rather than many small
 //! allocations.  You can also re-use a `Slab` for multiple expression
 //! parse-compile-eval cycles, greatly reducing the amount of memory
-//! operations.  The `Slab` is the main key to `fasteval`'s excellent
+//! operations.  The `Slab` is the main key to `fasteval3`'s excellent
 //! performance.
 //!
 //! You use `ExpressionI`, `ValueI`, and `InstructionI` index types to refer to
 //! elements within the `Slab`.  These special index types are necessary to
 //! side-step the Rust borrow checker, which is not able to understand
 //! borrow-splitting of contiguous allocations (like arrays).
-//! (In other words, these special index types allows `fasteval` to mutate a
+//! (In other words, these special index types allows `fasteval3` to mutate a
 //! `Slab` while simultaneously holding references to its contents.)
 //!
 //! You usually won't use any of the `Slab` method directly.  Instead, you'll
@@ -128,7 +128,7 @@ pub struct Slab {
 ///
 /// (This is documented here because the
 /// [`add_unsafe_var()`](#method.add_unsafe_var) method and its documentation
-/// only appears if `fasteval` is built with the `unsafe-vars` feature (`cargo
+/// only appears if `fasteval3` is built with the `unsafe-vars` feature (`cargo
 /// build --features unsafe-vars`).  I want this documentation to appear
 /// regardless of the build mode, so I'm putting it here.)
 ///

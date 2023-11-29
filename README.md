@@ -15,7 +15,7 @@ Documentation:
 Add this to your Cargo.toml:
 
     [dependencies]
-    fasteval3 = "0.2.4"
+    fasteval3 = "3.0.1"
 
 
 You can use [`codegen-units=1`](https://doc.rust-lang.org/stable/cargo/reference/manifest.html#the-profile-sections) for better run-time performance. In some cases [it will greatly improves LLVM's compile-time optimizations](http://likebike.com/posts/How_To_Write_Fast_Rust_Code.html#emit-asm).
@@ -48,7 +48,7 @@ Here is one simple example.  See the [API Reference](https://docs.rs/fasteval3/#
 
 The `ez_eval()` function performs the entire allocation-parse-eval process
 for you.  It is slightly inefficient because it always allocates a
-fresh [`Slab`](https://docs.rs/fasteval/latest/fasteval3/slab/index.html), but it is very simple to use:
+fresh [`Slab`](https://docs.rs/fasteval3/latest/fasteval3/slab/index.html), but it is very simple to use:
 
 ```rust
 fn main() -> Result<(), fasteval3::Error> {
@@ -76,7 +76,7 @@ fn main() -> Result<(), fasteval3::Error> {
 
 ## REPL Demo
 ```text
-github.com/likebike/fasteval$ rlwrap cargo run --release --example repl
+github.com/OverzealousLotus/fasteval3$ rlwrap cargo run --release --example repl
     Finished release [optimized] target(s) in 0.01s
      Running `target/release/examples/repl`
 >>> print("Hello fasteval", 1, 2, 3)
@@ -176,5 +176,5 @@ likely to be an excellent choice for your dynamic evaluation needs.
 ## License
 `fasteval3` is distributed under the terms the MIT license.
 
-See [LICENSE](https://github.com/likebike/fasteval3/blob/master/LICENSE) for details.
+See [LICENSE](https://github.com/OverzealousLotus/fasteval3/blob/master/LICENSE) for details.
 

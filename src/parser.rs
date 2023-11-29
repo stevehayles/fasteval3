@@ -1,6 +1,6 @@
 //! This module parses string expressions into an AST which can then be compiled or evaluated.
 //!
-//! # fasteval Algebra Grammar
+//! # fasteval3 Algebra Grammar
 //! ```text
 //! Expression: Value (BinaryOp Value)*
 //!
@@ -157,7 +157,7 @@ use StdFunc::{
     EFuncPi, EFuncRound, EFuncSign, EFuncSin, EFuncSinH, EFuncTan, EFuncTanH, EVar,
 };
 
-/// Represents a `print()` function call in the `fasteval` expression AST.
+/// Represents a `print()` function call in the `fasteval3` expression AST.
 #[derive(Debug, PartialEq, Eq)]
 pub struct PrintFunc(pub Vec<ExpressionOrString>); // cap=8
 

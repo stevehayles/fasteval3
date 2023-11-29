@@ -174,7 +174,7 @@
 //! If the pre-defined Namespace types aren't perfect for your application, you
 //! can create your own namespace type -- just implemenet the `EvalNamespace`
 //! trait (and maybe the `Cached` and `Layered` traits too).  Also, as
-//! `fasteval` becomes more mature and is used for more real-life things, I
+//! `fasteval3` becomes more mature and is used for more real-life things, I
 //! will continue to add more useful Namespace types.
 //!
 //! Here are a few ideas of possibly-useful custom Namespace types:
