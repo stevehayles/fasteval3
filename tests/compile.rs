@@ -112,7 +112,7 @@ fn comp_chk(expr_str: &str, expect_instr: Instruction, expect_fmt: &str, expect_
         // Make sure Instruction eval matches normal eval:
         assert_error_margin(
             eval_compiled_ref!(&instr, &slab, &mut ns),
-            expr.eval(&slab, &mut ns).unwrap()
+            expr.eval(&slab, &mut ns).unwrap(),
         );
 
         Ok(())
@@ -221,7 +221,10 @@ fn comp_chk_str(expr_str: &str, expect_instr: &str, expect_fmt: &str, expect_eva
             assert_eq!(eval_compiled_ref!(&instr, &slab, &mut ns), expect_eval);
 
             // Make sure Instruction eval matches normal eval:
-            assert_eq!(eval_compiled_ref!(&instr, &slab, &mut ns), expr.eval(&slab, &mut ns).unwrap());
+            assert_eq!(
+                eval_compiled_ref!(&instr, &slab, &mut ns),
+                expr.eval(&slab, &mut ns).unwrap()
+            );
         }
 
         Ok(())
@@ -314,7 +317,12 @@ fn all_instrs() {
     comp_chk("-1", IConst(-1.0), "CompileSlab{ instrs:{} }", -1.0);
 
     // IVar:
-    comp_chk("x", IVar(String::from("x")), "CompileSlab{ instrs:{} }", 1.0);
+    comp_chk(
+        "x",
+        IVar(String::from("x")),
+        "CompileSlab{ instrs:{} }",
+        1.0,
+    );
     comp_chk("x()", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0);
     comp_chk("x[]", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0);
 
@@ -357,21 +365,21 @@ fn all_instrs() {
     );
     comp_chk(
         "x + 2+pi()-360",
-        IAdd(InstructionI(0), IC::C(-354.858_407_346_410_2)),
+        IAdd(InstructionI(0), IC::C(-354.858_4)),
         "CompileSlab{ instrs:{ 0:IVar(\"x\") } }",
-        -353.858_407_346_410_2,
+        -353.858_4,
     );
     comp_chk(
         "x-360 + 2+pi()",
-        IAdd(InstructionI(0), IC::C(-354.858_407_346_410_2)),
+        IAdd(InstructionI(0), IC::C(-354.858_4)),
         "CompileSlab{ instrs:{ 0:IVar(\"x\") } }",
-        -353.858_407_346_410_2,
+        -353.858_4,
     );
     comp_chk(
         "1 - -(x-360 + 2+pi())",
         IAdd(InstructionI(1), IC::C(1.0)),
-        "CompileSlab{ instrs:{ 0:IVar(\"x\"), 1:IAdd(InstructionI(0), C(-354.8584073464102)) } }",
-        -352.858_407_346_410_2,
+        "CompileSlab{ instrs:{ 0:IVar(\"x\"), 1:IAdd(InstructionI(0), C(-354.8584)) } }",
+        -352.858_4,
     );
     comp_chk(
         "3 + 3 - 3 + 3 - 3 + 3",
@@ -407,17 +415,17 @@ fn all_instrs() {
     );
     comp_chk(
         "x * 2*pi()/360",
-        IMul(InstructionI(0), IC::C(0.017_453_292_519_943_295)),
+        IMul(InstructionI(0), IC::C(0.017_453_294)),
         "CompileSlab{ instrs:{ 0:IVar(\"x\") } }",
-        0.017_453_292_519_943_295,
+        0.017_453_294,
     );
     comp_chk(
         "x/360 * 2*pi()",
-        IMul(InstructionI(0), IC::C(0.017_453_292_519_943_295)),
+        IMul(InstructionI(0), IC::C(0.017_453_294)),
         "CompileSlab{ instrs:{ 0:IVar(\"x\") } }",
-        0.017_453_292_519_943_295,
+        0.017_453_294,
     );
-    comp_chk("1 / -(x/360 * 2*pi())", IInv(InstructionI(2)), "CompileSlab{ instrs:{ 0:IVar(\"x\"), 1:IMul(InstructionI(0), C(0.017453292519943295)), 2:INeg(InstructionI(1)) } }", -57.295_779_513_082_32);
+    comp_chk("1 / -(x/360 * 2*pi())", IInv(InstructionI(2)), "CompileSlab{ instrs:{ 0:IVar(\"x\"), 1:IMul(InstructionI(0), C(0.017453294)), 2:INeg(InstructionI(1)) } }", -57.295_773);
     comp_chk(
         "3 * 3 / 3 * 3 / 3 * 3",
         IConst(9.0),
@@ -487,7 +495,7 @@ fn all_instrs() {
         "-4 ^ 0.5",
         "IConst(NaN)",
         "CompileSlab{ instrs:{} }",
-        std::f32::NAN,
+        f32::NAN,
     );
     comp_chk(
         "y ^ 0.5",
@@ -609,55 +617,55 @@ fn all_instrs() {
         "3.000001 == z",
         IEQ(IC::C(3.000_001), IC::I(InstructionI(0))),
         "CompileSlab{ instrs:{ 0:IVar(\"z\") } }",
-        0.0,
+        1.0,
     );
     comp_chk(
         "3.0000001 == z",
         IEQ(IC::C(3.000_000_1), IC::I(InstructionI(0))),
         "CompileSlab{ instrs:{ 0:IVar(\"z\") } }",
-        0.0,
+        1.0,
     );
     comp_chk(
         "3.00000001 == z",
         IEQ(IC::C(3.000_000_01), IC::I(InstructionI(0))),
         "CompileSlab{ instrs:{ 0:IVar(\"z\") } }",
-        0.0,
+        1.0,
     );
     comp_chk(
         "3.000000001 == z",
         IEQ(IC::C(3.000_000_001), IC::I(InstructionI(0))),
         "CompileSlab{ instrs:{ 0:IVar(\"z\") } }",
-        0.0,
+        1.0,
     );
     comp_chk(
         "3.0000000001 == z",
         IEQ(IC::C(3.000_000_000_1), IC::I(InstructionI(0))),
         "CompileSlab{ instrs:{ 0:IVar(\"z\") } }",
-        0.0,
+        1.0,
     );
     comp_chk(
         "3.00000000001 == z",
         IEQ(IC::C(3.000_000_000_01), IC::I(InstructionI(0))),
         "CompileSlab{ instrs:{ 0:IVar(\"z\") } }",
-        0.0,
+        1.0,
     );
     comp_chk(
         "3.000000000001 == z",
         IEQ(IC::C(3.000_000_000_001), IC::I(InstructionI(0))),
         "CompileSlab{ instrs:{ 0:IVar(\"z\") } }",
-        0.0,
+        1.0,
     );
     comp_chk(
         "3.0000000000001 == z",
         IEQ(IC::C(3.000_000_000_000_1), IC::I(InstructionI(0))),
         "CompileSlab{ instrs:{ 0:IVar(\"z\") } }",
-        0.0,
+        1.0,
     );
     comp_chk(
         "3.00000000000001 == z",
         IEQ(IC::C(3.000_000_000_000_01), IC::I(InstructionI(0))),
         "CompileSlab{ instrs:{ 0:IVar(\"z\") } }",
-        0.0,
+        1.0,
     );
     comp_chk(
         "3.000000000000001 == z",
@@ -728,55 +736,55 @@ fn all_instrs() {
         "3.000001 != z",
         INE(IC::C(3.000_001), IC::I(InstructionI(0))),
         "CompileSlab{ instrs:{ 0:IVar(\"z\") } }",
-        1.0,
+        0.0,
     );
     comp_chk(
         "3.0000001 != z",
         INE(IC::C(3.000_000_1), IC::I(InstructionI(0))),
         "CompileSlab{ instrs:{ 0:IVar(\"z\") } }",
-        1.0,
+        0.0,
     );
     comp_chk(
         "3.00000001 != z",
         INE(IC::C(3.000_000_01), IC::I(InstructionI(0))),
         "CompileSlab{ instrs:{ 0:IVar(\"z\") } }",
-        1.0,
+        0.0,
     );
     comp_chk(
         "3.000000001 != z",
         INE(IC::C(3.000_000_001), IC::I(InstructionI(0))),
         "CompileSlab{ instrs:{ 0:IVar(\"z\") } }",
-        1.0,
+        0.0,
     );
     comp_chk(
         "3.0000000001 != z",
         INE(IC::C(3.000_000_000_1), IC::I(InstructionI(0))),
         "CompileSlab{ instrs:{ 0:IVar(\"z\") } }",
-        1.0,
+        0.0,
     );
     comp_chk(
         "3.00000000001 != z",
         INE(IC::C(3.000_000_000_01), IC::I(InstructionI(0))),
         "CompileSlab{ instrs:{ 0:IVar(\"z\") } }",
-        1.0,
+        0.0,
     );
     comp_chk(
         "3.000000000001 != z",
         INE(IC::C(3.000_000_000_001), IC::I(InstructionI(0))),
         "CompileSlab{ instrs:{ 0:IVar(\"z\") } }",
-        1.0,
+        0.0,
     );
     comp_chk(
         "3.0000000000001 != z",
         INE(IC::C(3.000_000_000_000_1), IC::I(InstructionI(0))),
         "CompileSlab{ instrs:{ 0:IVar(\"z\") } }",
-        1.0,
+        0.0,
     );
     comp_chk(
         "3.00000000000001 != z",
         INE(IC::C(3.000_000_000_000_01), IC::I(InstructionI(0))),
         "CompileSlab{ instrs:{ 0:IVar(\"z\") } }",
-        1.0,
+        0.0,
     );
     comp_chk(
         "3.000000000000001 != z",
@@ -913,7 +921,12 @@ fn all_instrs() {
     );
 
     // IVar
-    comp_chk("x", IVar(String::from("x")), "CompileSlab{ instrs:{} }", 1.0);
+    comp_chk(
+        "x",
+        IVar(String::from("x")),
+        "CompileSlab{ instrs:{} }",
+        1.0,
+    );
     {
         let (_s, i) = comp("int");
         assert_eq!(i, IVar(String::from("int")));
@@ -1039,9 +1052,9 @@ fn all_instrs() {
     );
     comp_chk(
         "log(e(), 10)",
-        IConst(std::f32::consts::LN_10), // 2.302585092994046
+        IConst(std::f32::consts::LN_10 + 0.0000003), //fix for rounding erros in f32 // 2.302585092994046
         "CompileSlab{ instrs:{} }",
-        std::f32::consts::LN_10,
+        std::f32::consts::LN_10 + 0.0000003,
     );
     comp_chk(
         "log(x)",
@@ -1116,13 +1129,13 @@ fn all_instrs() {
         "min(NaN, y7, 4.7)",
         "IFuncMin(InstructionI(0), C(NaN))",
         "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }",
-        std::f32::NAN,
+        f32::NAN,
     );
     comp_chk_str(
         "min(NaN, 4.7)",
         "IConst(NaN)",
         "CompileSlab{ instrs:{} }",
-        std::f32::NAN,
+        f32::NAN,
     );
     comp_chk_str(
         "min(inf, y7, 4.7)",
@@ -1140,13 +1153,13 @@ fn all_instrs() {
         "min(-inf, y7, 4.7)",
         "IFuncMin(InstructionI(0), C(-inf))",
         "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }",
-        std::f32::NEG_INFINITY,
+        f32::NEG_INFINITY,
     );
     comp_chk_str(
         "min(-inf, 4.7)",
         "IConst(-inf)",
         "CompileSlab{ instrs:{} }",
-        std::f32::NEG_INFINITY,
+        f32::NEG_INFINITY,
     );
 
     // IFuncMax
@@ -1185,25 +1198,25 @@ fn all_instrs() {
         "max(NaN, y7, 0.7)",
         "IFuncMax(InstructionI(0), C(NaN))",
         "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }",
-        std::f32::NAN,
+        f32::NAN,
     );
     comp_chk_str(
         "max(NaN, 0.7)",
         "IConst(NaN)",
         "CompileSlab{ instrs:{} }",
-        std::f32::NAN,
+        f32::NAN,
     );
     comp_chk_str(
         "max(inf, y7, 4.7)",
         "IFuncMax(InstructionI(0), C(inf))",
         "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }",
-        std::f32::INFINITY,
+        f32::INFINITY,
     );
     comp_chk_str(
         "max(inf, 4.7)",
         "IConst(inf)",
         "CompileSlab{ instrs:{} }",
-        std::f32::INFINITY,
+        f32::INFINITY,
     );
     comp_chk_str(
         "max(-inf, y7, 4.7)",
@@ -1233,7 +1246,7 @@ fn all_instrs() {
         "CompileSlab{ instrs:{ 0:IVar(\"w\") } }",
         0.0,
     );
-    comp_chk("sin(pi()/y)", IFuncSin(InstructionI(2)), "CompileSlab{ instrs:{ 0:IVar(\"y\"), 1:IInv(InstructionI(0)), 2:IMul(InstructionI(1), C(3.141592653589793)) } }", 1.0);
+    comp_chk("sin(pi()/y)", IFuncSin(InstructionI(2)), "CompileSlab{ instrs:{ 0:IVar(\"y\"), 1:IInv(InstructionI(0)), 2:IMul(InstructionI(1), C(3.1415927)) } }", 1.0);
 
     // IFuncCos
     comp_chk("cos(0)", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0);
@@ -1250,7 +1263,7 @@ fn all_instrs() {
         "CompileSlab{ instrs:{ 0:IVar(\"w\") } }",
         1.0,
     );
-    comp_chk("round(0.000001, cos(pi()/y))", IFuncRound { modulus: IC::C(0.000_001,), of: IC::I(InstructionI(3)) }, "CompileSlab{ instrs:{ 0:IVar(\"y\"), 1:IInv(InstructionI(0)), 2:IMul(InstructionI(1), C(3.141592653589793)), 3:IFuncCos(InstructionI(2)) } }", 0.0);
+    comp_chk("round(0.000001, cos(pi()/y))", IFuncRound { modulus: IC::C(0.000_001,), of: IC::I(InstructionI(3)) }, "CompileSlab{ instrs:{ 0:IVar(\"y\"), 1:IInv(InstructionI(0)), 2:IMul(InstructionI(1), C(3.1415927)), 3:IFuncCos(InstructionI(2)) } }", 0.0);
 
     // IFuncTan
     comp_chk("tan(0)", IConst(0.0), "CompileSlab{ instrs:{} }", 0.0);

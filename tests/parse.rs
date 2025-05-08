@@ -69,12 +69,12 @@ fn consts() {
 
     assert_eq!(
         Parser::new().parse(".", &mut slab.ps),
-        Err(Error::Parsef32(String::from(".")))
+        Err(Error::ParseF32(String::from(".")))
     );
 
     assert_eq!(
         Parser::new().parse("12..34", &mut slab.ps),
-        Err(Error::Parsef32(String::from("12..34")))
+        Err(Error::ParseF32(String::from("12..34")))
     );
 
     Parser::new().parse("12.34k", &mut slab.ps).unwrap();
@@ -117,37 +117,37 @@ fn consts() {
     assert_eq!(format!("{:?}",&slab),
 "Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-11), pairs: [] } }, vals:{}, instrs:{} }");
 
-    Parser::new().parse("12.34e56", &mut slab.ps).unwrap();
+    Parser::new().parse("12.34e26", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e57), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e27), pairs: [] } }, vals:{}, instrs:{} }");
 
-    Parser::new().parse("12.34e+56", &mut slab.ps).unwrap();
+    Parser::new().parse("12.34e+26", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e57), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e27), pairs: [] } }, vals:{}, instrs:{} }");
 
-    Parser::new().parse("12.34E56", &mut slab.ps).unwrap();
+    Parser::new().parse("12.34E26", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e57), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e27), pairs: [] } }, vals:{}, instrs:{} }");
 
-    Parser::new().parse("12.34E+56", &mut slab.ps).unwrap();
+    Parser::new().parse("12.34E+26", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e57), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e27), pairs: [] } }, vals:{}, instrs:{} }");
 
-    Parser::new().parse("12.34e-56", &mut slab.ps).unwrap();
+    Parser::new().parse("12.34e-26", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-55), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-25), pairs: [] } }, vals:{}, instrs:{} }");
 
-    Parser::new().parse("12.34E-56", &mut slab.ps).unwrap();
+    Parser::new().parse("12.34E-26", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-55), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-25), pairs: [] } }, vals:{}, instrs:{} }");
 
-    Parser::new().parse("+12.34E-56", &mut slab.ps).unwrap();
+    Parser::new().parse("+12.34E-26", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-55), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(1.234e-25), pairs: [] } }, vals:{}, instrs:{} }");
 
-    Parser::new().parse("-12.34E-56", &mut slab.ps).unwrap();
+    Parser::new().parse("-12.34E-26", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(-1.234e-55), pairs: [] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(-1.234e-25), pairs: [] } }, vals:{}, instrs:{} }");
 
     Parser::new().parse("-x", &mut slab.ps).unwrap();
     assert_eq!(format!("{:?}",&slab),

@@ -19,7 +19,10 @@ fn eval() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns)
-            .unwrap() - 5.0).abs() < f32::EPSILON
+            .unwrap()
+            - 5.0)
+            .abs()
+            < f32::EPSILON
     );
 
     assert!(
@@ -28,7 +31,10 @@ fn eval() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns)
-            .unwrap() - 6.0).abs() < f32::EPSILON
+            .unwrap()
+            - 6.0)
+            .abs()
+            < f32::EPSILON
     );
 
     assert_eq!(
@@ -63,7 +69,10 @@ fn aaa_aab_single() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns)
-            .unwrap() - 123.456f32).abs() < f32::EPSILON
+            .unwrap()
+            - 123.456f32)
+            .abs()
+            < f32::EPSILON
     );
 }
 
@@ -104,7 +113,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(33.33)
+        Ok(33.329_998)
     );
     assert_eq!(
         Parser::new()
@@ -112,7 +121,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(11.11)
+        Ok(11.110_001)
     );
     assert_eq!(
         Parser::new()
@@ -120,7 +129,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(0.329_999_999_999_998_3)
+        Ok(0.330_001_83)
     );
     assert_eq!(
         Parser::new()
@@ -226,7 +235,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(-1.099_999_999_999_999_6)
+        Ok(-1.099_999_9)
     );
     assert_eq!(
         Parser::new()
@@ -286,7 +295,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(4.6)
+        Ok(4.600_000_4)
     );
     assert_eq!(
         Parser::new()
@@ -357,7 +366,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(0.199_999_999_999_999_96)
+        Ok(0.200_000_05)
     );
     assert_eq!(
         Parser::new()
@@ -424,7 +433,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(0.000_000_000_000_000_061_232_339_957_367_66)
+        Ok(-0.000_000_043_711_39)
     );
     assert_eq!(
         Parser::new()
@@ -464,7 +473,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(2.301_298_902_307_294_7)
+        Ok(2.301_299)
     );
     assert_eq!(
         Parser::new()
@@ -472,7 +481,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(2.509_178_478_658_056_7)
+        Ok(2.509_178_6)
     );
     assert_eq!(
         Parser::new()

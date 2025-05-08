@@ -356,11 +356,11 @@ impl BinaryOp {
         // Passing 'self' by value is more efficient than pass-by-reference.
         let left = match left_opt {
             Some(l) => *l,
-            None => return std::f32::NAN,
+            None => return f32::NAN,
         };
         let right = match right_opt {
             Some(r) => *r,
-            None => return std::f32::NAN,
+            None => return f32::NAN,
         };
         match self {
             EAdd => left + right, // Floats don't overflow.
@@ -528,7 +528,7 @@ impl Evaler for StdFunc {
                     saw_nan = saw_nan || max.is_nan();
                 }
                 if saw_nan {
-                    Ok(std::f32::NAN)
+                    Ok(f32::NAN)
                 } else {
                     Ok(max)
                 }

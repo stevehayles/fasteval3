@@ -36,8 +36,8 @@ fn chk_ok(expr_str: &str, expect_compile_str: &str, expect_slab_str: &str, expec
 
         // Make sure Instruction eval matches normal eval:
         assert!(
-            (eval_compiled_ref!(&instr, &slab, &mut ns) - 
-            expr.eval(&slab, &mut ns).unwrap()).abs() < f32::EPSILON
+            (eval_compiled_ref!(&instr, &slab, &mut ns) - expr.eval(&slab, &mut ns).unwrap()).abs()
+                < f32::EPSILON
         );
 
         Ok(())
@@ -68,8 +68,8 @@ fn meval() {
     chk_perr("(", Error::EofWhileParsing(String::from("value")));
     chk_perr("0(", Error::UnparsedTokensRemaining(String::from("(")));
     chk_eerr("e", Error::Undefined(String::from("e")));
-    chk_perr("1E", Error::Parsef32(String::from("1E")));
-    chk_perr("1e+", Error::Parsef32(String::from("1e+")));
+    chk_perr("1E", Error::ParseF32(String::from("1E")));
+    chk_perr("1e+", Error::ParseF32(String::from("1e+")));
     chk_perr("()", Error::InvalidValue);
     chk_perr("2)", Error::UnparsedTokensRemaining(String::from(")")));
     chk_perr("2^", Error::EofWhileParsing(String::from("value")));
@@ -78,7 +78,7 @@ fn meval() {
     chk_perr("f(,2)", Error::InvalidValue);
 
     chk_ok("round(sin (pi()) * cos(0))",
-"IConst(0.0)",
+"IConst(-0.0)",
 "Slab{ exprs:{ 0:Expression { first: EStdFunc(EFuncPi), pairs: [] }, 1:Expression { first: EConstant(0.0), pairs: [] }, 2:Expression { first: EStdFunc(EFuncSin(ExpressionI(0))), pairs: [ExprPair(EMul, EStdFunc(EFuncCos(ExpressionI(1))))] }, 3:Expression { first: EStdFunc(EFuncRound { modulus: None, expr: ExpressionI(2) }), pairs: [] } }, vals:{}, instrs:{} }",
 0.0);
 
@@ -93,7 +93,7 @@ fn meval() {
 2.0);
 
     chk_ok("sin(1.) + cos(2.)",
-"IConst(0.4253241482607541)",
+"IConst(0.4253241)",
 "Slab{ exprs:{ 0:Expression { first: EConstant(1.0), pairs: [] }, 1:Expression { first: EConstant(2.0), pairs: [] }, 2:Expression { first: EStdFunc(EFuncSin(ExpressionI(0))), pairs: [ExprPair(EAdd, EStdFunc(EFuncCos(ExpressionI(1))))] } }, vals:{}, instrs:{} }",
 (1f32).sin() + (2f32).cos());
 }

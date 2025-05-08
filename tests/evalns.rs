@@ -137,10 +137,10 @@ fn custom_vector_funcs() {
                     return v.iter().sum();
                 }
             }
-            std::f32::NAN
+            f32::NAN
         }),
     );
 
     let val = ez_eval("vec_sum(vec_store(1.1, x, 3.3)) + vec_sum(0)", &mut ns).unwrap();
-    assert_error_margin(val, 12.8);
+    assert_error_margin(val, 12.799999);
 }

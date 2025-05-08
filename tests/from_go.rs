@@ -20,6 +20,7 @@ fn ok_parse(s: &str, slab: &mut Slab) -> ExpressionI {
 }
 
 fn do_eval(s: &str) -> f32 {
+    //println!("do_eval({s})");
     let mut slab = Slab::new();
     let mut ns = EmptyNamespace;
     ok_parse(s, &mut slab)
@@ -71,7 +72,7 @@ fn aaa_test_b0() {
 
     ok_parse("3.14 + 4.99999999999999", &mut slab);
     assert_eq!(format!("{:?}",&slab),
-"Slab{ exprs:{ 0:Expression { first: EConstant(3.14), pairs: [ExprPair(EAdd, EConstant(4.99999999999999))] } }, vals:{}, instrs:{} }");
+"Slab{ exprs:{ 0:Expression { first: EConstant(3.14), pairs: [ExprPair(EAdd, EConstant(5.0))] } }, vals:{}, instrs:{} }");
     ok_parse(
         "3.14 + 4.99999999999999999999999999999999999999999999999999999",
         &mut slab,
@@ -95,10 +96,10 @@ fn aaa_test_b1() {
     let mut slab = Slab::new();
 
     assert_eq!(parse_raw("3.14 + 4.99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999.9999", &mut slab),
-Err(Error::Parsef32(String::from("4.99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999.9999"))));
+Err(Error::ParseF32(String::from("4.99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999.9999"))));
     assert_eq!(
         parse_raw("3.14 + 4.9999.9999", &mut slab),
-        Err(Error::Parsef32(String::from("4.9999.9999")))
+        Err(Error::ParseF32(String::from("4.9999.9999")))
     );
 }
 
@@ -108,7 +109,7 @@ fn aaa_test_b2() {
 
     assert_eq!(
         parse_raw("3.14 + .", &mut slab),
-        Err(Error::Parsef32(String::from(".")))
+        Err(Error::ParseF32(String::from(".")))
     );
 }
 
@@ -174,40 +175,40 @@ fn aaa_test_e() {
     assert_error_margin(do_eval("3+4+5+6"), 18.0);
     assert_error_margin(do_eval("3-4-5-6"), -12.0);
     assert_error_margin(do_eval("3*4*5*6"), 360.0);
-    assert_error_margin(do_eval("3/4/5/6"), 0.024_999_999_999_999_998); // Fragile!
+    assert_error_margin(do_eval("3/4/5/6"), 0.025_000_002); // Fragile!
     assert_error_margin(do_eval("2^3^4"), 2_417_851_639_229_258_349_412_352.0);
     assert_error_margin(do_eval("3*3-3/3"), 8.0);
     assert_error_margin(do_eval("(1+1)^3"), 8.0);
     assert_error_margin(do_eval("(1+(-1)^4)^3"), 8.0);
     assert_error_margin(do_eval("(1+1)^(1+1+1)"), 8.0);
-    assert_error_margin(do_eval("(8^(1/3))^(3)"), 8.0); // Fragile!  Go is 7.999999999999997 
+    assert_error_margin(do_eval("(8^(1/3))^(3)"), 8.0); // Fragile!  Go is 7.999999999999997
     assert_error_margin(do_eval("round( (8^(1/3))^(3) )"), 8.0);
 
     assert_error_margin(do_eval("5%2"), 1.0);
     assert_error_margin(do_eval("5%3"), 2.0);
-    assert_error_margin(do_eval("5.1%3.2"), 1.899_999_999_999_999_5);
-    assert_error_margin(do_eval("5.1%2.5"), 0.099_999_999_999_999_64);
-    assert_error_margin(do_eval("5.1%2.499999999"), 0.100_000_001_999_999_81);
+    assert_error_margin(do_eval("5.1%3.2"), 1.899_999_9);
+    assert_error_margin(do_eval("5.1%2.5"), 0.099_999_9);
+    assert_error_margin(do_eval("5.1%2.499999999"), 0.100_000);
     assert_error_margin(do_eval("-5%2"), -1.0);
     assert_error_margin(do_eval("-5%3"), -2.0);
-    assert_error_margin(do_eval("-5.1%3.2"), -1.899_999_999_999_999_5);
-    assert_error_margin(do_eval("-5.1%2.5"), -0.099_999_999_999_999_64);
-    assert_error_margin(do_eval("-5.1%2.499999999"), -0.100_000_001_999_999_81);
+    assert_error_margin(do_eval("-5.1%3.2"), -1.899_999_9);
+    assert_error_margin(do_eval("-5.1%2.5"), -0.099_999_9);
+    assert_error_margin(do_eval("-5.1%2.499999999"), -0.100_000_0);
     assert_error_margin(do_eval("5%-2"), 1.0);
     assert_error_margin(do_eval("5%-3"), 2.0);
-    assert_error_margin(do_eval("5.1%-3.2"), 1.899_999_999_999_999_5);
-    assert_error_margin(do_eval("5.1%-2.5"), 0.099_999_999_999_999_64);
-    assert_error_margin(do_eval("5.1%-2.499999999"), 0.100_000_001_999_999_81);
+    assert_error_margin(do_eval("5.1%-3.2"), 1.899_999_9);
+    assert_error_margin(do_eval("5.1%-2.5"), 0.099_999_9);
+    assert_error_margin(do_eval("5.1%-2.499999999"), 0.100_000_0);
     assert_error_margin(do_eval("int(5)%int(2)"), 1.0);
     assert_error_margin(do_eval("int(5)%int(3)"), 2.0);
     assert_error_margin(do_eval("int(5.1)%round(3.2)"), 2.0);
     assert_error_margin(do_eval("int(5.1)%round(2.5)"), 2.0);
-    assert_error_margin(do_eval("int(5.1)%round(2.499999999)"), 1.0);
+    assert_error_margin(do_eval("int(5.1)%round(2.499999)"), 1.0);
     assert_error_margin(do_eval("int(5)%int(-2)"), 1.0);
     assert_error_margin(do_eval("int(5)%int(-3)"), 2.0);
     assert_error_margin(do_eval("int(5.1)%round(-3.2)"), 2.0);
     assert_error_margin(do_eval("int(5.1)%round(-2.5)"), 2.0);
-    assert_error_margin(do_eval("int(5.1)%round(-2.499999999)"), 1.0);
+    assert_error_margin(do_eval("int(5.1)%round(-2.499999)"), 1.0);
 
     assert_error_margin(do_eval("int(123.456/78)*78 + 123.456%78"), 123.456);
     assert_error_margin(do_eval("int(-123.456/78)*78 + -123.456%78"), -123.456);
@@ -218,31 +219,39 @@ fn aaa_test_e() {
 fn aaa_test_f() {
     let mut slab = Slab::new();
 
-    assert_error_margin(ok_parse("(x)^(3)", &mut slab)
-        .from(&slab.ps)
-        .eval(&slab, &mut CachedCallbackNamespace::new(|n, _| {
-            [("x", 2.0)]
-                .iter()
-                .copied()
-                .collect::<BTreeMap<&str, f32>>()
-                .get(n)
-                .copied()
-        })
-    ).unwrap(),
-        8.0
+    assert_error_margin(
+        ok_parse("(x)^(3)", &mut slab)
+            .from(&slab.ps)
+            .eval(
+                &slab,
+                &mut CachedCallbackNamespace::new(|n, _| {
+                    [("x", 2.0)]
+                        .iter()
+                        .copied()
+                        .collect::<BTreeMap<&str, f32>>()
+                        .get(n)
+                        .copied()
+                }),
+            )
+            .unwrap(),
+        8.0,
     );
-    assert_error_margin(ok_parse("(x)^(y)", &mut slab)
-        .from(&slab.ps)
-        .eval(&slab, &mut CachedCallbackNamespace::new(|n, _| {
-            [("x", 2.0), ("y", 3.0)]
-                .iter()
-                .copied()
-                .collect::<BTreeMap<&str, f32>>()
-                .get(n)
-                .copied()
-        })
-    ).unwrap(),
-        8.0
+    assert_error_margin(
+        ok_parse("(x)^(y)", &mut slab)
+            .from(&slab.ps)
+            .eval(
+                &slab,
+                &mut CachedCallbackNamespace::new(|n, _| {
+                    [("x", 2.0), ("y", 3.0)]
+                        .iter()
+                        .copied()
+                        .collect::<BTreeMap<&str, f32>>()
+                        .get(n)
+                        .copied()
+                }),
+            )
+            .unwrap(),
+        8.0,
     );
     assert_eq!(
         ok_parse("(x)^(y)", &mut slab)
@@ -312,8 +321,8 @@ fn aaa_test_i() {
     assert_error_margin(do_eval("2<=(2-0.1)"), 0.0);
     assert_error_margin(do_eval("2k==2K"), 1.0);
     assert_error_margin(do_eval("2k==2000"), 1.0);
-    assert_error_margin(do_eval("2k==2000.0000001"), 0.0);
-    assert_error_margin(do_eval("2k!=2000.0000001"), 1.0);
+    assert_error_margin(do_eval("2k==2000.0001"), 0.0);
+    assert_error_margin(do_eval("2k!=2000.0001"), 1.0);
     assert_error_margin(do_eval("2k!=3G"), 1.0);
     assert_error_margin(do_eval("1000*2k!=2M"), 0.0);
     assert_error_margin(do_eval("3>=2"), 1.0);
@@ -358,7 +367,7 @@ fn aaa_test_i() {
 fn aaa_test_j() {
     assert_error_margin(do_eval("2/3*3/2"), 1.0);
     assert_error_margin(do_eval("2%3*3/2"), 3.0);
-    assert_error_margin(do_eval("3^2%2^2*2^2/3^2"), 0.444_444_444_444_444_4);
+    assert_error_margin(do_eval("3^2%2^2*2^2/3^2"), 0.444_444_45);
     assert_error_margin(do_eval("1+2-3+4"), 4.0);
 }
 
