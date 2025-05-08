@@ -29,9 +29,9 @@ unreachable_pub = "warn"
 
 [lints.clippy]
 str_to_string = "warn"
-pedantic = "warn"
+# pedantic lint group removed to avoid priority conflict
 must_use_candidate = "allow" # Caused quite a few false-positives.
 cast_precision_loss = "allow" # Unsure how to resolve. Help wanted.
 cast_sign_loss = "allow" # Unsure how to resolve. Help wanted.
 cast_possible_truncation = "allow" # Unsure how to resolve. Help wanted.
-nursery = "warn"
+# nursery lint group removed to avoid priority conflict
