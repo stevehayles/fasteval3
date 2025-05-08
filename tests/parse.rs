@@ -69,12 +69,12 @@ fn consts() {
 
     assert_eq!(
         Parser::new().parse(".", &mut slab.ps),
-        Err(Error::ParseF64(String::from(".")))
+        Err(Error::Parsef32(String::from(".")))
     );
 
     assert_eq!(
         Parser::new().parse("12..34", &mut slab.ps),
-        Err(Error::ParseF64(String::from("12..34")))
+        Err(Error::Parsef32(String::from("12..34")))
     );
 
     Parser::new().parse("12.34k", &mut slab.ps).unwrap();

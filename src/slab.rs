@@ -135,7 +135,7 @@ pub struct Slab {
 /// Here is the function signature of the `add_unsafe_var()` method:
 ///
 /// ```text
-/// pub unsafe fn add_unsafe_var(&mut self, name: String, ptr: &f64)
+/// pub unsafe fn add_unsafe_var(&mut self, name: String, ptr: &f32)
 /// ```
 ///
 /// If you are using [Unsafe Variables](../index.html#unsafe-variables), you
@@ -168,7 +168,7 @@ pub struct Slab {
 /// // Here is an example of INCORRECT registration.  DO NOT DO THIS!
 /// #[cfg(feature = "unsafe-vars")]
 /// fn bad_unsafe_var(slab_mut:&mut fasteval3::Slab) {
-///     let bad : f64 = 0.0;
+///     let bad : f32 = 0.0;
 ///
 ///     // Saves a pointer to 'bad':
 ///     unsafe { slab_mut.ps.add_unsafe_var("bad".to_string(), &bad); }  // `add_unsafe_var()` only exists if the `unsafe-vars` feature is enabled: `cargo test --features unsafe-vars`
@@ -187,7 +187,7 @@ pub struct Slab {
 ///     // The Unsafe Variable will use a pointer to read this memory location:
 ///     // You must make sure that this variable stays in-scope as long as the
 ///     // expression is in-use.
-///     let mut deg : f64 = 0.0;
+///     let mut deg : f32 = 0.0;
 ///
 ///     // Unsafe Variables must be registered before 'parse()'.
 ///     // (Normal Variables only need definitions during the 'eval' phase.)
@@ -204,7 +204,7 @@ pub struct Slab {
 ///     let compiled = expr_ref.compile(&slab.ps, &mut slab.cs, &mut ns);
 ///
 ///     for d in 0..360 {
-///         deg = d as f64;
+///         deg = d as f32;
 ///         let val = fasteval3::eval_compiled!(compiled, &slab, &mut ns);
 ///         eprintln!("sin({}°) = {}", deg, val);
 ///     }
@@ -220,7 +220,7 @@ pub struct ParseSlab {
     pub(crate) def_val: Value,
     pub(crate) char_buf: String,
     #[cfg(feature = "unsafe-vars")]
-    pub(crate) unsafe_vars: BTreeMap<String, *const f64>,
+    pub(crate) unsafe_vars: BTreeMap<String, *const f32>,
 }
 
 /// `CompileSlab` is where `compile()` results are stored, located at `Slab.cs`.
@@ -238,7 +238,9 @@ impl ParseSlab {
     #[inline]
     pub fn get_expr(&self, expr_i: ExpressionI) -> &Expression {
         // I'm using this non-panic match structure to boost performance:
-        self.exprs.get(expr_i.0).map_or(&self.def_expr, |expr_ref| expr_ref)
+        self.exprs
+            .get(expr_i.0)
+            .map_or(&self.def_expr, |expr_ref| expr_ref)
     }
 
     /// Returns a reference to the [`Value`](../parser/enum.Value.html)
@@ -248,7 +250,9 @@ impl ParseSlab {
     ///
     #[inline]
     pub fn get_val(&self, val_i: ValueI) -> &Value {
-        self.vals.get(val_i.0).map_or(&self.def_val, |val_ref| val_ref)
+        self.vals
+            .get(val_i.0)
+            .map_or(&self.def_val, |val_ref| val_ref)
     }
 
     /// Appends an `Expression` to `ParseSlab.exprs`.
@@ -293,8 +297,8 @@ impl ParseSlab {
     /// [See the `add_unsafe_var()` documentation above.](#unsafe-variable-registration-with-add_unsafe_var)
     #[cfg(feature = "unsafe-vars")]
     #[allow(clippy::trivially_copy_pass_by_ref)]
-    pub unsafe fn add_unsafe_var(&mut self, name: String, ptr: &f64) {
-        self.unsafe_vars.insert(name, ptr as *const f64);
+    pub unsafe fn add_unsafe_var(&mut self, name: String, ptr: &f32) {
+        self.unsafe_vars.insert(name, ptr as *const f32);
     }
 }
 
@@ -306,7 +310,9 @@ impl CompileSlab {
     ///
     #[inline]
     pub fn get_instr(&self, instr_i: InstructionI) -> &Instruction {
-        self.instrs.get(instr_i.0).map_or(&self.def_instr, |instr_ref| instr_ref)
+        self.instrs
+            .get(instr_i.0)
+            .map_or(&self.def_instr, |instr_ref| instr_ref)
     }
 
     /// Appends an `Instruction` to `CompileSlab.instrs`.
@@ -322,9 +328,15 @@ impl CompileSlab {
     /// Removes an `Instruction` from `CompileSlab.instrs` as efficiently as possible.
     pub(crate) fn take_instr(&mut self, i: InstructionI) -> Instruction {
         if i.0 == self.instrs.len() - 1 {
-            self.instrs.pop().map_or(IConst(std::f64::NAN), |instr| instr)
+            self.instrs
+                .pop()
+                .map_or(IConst(std::f32::NAN), |instr| instr)
         } else {
-            self.instrs.get_mut(i.0).map_or(IConst(std::f64::NAN), |instr_ref| mem::replace(instr_ref, IConst(std::f64::NAN)))
+            self.instrs
+                .get_mut(i.0)
+                .map_or(IConst(std::f32::NAN), |instr_ref| {
+                    mem::replace(instr_ref, IConst(std::f32::NAN))
+                })
         }
     }
 

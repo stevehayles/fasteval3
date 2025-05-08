@@ -2,11 +2,11 @@
 
 use std::collections::BTreeMap;
 fn main() -> Result<(), fasteval3::Error> {
-    let mut map: BTreeMap<&'static str, f64> = BTreeMap::new();
+    let mut map: BTreeMap<&'static str, f32> = BTreeMap::new();
     map.insert("x", 2.0);
 
     let val = fasteval3::ez_eval("x * (x + 1)", &mut map)?;
-    assert!((val - 6.0).abs() < f64::EPSILON);
+    assert!((val - 6.0).abs() < f32::EPSILON);
 
     Ok(())
 }

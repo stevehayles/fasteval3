@@ -58,7 +58,7 @@ pub(crate) struct ExprPair(pub(crate) BinaryOp, pub(crate) Value);
 /// A `Value` can be a Constant, a `UnaryOp`, a `StdFunc`, or a `PrintFunc`.
 #[derive(Debug, PartialEq)]
 pub enum Value {
-    EConstant(f64),
+    EConstant(f32),
     EUnaryOp(UnaryOp),
     EStdFunc(StdFunc),
     EPrintFunc(PrintFunc),
@@ -95,7 +95,9 @@ pub enum BinaryOp {
     EMod = 13,
     EExp = 14, // Highest Priority
 }
-use self::BinaryOp::{EAdd, EDiv, EExp, EMod, EMul, ESub, EAND, EEQ, EGT, EGTE, ELT, ELTE, ENE, EOR};
+use self::BinaryOp::{
+    EAdd, EDiv, EExp, EMod, EMul, ESub, EAND, EEQ, EGT, EGTE, ELT, ELTE, ENE, EOR,
+};
 
 /// A Function Call with Standard Syntax.
 #[derive(Debug, PartialEq, Eq)]
@@ -104,7 +106,7 @@ pub enum StdFunc {
     #[cfg(feature = "unsafe-vars")]
     EUnsafeVar {
         name: String,
-        ptr: *const f64,
+        ptr: *const f32,
     },
     EFunc {
         name: String,
@@ -287,11 +289,14 @@ impl Parser {
     const fn is_varname_byte(b: u8, i: usize) -> bool {
         // Might be parser-breaking
         /*(b'A' <= b && b <= b'Z')
-            || (b'a' <= b && b <= b'z')
+        || (b'a' <= b && b <= b'z')
+        || b == b'_'
+        || (i > 0 && (b'0' <= b && b <= b'9'))*/
+
+        b.is_ascii_uppercase()
+            || b.is_ascii_lowercase()
             || b == b'_'
-            || (i > 0 && (b'0' <= b && b <= b'9'))*/
-        
-        b.is_ascii_uppercase() || b.is_ascii_lowercase() || b == b'_' || ( i > 0 && b.is_ascii_digit())
+            || (i > 0 && b.is_ascii_digit())
     }
 
     /// Checks if a given bytes matches its character counterpart, with the byte itself possibly being none.
@@ -300,9 +305,9 @@ impl Parser {
     }
 
     /// Use this function to parse an expression String.  The `Slab` will be cleared first.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Will return `Err` if length of `expr_str` exceeds limit.
     #[inline]
     pub fn parse(&self, expr_str: &str, slab: &mut ParseSlab) -> Result<ExpressionI, Error> {
@@ -316,9 +321,9 @@ impl Parser {
     ///
     /// This function cannot return Result<&Expression> because it would
     /// prolong the mut ref.  / That's why we return an `ExpressionI` instead.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Will return `Err` if length of `expr_str` exceeds limit.
     #[inline]
     pub fn parse_noclear(
@@ -397,7 +402,7 @@ impl Parser {
         Err(Error::InvalidValue)
     }
 
-    fn read_const(slab: &mut ParseSlab, bs: &mut &[u8]) -> Result<Token<f64>, Error> {
+    fn read_const(slab: &mut ParseSlab, bs: &mut &[u8]) -> Result<Token<f32>, Error> {
         spaces!(bs);
 
         let mut toklen = 0;
@@ -478,15 +483,15 @@ impl Parser {
         }
 
         let val = tok
-            .parse::<f64>()
-            .map_err(|_| Error::ParseF64(tok.to_owned()))?;
+            .parse::<f32>()
+            .map_err(|_| Error::ParseF32(tok.to_owned()))?;
         skip_n!(bs, toklen);
 
         Ok(Bite(val))
     }
 
     // // This implementation is beautiful and correct, but it is slow due to the fact that I am first parsing everything,
-    // // and then I'm calling parse::<f64> which repeats the entire process.
+    // // and then I'm calling parse::<f32> which repeats the entire process.
     // // I wish I could just call dec2flt::convert() ( https://doc.rust-lang.org/src/core/num/dec2flt/mod.rs.html#247 )
     // // with all the pieces I already parsed, but, alas, that function is private.
     // //
@@ -496,7 +501,7 @@ impl Parser {
     // //
     // // As a side-note, It's surprising how similar these algorithms are (which I created from scratch at 3am with no reference),
     // // compared to the dec2flt::parse module.
-    // fn read_const(&mut self, bs:&mut &[u8]) -> Result<Token<f64>, KErr> {
+    // fn read_const(&mut self, bs:&mut &[u8]) -> Result<Token<f32>, KErr> {
     //     spaces!(bs);
     //
     //     // Grammar: [+-]?[0-9]*(\.[0-9]+)?( ([eE][+-]?[0-9]+) || [pnuµmkKMGT] )?
@@ -566,8 +571,8 @@ impl Parser {
     //     for _ in 0..toskip { read(bs)?; }
     //     if exp!=0 { self.char_buf.push('e'); self.char_buf.push_str(&exp.to_string()); }
     //
-    //     let val = self.char_buf.parse::<f64>().map_err(|_| {
-    //         KErr::new("parse<f64> error").pre(&self.char_buf)
+    //     let val = self.char_buf.parse::<f32>().map_err(|_| {
+    //         KErr::new("parse<f32> error").pre(&self.char_buf)
     //     })?;
     //     Ok(Bite(val))
     // }
@@ -867,7 +872,9 @@ impl Parser {
                         },
                     })
                 } else if args.len() == 2 {
-                    let Some(expr) = args.pop() else { return Err(Error::Unreachable) };
+                    let Some(expr) = args.pop() else {
+                        return Err(Error::Unreachable);
+                    };
                     Ok(EFuncLog {
                         base: Some(match args.pop() {
                             Some(xi) => xi,
@@ -876,9 +883,9 @@ impl Parser {
                         expr,
                     })
                 } else {
-                    Err(Error::WrongArgs(
-                        String::from("expected log(x) or log(base,x)"),
-                    ))
+                    Err(Error::WrongArgs(String::from(
+                        "expected log(x) or log(base,x)",
+                    )))
                 }
             }
             "round" => {
@@ -891,7 +898,9 @@ impl Parser {
                         },
                     })
                 } else if args.len() == 2 {
-                    let Some(expr) = args.pop() else { return Err(Error::Unreachable) };
+                    let Some(expr) = args.pop() else {
+                        return Err(Error::Unreachable);
+                    };
                     Ok(EFuncRound {
                         modulus: Some(match args.pop() {
                             Some(xi) => xi,
@@ -900,27 +909,31 @@ impl Parser {
                         expr,
                     })
                 } else {
-                    Err(Error::WrongArgs(
-                        String::from("round: expected round(x) or round(modulus,x)"),
-                    ))
+                    Err(Error::WrongArgs(String::from(
+                        "round: expected round(x) or round(modulus,x)",
+                    )))
                 }
             }
             "min" => {
                 if args.is_empty() {
-                    Err(Error::WrongArgs(
-                        String::from("min: expected one or more args"),
-                    ))
+                    Err(Error::WrongArgs(String::from(
+                        "min: expected one or more args",
+                    )))
                 } else {
-                    remove_no_panic(&mut args, 0).map_or(Err(Error::Unreachable), |first| Ok(EFuncMin { first, rest: args }))
+                    remove_no_panic(&mut args, 0).map_or(Err(Error::Unreachable), |first| {
+                        Ok(EFuncMin { first, rest: args })
+                    })
                 }
             }
             "max" => {
                 if args.is_empty() {
-                    Err(Error::WrongArgs(
-                        String::from("max: expected one or more args"),
-                    ))
+                    Err(Error::WrongArgs(String::from(
+                        "max: expected one or more args",
+                    )))
                 } else {
-                    remove_no_panic(&mut args, 0).map_or(Err(Error::Unreachable), |first| Ok(EFuncMax { first, rest: args }))
+                    remove_no_panic(&mut args, 0).map_or(Err(Error::Unreachable), |first| {
+                        Ok(EFuncMax { first, rest: args })
+                    })
                 }
             }
 
@@ -1132,9 +1145,9 @@ impl Parser {
 
         match peek!(bs) {
             None => {
-                return Err(Error::EofWhileParsing(
-                    String::from("opening quote of string"),
-                ))
+                return Err(Error::EofWhileParsing(String::from(
+                    "opening quote of string",
+                )))
             }
             Some(b'"') => {
                 skip!(bs);
@@ -1169,7 +1182,7 @@ impl Default for Parser {
 
 impl Default for Value {
     fn default() -> Self {
-        EConstant(std::f64::NAN)
+        EConstant(std::f32::NAN)
     }
 }
 

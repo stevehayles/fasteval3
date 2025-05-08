@@ -21,7 +21,7 @@ use crate::slab::Slab;
 /// # Examples
 ///
 /// [See the `fasteval3` top-level documentation for examples.](../index.html#easy-evaluation)
-pub fn ez_eval(expr_str: &str, ns: &mut impl EvalNamespace) -> Result<f64, Error> {
+pub fn ez_eval(expr_str: &str, ns: &mut impl EvalNamespace) -> Result<f32, Error> {
     let mut slab = Slab::new(); // A big block of memory, so we don't need to perform many tiny (and slow!) allocations.
 
     // Here is a one-liner that performs the entire parse-and-eval process:

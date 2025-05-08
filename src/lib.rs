@@ -139,7 +139,7 @@
 //! ```
 //! use std::collections::BTreeMap;
 //! fn main() -> Result<(), fasteval3::Error> {
-//!     let mut map : BTreeMap<String,f64> = BTreeMap::new();
+//!     let mut map : BTreeMap<String,f32> = BTreeMap::new();
 //!     map.insert("x".to_string(), 1.0);
 //!     map.insert("y".to_string(), 2.0);
 //!     map.insert("z".to_string(), 3.0);
@@ -160,8 +160,8 @@
 //!
 //! ```
 //! fn main() -> Result<(), fasteval3::Error> {
-//!     let mut cb = |name:&str, args:Vec<f64>| -> Option<f64> {
-//!         let mydata : [f64; 3] = [11.1, 22.2, 33.3];
+//!     let mut cb = |name:&str, args:Vec<f32>| -> Option<f32> {
+//!         let mydata : [f32; 3] = [11.1, 22.2, 33.3];
 //!         match name {
 //!             // Custom constants/variables:
 //!             "x" => Some(3.0),
@@ -236,7 +236,7 @@
 //!
 //!     // Let's evaluate the expression a couple times with different 'x' values:
 //!
-//!     let mut map : BTreeMap<String,f64> = BTreeMap::new();
+//!     let mut map : BTreeMap<String,f32> = BTreeMap::new();
 //!     map.insert("x".to_string(), 1.0);
 //!     let val = expr_ref.eval(&slab, &mut map)?;
 //!     assert_eq!(val, 2.0);
@@ -280,7 +280,7 @@
 //!     let expr_str = "sin(deg/360 * 2*pi())";
 //!     let compiled = parser.parse(expr_str, &mut slab.ps)?.from(&slab.ps).compile(&slab.ps, &mut slab.cs, &mut EmptyNamespace);
 //!     for deg in 0..360 {
-//!         map.insert("deg".to_string(), deg as f64);
+//!         map.insert("deg".to_string(), deg as f32);
 //!         // When working with compiled constant expressions, you can use the
 //!         // eval_compiled*!() macros to save a function call:
 //!         let val = fasteval3::eval_compiled!(compiled, &slab, &mut map);
@@ -313,7 +313,7 @@
 //!     // The Unsafe Variable will use a pointer to read this memory location:
 //!     // You must make sure that this variable stays in-scope as long as the
 //!     // expression is in-use.
-//!     let mut deg : f64 = 0.0;
+//!     let mut deg : f32 = 0.0;
 //!
 //!     // Unsafe Variables must be registered before 'parse()'.
 //!     // (Normal Variables only need definitions during the 'eval' phase.)
@@ -324,7 +324,7 @@
 //!     let compiled = parser.parse(expr_str, &mut slab.ps)?.from(&slab.ps).compile(&slab.ps, &mut slab.cs, &mut ns);
 //!
 //!     for d in 0..360 {
-//!         deg = d as f64;
+//!         deg = d as f32;
 //!         let val = fasteval3::eval_compiled!(compiled, &slab, &mut ns);
 //!         eprintln!("sin({}°) = {}", deg, val);
 //!     }
@@ -475,7 +475,7 @@
 //!       but some libraries (particularly tinyexpr and rsc) use
 //!       left-associativity.
 //!       This test is also interesting because it shows the precision of a
-//!       library's number system.  `fasteval` just uses f64 and therefore truncates
+//!       library's number system.  `fasteval` just uses f32 and therefore truncates
 //!       the result (2417851639229258300000000), while python, bc, and the
 //!       tinyexpr C library produce a higher precision result
 //!       (2417851639229258349412352).
@@ -595,7 +595,7 @@
 //! * FFI so this library can be used from other languages.
 //! * Ability to copy the contents of a `Slab` into a perfectly-sized container
 //!   (`PackedSlab`) to reduce wasted memory.
-//! * Support for other number types other than `f64`, such as Integers, Big Integers,
+//! * Support for other number types other than `f32`, such as Integers, Big Integers,
 //!   Arbitrary Precision Numbers, Complex Numbers, etc. like [rclc](https://crates.io/crates/rclc).
 //!
 //! # List of Projects that use `fasteval`
@@ -633,8 +633,8 @@ pub use self::compiler::{
 pub use self::error::Error;
 pub use self::evaler::Evaler;
 pub use self::evalns::{
-    Cached, CachedCallbackNamespace, EmptyNamespace, EvalNamespace, LayeredStringToF64Namespace,
-    StrToCallbackNamespace, StrToF64Namespace, StringToCallbackNamespace, StringToF64Namespace,
+    Cached, CachedCallbackNamespace, EmptyNamespace, EvalNamespace, LayeredStringTof32Namespace,
+    StrToCallbackNamespace, StrTof32Namespace, StringToCallbackNamespace, StringTof32Namespace,
 };
 pub use self::ez::ez_eval;
 pub use self::parser::{Expression, ExpressionI, Parser, Value, ValueI};

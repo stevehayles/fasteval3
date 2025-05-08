@@ -1,4 +1,4 @@
-use fasteval3::bool_to_f64;
+use fasteval3::bool_to_f32;
 use fasteval3::{Cached, CachedCallbackNamespace, EmptyNamespace, Error, Evaler, Parser, Slab};
 
 use std::collections::{BTreeMap, BTreeSet};
@@ -7,7 +7,7 @@ use std::mem;
 #[test]
 fn eval() {
     let mut slab = Slab::new();
-    let mut ns = BTreeMap::<String, f64>::new();
+    let mut ns = BTreeMap::<String, f32>::new();
     ns.insert(String::from("x"), 1.0);
     ns.insert(String::from("y"), 2.0);
     ns.insert(String::from("z"), 3.0);
@@ -19,7 +19,7 @@ fn eval() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns)
-            .unwrap() - 5.0).abs() < f64::EPSILON
+            .unwrap() - 5.0).abs() < f32::EPSILON
     );
 
     assert!(
@@ -28,7 +28,7 @@ fn eval() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns)
-            .unwrap() - 6.0).abs() < f64::EPSILON
+            .unwrap() - 6.0).abs() < f32::EPSILON
     );
 
     assert_eq!(
@@ -43,8 +43,8 @@ fn eval() {
 
 #[test]
 fn aaa_util() {
-    assert!((bool_to_f64!(true) - 1.0).abs() < f64::EPSILON);
-    assert!((bool_to_f64!(false) - 0.0).abs() < f64::EPSILON);
+    assert!((bool_to_f32!(true) - 1.0).abs() < f32::EPSILON);
+    assert!((bool_to_f32!(false) - 0.0).abs() < f32::EPSILON);
 }
 
 #[test]
@@ -63,7 +63,7 @@ fn aaa_aab_single() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns)
-            .unwrap() - 123.456f64).abs() < f64::EPSILON
+            .unwrap() - 123.456f32).abs() < f32::EPSILON
     );
 }
 
@@ -310,7 +310,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(std::f64::NEG_INFINITY)
+        Ok(std::f32::NEG_INFINITY)
     );
     assert!(Parser::new()
         .parse("1.2 + log(-1)", &mut slab.ps)
@@ -399,7 +399,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(std::f64::consts::E) // 2.718281828459045
+        Ok(std::f32::consts::E) // 2.718281828459045
     );
     assert_eq!(
         Parser::new()
@@ -407,7 +407,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(std::f64::consts::PI) // 3.141592653589793
+        Ok(std::f32::consts::PI) // 3.141592653589793
     );
 
     assert_eq!(
@@ -440,7 +440,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(std::f64::consts::FRAC_PI_2)
+        Ok(std::f32::consts::FRAC_PI_2)
     );
     assert_eq!(
         Parser::new()
@@ -448,7 +448,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(std::f64::consts::FRAC_PI_2) // 1.5707963267948966
+        Ok(std::f32::consts::FRAC_PI_2) // 1.5707963267948966
     );
     assert_eq!(
         Parser::new()
@@ -456,7 +456,7 @@ fn aaa_basics() {
             .unwrap()
             .from(&slab.ps)
             .eval(&slab, &mut ns),
-        Ok(std::f64::consts::FRAC_PI_4) // 0.7853981633974483
+        Ok(std::f32::consts::FRAC_PI_4) // 0.7853981633974483
     );
     assert_eq!(
         Parser::new()
@@ -489,7 +489,7 @@ fn aaa_basics() {
 // struct TestEvaler;
 // impl Evaler for TestEvaler {
 //     fn _var_names(&self, _slab:&Slab, _dst:&mut BTreeSet<String>) {}
-//     fn eval(&self, _slab:&Slab, ns:&mut impl EvalNamespace) -> Result<f64,Error> {
+//     fn eval(&self, _slab:&Slab, ns:&mut impl EvalNamespace) -> Result<f32,Error> {
 //         match ns.lookup("x", vec![], &mut String::new()) {
 //             Some(v) => Ok(v),
 //             None => Ok(1.23),
@@ -523,7 +523,7 @@ fn corners() {
     );
 }
 
-fn my_evalns_cb_function(_: &str, _: Vec<f64>) -> Option<f64> {
+fn my_evalns_cb_function(_: &str, _: Vec<f32>) -> Option<f32> {
     None
 }
 #[test]
@@ -532,17 +532,17 @@ fn evalns_cb_ownership() {
     let _ns = CachedCallbackNamespace::new(my_evalns_cb_function);
     // Conclusion: You can pass a function pointer into a function that receives ownership.
 
-    let closure = |_: &str, _: Vec<f64>| None;
+    let closure = |_: &str, _: Vec<f32>| None;
     let _ns = CachedCallbackNamespace::new(closure);
     let _ns = CachedCallbackNamespace::new(closure);
 
     let x = 1.0;
-    let closure = |_: &str, _: Vec<f64>| Some(x);
+    let closure = |_: &str, _: Vec<f32>| Some(x);
     let _ns = CachedCallbackNamespace::new(closure);
     let _ns = CachedCallbackNamespace::new(closure);
 
     let mut x = 1.0;
-    let closure = |_: &str, _: Vec<f64>| {
+    let closure = |_: &str, _: Vec<f32>| {
         x += 1.0;
         Some(x)
     };
@@ -565,9 +565,9 @@ fn custom_func() {
             "x" => Some(1.0),
             "y" => Some(2.0),
             "z" => Some(3.0),
-            "foo" => Some(args.first().unwrap_or(&std::f64::NAN) * 10.0),
+            "foo" => Some(args.first().unwrap_or(&std::f32::NAN) * 10.0),
             "bar" => {
-                Some(args.first().unwrap_or(&std::f64::NAN) + args.get(1).unwrap_or(&std::f64::NAN))
+                Some(args.first().unwrap_or(&std::f32::NAN) + args.get(1).unwrap_or(&std::f32::NAN))
             }
             _ => None,
         }

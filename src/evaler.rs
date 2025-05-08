@@ -40,9 +40,9 @@ use crate::parser::{
 };
 use crate::slab::Slab;
 
-use std::{collections::BTreeSet, cell::RefCell};
-use std::f64::consts;
+use std::f32::consts;
 use std::fmt;
+use std::{cell::RefCell, collections::BTreeSet};
 
 /// The same as `evaler.eval(&slab, &mut ns)`, but more efficient for common cases.
 ///
@@ -143,12 +143,12 @@ macro_rules! eval_ic_ref {
 
 /// You must `use` this trait so you can call `.eval()`.
 pub trait Evaler: fmt::Debug {
-    /// Evaluate this `Expression`/`Instruction` and return an `f64`.
+    /// Evaluate this `Expression`/`Instruction` and return an `f32`.
     ///
     /// # Errors
-    /// 
+    ///
     /// Returns a `fasteval3::Error` if there are any problems, such as undefined variables.
-    fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f64, Error>;
+    fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f32, Error>;
 
     /// Don't call this directly.  Use `var_names()` instead.
     ///
@@ -173,9 +173,9 @@ impl Evaler for Expression {
             pair.1._var_names(slab, dst);
         }
     }
-    fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f64, Error> {
+    fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f32, Error> {
         #[inline(always)]
-        fn rtol(vals: &mut Vec<f64>, ops: &mut Vec<BinaryOp>, search: BinaryOp) {
+        fn rtol(vals: &mut Vec<f32>, ops: &mut Vec<BinaryOp>, search: BinaryOp) {
             for i in (0..ops.len()).rev() {
                 let op = ops.get(i).map_or(EOR, |op| *op);
                 if op == search {
@@ -189,7 +189,7 @@ impl Evaler for Expression {
             }
         }
         #[inline(always)]
-        fn ltor(vals: &mut Vec<f64>, ops: &mut Vec<BinaryOp>, search: BinaryOp) {
+        fn ltor(vals: &mut Vec<f32>, ops: &mut Vec<BinaryOp>, search: BinaryOp) {
             let mut i = 0;
             loop {
                 match ops.get(i) {
@@ -210,7 +210,7 @@ impl Evaler for Expression {
             }
         }
         #[inline(always)]
-        fn ltor_multi(vals: &mut Vec<f64>, ops: &mut Vec<BinaryOp>, search: &[BinaryOp]) {
+        fn ltor_multi(vals: &mut Vec<f32>, ops: &mut Vec<BinaryOp>, search: &[BinaryOp]) {
             let mut i = 0;
             loop {
                 match ops.get(i) {
@@ -248,7 +248,7 @@ impl Evaler for Expression {
         // // }
 
         // if self.0.len()%2!=1 { return Err(KErr::new("Expression len should always be odd")) }
-        // let mut vals : Vec<f64>      = Vec::with_capacity(self.0.len()/2+1);
+        // let mut vals : Vec<f32>      = Vec::with_capacity(self.0.len()/2+1);
         // let mut ops  : Vec<BinaryOp> = Vec::with_capacity(self.0.len()/2  );
         // for (i,tok) in self.0.iter().enumerate() {
         //     match tok {
@@ -267,7 +267,7 @@ impl Evaler for Expression {
         // }
 
         // Code for new Expression data structure:
-        let mut vals = Vec::<f64>::with_capacity(self.pairs.len() + 1);
+        let mut vals = Vec::<f32>::with_capacity(self.pairs.len() + 1);
         let mut ops = Vec::<BinaryOp>::with_capacity(self.pairs.len());
         vals.push(self.first.eval(slab, ns)?);
         for pair in &self.pairs {
@@ -318,7 +318,7 @@ impl Evaler for Value {
             EPrintFunc(f) => f._var_names(slab, dst),
         };
     }
-    fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f64, Error> {
+    fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f32, Error> {
         match self {
             EConstant(c) => Ok(*c),
             EUnaryOp(u) => u.eval(slab, ns),
@@ -337,11 +337,11 @@ impl Evaler for UnaryOp {
             EParentheses(expr_i) => get_expr!(slab.ps, expr_i)._var_names(slab, dst),
         }
     }
-    fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f64, Error> {
+    fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f32, Error> {
         match self {
             EPos(val_i) => get_val!(slab.ps, val_i).eval(slab, ns),
             ENeg(val_i) => Ok(-get_val!(slab.ps, val_i).eval(slab, ns)?),
-            ENot(val_i) => Ok(bool_to_f64!(f64_eq!(
+            ENot(val_i) => Ok(bool_to_f32!(f32_eq!(
                 get_val!(slab.ps, val_i).eval(slab, ns)?,
                 0.0
             ))),
@@ -352,15 +352,15 @@ impl Evaler for UnaryOp {
 
 impl BinaryOp {
     // Non-standard eval interface (not generalized yet):
-    fn binaryop_eval(self, left_opt: Option<&f64>, right_opt: Option<&f64>) -> f64 {
+    fn binaryop_eval(self, left_opt: Option<&f32>, right_opt: Option<&f32>) -> f32 {
         // Passing 'self' by value is more efficient than pass-by-reference.
         let left = match left_opt {
             Some(l) => *l,
-            None => return std::f64::NAN,
+            None => return std::f32::NAN,
         };
         let right = match right_opt {
             Some(r) => *r,
-            None => return std::f64::NAN,
+            None => return std::f32::NAN,
         };
         match self {
             EAdd => left + right, // Floats don't overflow.
@@ -369,21 +369,21 @@ impl BinaryOp {
             EDiv => left / right,
             EMod => left % right, //left - (left/right).trunc()*right
             EExp => left.powf(right),
-            ELT => bool_to_f64!(left < right),
-            ELTE => bool_to_f64!(left <= right),
-            EEQ => bool_to_f64!(f64_eq!(left, right)),
-            ENE => bool_to_f64!(f64_ne!(left, right)),
-            EGTE => bool_to_f64!(left >= right),
-            EGT => bool_to_f64!(left > right),
+            ELT => bool_to_f32!(left < right),
+            ELTE => bool_to_f32!(left <= right),
+            EEQ => bool_to_f32!(f32_eq!(left, right)),
+            ENE => bool_to_f32!(f32_ne!(left, right)),
+            EGTE => bool_to_f32!(left >= right),
+            EGT => bool_to_f32!(left > right),
             EOR => {
-                if f64_ne!(left, 0.0) {
+                if f32_ne!(left, 0.0) {
                     left
                 } else {
                     right
                 }
             }
             EAND => {
-                if f64_eq!(left, 0.0) {
+                if f32_eq!(left, 0.0) {
                     left
                 } else {
                     right
@@ -428,7 +428,9 @@ impl Evaler for StdFunc {
 
             EFuncE | EFuncPi => (),
             EFuncLog { base: opt, expr } | EFuncRound { modulus: opt, expr } => {
-                if let Some(xi) = opt.as_ref() { get_expr!(slab.ps, xi)._var_names(slab, dst) }
+                if let Some(xi) = opt.as_ref() {
+                    get_expr!(slab.ps, xi)._var_names(slab, dst)
+                }
                 get_expr!(slab.ps, expr)._var_names(slab, dst);
             }
             EFuncMin { first, rest } | EFuncMax { first, rest } => {
@@ -441,7 +443,7 @@ impl Evaler for StdFunc {
     }
 
     #[allow(clippy::cognitive_complexity)]
-    fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f64, Error> {
+    fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f32, Error> {
         let celled_slab = RefCell::from(slab.ps.char_buf.clone());
         match self {
             // These match arms are ordered in a way that I feel should deliver good performance.
@@ -510,7 +512,7 @@ impl Evaler for StdFunc {
                     saw_nan = saw_nan || min.is_nan();
                 }
                 if saw_nan {
-                    Ok(std::f64::NAN)
+                    Ok(std::f32::NAN)
                 } else {
                     Ok(min)
                 }
@@ -526,7 +528,7 @@ impl Evaler for StdFunc {
                     saw_nan = saw_nan || max.is_nan();
                 }
                 if saw_nan {
-                    Ok(std::f64::NAN)
+                    Ok(std::f32::NAN)
                 } else {
                     Ok(max)
                 }
@@ -547,12 +549,12 @@ impl Evaler for PrintFunc {
             };
         }
     }
-    fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f64, Error> {
+    fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f32, Error> {
         fn process_str(s: &str) -> String {
             s.replace("\\n", "\n").replace("\\t", "\t")
         }
-        
-        let mut val = 0f64;
+
+        let mut val = 0f32;
 
         if let Some(EStr(fmtstr)) = self.0.first() {
             if fmtstr.contains('%') {
@@ -560,9 +562,9 @@ impl Evaler for PrintFunc {
 
                 //let fmtstr = process_str(fmtstr);
 
-                return Err(Error::WrongArgs(
-                    String::from("printf formatting is not yet implemented"),
-                )); // TODO: Make a pure-rust sprintf libarary.
+                return Err(Error::WrongArgs(String::from(
+                    "printf formatting is not yet implemented",
+                ))); // TODO: Make a pure-rust sprintf libarary.
 
                 //return Ok(val);
             }
@@ -630,7 +632,10 @@ impl Evaler for Instruction {
                 base: left_ic,
                 power: right_ic,
             }
-            | IFuncLog { base: left_ic, of: right_ic }
+            | IFuncLog {
+                base: left_ic,
+                of: right_ic,
+            }
             | IFuncRound {
                 modulus: left_ic,
                 of: right_ic,
@@ -656,7 +661,7 @@ impl Evaler for Instruction {
     }
 
     #[allow(clippy::too_many_lines, clippy::cognitive_complexity)] // This is pretty simple on its own.
-    fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f64, Error> {
+    fn eval(&self, slab: &Slab, ns: &mut impl EvalNamespace) -> Result<f32, Error> {
         let celled_slab = RefCell::from(slab.ps.char_buf.clone());
         match self {
             // I have manually ordered these match arms in a way that I feel should deliver good performance.
@@ -728,8 +733,8 @@ impl Evaler for Instruction {
                 let left = eval_compiled_ref!(get_instr!(slab.cs, li), slab, ns);
                 let right = eval_ic_ref!(ric, slab, ns);
                 if left.is_nan() || right.is_nan() {
-                    return Ok(std::f64::NAN);
-                } // I need to implement NAN checks myself because the f64.min() function says that if one number is NaN, the other will be returned.
+                    return Ok(std::f32::NAN);
+                } // I need to implement NAN checks myself because the f32.min() function says that if one number is NaN, the other will be returned.
                 if left < right {
                     Ok(left)
                 } else {
@@ -740,7 +745,7 @@ impl Evaler for Instruction {
                 let left = eval_compiled_ref!(get_instr!(slab.cs, li), slab, ns);
                 let right = eval_ic_ref!(ric, slab, ns);
                 if left.is_nan() || right.is_nan() {
-                    return Ok(std::f64::NAN);
+                    return Ok(std::f32::NAN);
                 }
                 if left > right {
                     Ok(left)
@@ -749,34 +754,34 @@ impl Evaler for Instruction {
                 }
             }
 
-            IEQ(left, right) => Ok(bool_to_f64!(f64_eq!(
+            IEQ(left, right) => Ok(bool_to_f32!(f32_eq!(
                 eval_ic_ref!(left, slab, ns),
                 eval_ic_ref!(right, slab, ns)
             ))),
-            INE(left, right) => Ok(bool_to_f64!(f64_ne!(
+            INE(left, right) => Ok(bool_to_f32!(f32_ne!(
                 eval_ic_ref!(left, slab, ns),
                 eval_ic_ref!(right, slab, ns)
             ))),
-            ILT(left, right) => Ok(bool_to_f64!(
+            ILT(left, right) => Ok(bool_to_f32!(
                 eval_ic_ref!(left, slab, ns) < eval_ic_ref!(right, slab, ns)
             )),
-            ILTE(left, right) => Ok(bool_to_f64!(
+            ILTE(left, right) => Ok(bool_to_f32!(
                 eval_ic_ref!(left, slab, ns) <= eval_ic_ref!(right, slab, ns)
             )),
-            IGTE(left, right) => Ok(bool_to_f64!(
+            IGTE(left, right) => Ok(bool_to_f32!(
                 eval_ic_ref!(left, slab, ns) >= eval_ic_ref!(right, slab, ns)
             )),
-            IGT(left, right) => Ok(bool_to_f64!(
+            IGT(left, right) => Ok(bool_to_f32!(
                 eval_ic_ref!(left, slab, ns) > eval_ic_ref!(right, slab, ns)
             )),
 
-            INot(i) => Ok(bool_to_f64!(f64_eq!(
+            INot(i) => Ok(bool_to_f32!(f32_eq!(
                 eval_compiled_ref!(get_instr!(slab.cs, i), slab, ns),
                 0.0
             ))),
             IAND(lefti, rightic) => {
                 let left = eval_compiled_ref!(get_instr!(slab.cs, lefti), slab, ns);
-                if f64_eq!(left, 0.0) {
+                if f32_eq!(left, 0.0) {
                     Ok(left)
                 } else {
                     Ok(eval_ic_ref!(rightic, slab, ns))
@@ -784,7 +789,7 @@ impl Evaler for Instruction {
             }
             IOR(lefti, rightic) => {
                 let left = eval_compiled_ref!(get_instr!(slab.cs, lefti), slab, ns);
-                if f64_ne!(left, 0.0) {
+                if f32_ne!(left, 0.0) {
                     Ok(left)
                 } else {
                     Ok(eval_ic_ref!(rightic, slab, ns))

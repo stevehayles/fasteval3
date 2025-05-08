@@ -6,7 +6,7 @@ use fasteval3::{
 use std::str::from_utf8;
 
 #[allow(clippy::needless_pass_by_value)] // This type is explicitly required by our namespace.
-fn evalns_cb(name: &str, args: Vec<f64>) -> Option<f64> {
+fn evalns_cb(name: &str, args: Vec<f32>) -> Option<f32> {
     match name {
         "w" => Some(0.0),
         "x" => Some(1.0),
@@ -19,7 +19,7 @@ fn evalns_cb(name: &str, args: Vec<f64>) -> Option<f64> {
     }
 }
 
-fn chk_ok(expr_str: &str, expect_compile_str: &str, expect_slab_str: &str, expect_eval: f64) {
+fn chk_ok(expr_str: &str, expect_compile_str: &str, expect_slab_str: &str, expect_eval: f32) {
     let mut slab = Slab::new();
     let expr = Parser::new()
         .parse(expr_str, &mut slab.ps)
@@ -32,12 +32,12 @@ fn chk_ok(expr_str: &str, expect_compile_str: &str, expect_slab_str: &str, expec
 
     (|| -> Result<(), Error> {
         let mut ns = CachedCallbackNamespace::new(evalns_cb);
-        assert!((eval_compiled_ref!(&instr, &slab, &mut ns) - expect_eval).abs() < f64::EPSILON);
+        assert!((eval_compiled_ref!(&instr, &slab, &mut ns) - expect_eval).abs() < f32::EPSILON);
 
         // Make sure Instruction eval matches normal eval:
         assert!(
             (eval_compiled_ref!(&instr, &slab, &mut ns) - 
-            expr.eval(&slab, &mut ns).unwrap()).abs() < f64::EPSILON
+            expr.eval(&slab, &mut ns).unwrap()).abs() < f32::EPSILON
         );
 
         Ok(())
@@ -68,8 +68,8 @@ fn meval() {
     chk_perr("(", Error::EofWhileParsing(String::from("value")));
     chk_perr("0(", Error::UnparsedTokensRemaining(String::from("(")));
     chk_eerr("e", Error::Undefined(String::from("e")));
-    chk_perr("1E", Error::ParseF64(String::from("1E")));
-    chk_perr("1e+", Error::ParseF64(String::from("1e+")));
+    chk_perr("1E", Error::Parsef32(String::from("1E")));
+    chk_perr("1e+", Error::Parsef32(String::from("1e+")));
     chk_perr("()", Error::InvalidValue);
     chk_perr("2)", Error::UnparsedTokensRemaining(String::from(")")));
     chk_perr("2^", Error::EofWhileParsing(String::from("value")));
@@ -95,7 +95,7 @@ fn meval() {
     chk_ok("sin(1.) + cos(2.)",
 "IConst(0.4253241482607541)",
 "Slab{ exprs:{ 0:Expression { first: EConstant(1.0), pairs: [] }, 1:Expression { first: EConstant(2.0), pairs: [] }, 2:Expression { first: EStdFunc(EFuncSin(ExpressionI(0))), pairs: [ExprPair(EAdd, EStdFunc(EFuncCos(ExpressionI(1))))] } }, vals:{}, instrs:{} }",
-(1f64).sin() + (2f64).cos());
+(1f32).sin() + (2f32).cos());
 }
 
 #[test]

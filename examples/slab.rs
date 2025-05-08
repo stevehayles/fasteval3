@@ -11,14 +11,14 @@ fn main() -> Result<(), fasteval3::Error> {
 
     // Let's evaluate the expression a couple times with different 'x' values:
 
-    let mut map: BTreeMap<String, f64> = BTreeMap::new();
+    let mut map: BTreeMap<String, f32> = BTreeMap::new();
     map.insert(String::from("x"), 1.0);
     let val = expr_ref.eval(&slab, &mut map)?;
-    assert!((val - 2.0).abs() < f64::EPSILON);
+    assert!((val - 2.0).abs() < f32::EPSILON);
 
     map.insert(String::from("x"), 2.5);
     let val = expr_ref.eval(&slab, &mut map)?;
-    assert!((val - 3.5).abs() < f64::EPSILON);
+    assert!((val - 3.5).abs() < f32::EPSILON);
 
     // Now, let's re-use the Slab for a new expression.
     // (This is much cheaper than allocating a new Slab.)
@@ -29,7 +29,7 @@ fn main() -> Result<(), fasteval3::Error> {
     let expr_ref = parser.parse("x * 10", &mut slab.ps)?.from(&slab.ps);
 
     let val = expr_ref.eval(&slab, &mut map)?;
-    assert!((val - 25.0).abs() < f64::EPSILON);
+    assert!((val - 25.0).abs() < f32::EPSILON);
 
     Ok(())
 }

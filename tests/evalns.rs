@@ -13,9 +13,9 @@ fn empty() {
 }
 
 #[test]
-fn str_to_f64() {
+fn str_to_f32() {
     {
-        let mut ns = fasteval3::StringToF64Namespace::new();
+        let mut ns = fasteval3::StringTof32Namespace::new();
         ns.insert(String::from("a"), 1.11);
         ns.insert(String::from("b"), 2.22);
 
@@ -24,7 +24,7 @@ fn str_to_f64() {
     }
 
     {
-        let mut ns = fasteval3::StrToF64Namespace::new();
+        let mut ns = fasteval3::StrTof32Namespace::new();
         ns.insert("a", 1.11);
         ns.insert("b", 2.22);
 
@@ -55,9 +55,9 @@ fn str_to_cb() {
 }
 
 #[test]
-fn layered_str_to_f64() {
-    let mut ns = fasteval3::LayeredStringToF64Namespace::new();
-    let mut layer0 = fasteval3::StringToF64Namespace::new();
+fn layered_str_to_f32() {
+    let mut ns = fasteval3::LayeredStringTof32Namespace::new();
+    let mut layer0 = fasteval3::StringTof32Namespace::new();
     layer0.insert(String::from("a"), 1.11);
     layer0.insert(String::from("b"), 2.22);
     ns.push(layer0);
@@ -65,7 +65,7 @@ fn layered_str_to_f64() {
     let val = ez_eval("a + b + 1", &mut ns).unwrap();
     assert_error_margin(val, 4.33);
 
-    let mut layer1 = fasteval3::StringToF64Namespace::new();
+    let mut layer1 = fasteval3::StringTof32Namespace::new();
     layer1.insert(String::from("a"), 11.11);
     ns.push(layer1);
 
@@ -80,10 +80,10 @@ fn layered_str_to_f64() {
 
 #[test]
 fn cb() {
-    let mut ns = |name: &str, args: Vec<f64>| match name {
+    let mut ns = |name: &str, args: Vec<f32>| match name {
         "a" => Some(1.11),
         "b" => Some(2.22),
-        "len" => Some(args.len() as f64),
+        "len" => Some(args.len() as f32),
         _ => None,
     };
 
@@ -93,13 +93,13 @@ fn cb() {
 
 #[test]
 fn cached_cb() {
-    let mut ns = fasteval3::CachedCallbackNamespace::new(|name: &str, args: Vec<f64>| match name {
+    let mut ns = fasteval3::CachedCallbackNamespace::new(|name: &str, args: Vec<f32>| match name {
         "a" => {
             eprintln!("cached_cb: a: This should only be printed once.");
             Some(1.11)
         }
         "b" => Some(2.22),
-        "len" => Some(args.len() as f64),
+        "len" => Some(args.len() as f32),
         _ => None,
     });
 
@@ -113,7 +113,7 @@ fn cached_cb() {
 
 #[test]
 fn custom_vector_funcs() {
-    let vecs_cell = std::cell::RefCell::new(Vec::<Vec<f64>>::new());
+    let vecs_cell = std::cell::RefCell::new(Vec::<Vec<f32>>::new());
 
     let mut ns = fasteval3::StrToCallbackNamespace::new();
 
@@ -125,7 +125,7 @@ fn custom_vector_funcs() {
             let mut vecs = vecs_cell.borrow_mut();
             let index = vecs.len();
             vecs.push(args);
-            index as f64
+            index as f32
         }),
     );
 
@@ -137,7 +137,7 @@ fn custom_vector_funcs() {
                     return v.iter().sum();
                 }
             }
-            std::f64::NAN
+            std::f32::NAN
         }),
     );
 

@@ -83,7 +83,7 @@ fn comp(expr_str: &str) -> (Slab, Instruction) {
 }
 
 #[allow(clippy::needless_pass_by_value)] // The amount of work it would take to fix this... Is immeasurable.
-fn comp_chk(expr_str: &str, expect_instr: Instruction, expect_fmt: &str, expect_eval: f64) {
+fn comp_chk(expr_str: &str, expect_instr: Instruction, expect_fmt: &str, expect_eval: f32) {
     let mut slab = Slab::new();
 
     let mut ns = CachedCallbackNamespace::new(|name, args| match name {
@@ -120,7 +120,7 @@ fn comp_chk(expr_str: &str, expect_instr: Instruction, expect_fmt: &str, expect_
     .unwrap();
 }
 #[cfg(feature = "unsafe-vars")]
-fn unsafe_comp_chk(expr_str: &str, expect_fmt: &str, expect_eval: f64) {
+fn unsafe_comp_chk(expr_str: &str, expect_fmt: &str, expect_eval: f32) {
     fn replace_addrs(mut s: String) -> String {
         let mut start = 0;
         loop {
@@ -186,7 +186,7 @@ fn unsafe_comp_chk(expr_str: &str, expect_fmt: &str, expect_eval: f64) {
     .unwrap();
 }
 
-fn comp_chk_str(expr_str: &str, expect_instr: &str, expect_fmt: &str, expect_eval: f64) {
+fn comp_chk_str(expr_str: &str, expect_instr: &str, expect_fmt: &str, expect_eval: f32) {
     let mut slab = Slab::new();
     let expr = Parser::new()
         .parse(expr_str, &mut slab.ps)
@@ -215,7 +215,7 @@ fn comp_chk_str(expr_str: &str, expect_instr: &str, expect_fmt: &str, expect_eva
             assert!(eval_compiled_ref!(&instr, &slab, &mut ns).is_nan());
             assert!(expr.eval(&slab, &mut ns).unwrap().is_nan());
         } else {
-            // These two checks do not pass the (x - y).abs() < f64::EPSILON evaluation.
+            // These two checks do not pass the (x - y).abs() < f32::EPSILON evaluation.
             // There's some imprecision here.
             // TODO: Fix imprecision.
             assert_eq!(eval_compiled_ref!(&instr, &slab, &mut ns), expect_eval);
@@ -479,15 +479,15 @@ fn all_instrs() {
     comp_chk("4 ^ 0.5", IConst(2.0), "CompileSlab{ instrs:{} }", 2.0);
     comp_chk(
         "2 ^ 0.5",
-        IConst(std::f64::consts::SQRT_2), // 1.4142135623730951
+        IConst(std::f32::consts::SQRT_2), // 1.4142135623730951
         "CompileSlab{ instrs:{} }",
-        std::f64::consts::SQRT_2,
+        std::f32::consts::SQRT_2,
     );
     comp_chk_str(
         "-4 ^ 0.5",
         "IConst(NaN)",
         "CompileSlab{ instrs:{} }",
-        std::f64::NAN,
+        std::f32::NAN,
     );
     comp_chk(
         "y ^ 0.5",
@@ -496,7 +496,7 @@ fn all_instrs() {
             power: IC::C(0.5),
         },
         "CompileSlab{ instrs:{ 0:IVar(\"y\") } }",
-        std::f64::consts::SQRT_2,
+        std::f32::consts::SQRT_2,
     );
     comp_chk(
         "2 ^ 3 ^ 2",
@@ -1033,15 +1033,15 @@ fn all_instrs() {
     comp_chk("log(10)", IConst(1.0), "CompileSlab{ instrs:{} }", 1.0);
     comp_chk(
         "log(2, 10)",
-        IConst(std::f64::consts::LOG2_10), // 3.321928094887362
+        IConst(std::f32::consts::LOG2_10), // 3.321928094887362
         "CompileSlab{ instrs:{} }",
-        std::f64::consts::LOG2_10,
+        std::f32::consts::LOG2_10,
     );
     comp_chk(
         "log(e(), 10)",
-        IConst(std::f64::consts::LN_10), // 2.302585092994046
+        IConst(std::f32::consts::LN_10), // 2.302585092994046
         "CompileSlab{ instrs:{} }",
-        std::f64::consts::LN_10,
+        std::f32::consts::LN_10,
     );
     comp_chk(
         "log(x)",
@@ -1116,13 +1116,13 @@ fn all_instrs() {
         "min(NaN, y7, 4.7)",
         "IFuncMin(InstructionI(0), C(NaN))",
         "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }",
-        std::f64::NAN,
+        std::f32::NAN,
     );
     comp_chk_str(
         "min(NaN, 4.7)",
         "IConst(NaN)",
         "CompileSlab{ instrs:{} }",
-        std::f64::NAN,
+        std::f32::NAN,
     );
     comp_chk_str(
         "min(inf, y7, 4.7)",
@@ -1140,13 +1140,13 @@ fn all_instrs() {
         "min(-inf, y7, 4.7)",
         "IFuncMin(InstructionI(0), C(-inf))",
         "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }",
-        std::f64::NEG_INFINITY,
+        std::f32::NEG_INFINITY,
     );
     comp_chk_str(
         "min(-inf, 4.7)",
         "IConst(-inf)",
         "CompileSlab{ instrs:{} }",
-        std::f64::NEG_INFINITY,
+        std::f32::NEG_INFINITY,
     );
 
     // IFuncMax
@@ -1185,25 +1185,25 @@ fn all_instrs() {
         "max(NaN, y7, 0.7)",
         "IFuncMax(InstructionI(0), C(NaN))",
         "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }",
-        std::f64::NAN,
+        std::f32::NAN,
     );
     comp_chk_str(
         "max(NaN, 0.7)",
         "IConst(NaN)",
         "CompileSlab{ instrs:{} }",
-        std::f64::NAN,
+        std::f32::NAN,
     );
     comp_chk_str(
         "max(inf, y7, 4.7)",
         "IFuncMax(InstructionI(0), C(inf))",
         "CompileSlab{ instrs:{ 0:IVar(\"y7\") } }",
-        std::f64::INFINITY,
+        std::f32::INFINITY,
     );
     comp_chk_str(
         "max(inf, 4.7)",
         "IConst(inf)",
         "CompileSlab{ instrs:{} }",
-        std::f64::INFINITY,
+        std::f32::INFINITY,
     );
     comp_chk_str(
         "max(-inf, y7, 4.7)",
@@ -1273,15 +1273,15 @@ fn all_instrs() {
     // IFuncACos
     comp_chk(
         "acos(0)",
-        IConst(std::f64::consts::FRAC_PI_2), // 1.5707963267948966
+        IConst(std::f32::consts::FRAC_PI_2), // 1.5707963267948966
         "CompileSlab{ instrs:{} }",
-        std::f64::consts::FRAC_PI_2,
+        std::f32::consts::FRAC_PI_2,
     );
     comp_chk(
         "acos(w)",
         IFuncACos(InstructionI(0)),
         "CompileSlab{ instrs:{ 0:IVar(\"w\") } }",
-        std::f64::consts::FRAC_PI_2,
+        std::f32::consts::FRAC_PI_2,
     );
 
     // IFuncATan
@@ -1391,13 +1391,13 @@ fn eval_macro() {
             .unwrap()
             .from(&slab.ps);
         let instr = expr.compile(&slab.ps, &mut slab.cs, &mut ns);
-        assert!((eval_compiled_ref!(&instr, &slab, &mut ns) - 5.0).abs() < f64::EPSILON);
+        assert!((eval_compiled_ref!(&instr, &slab, &mut ns) - 5.0).abs() < f32::EPSILON);
         (|| -> Result<(), Error> {
-            assert!((eval_compiled_ref!(&instr, &slab, &mut ns) - 5.0).abs() < f64::EPSILON);
+            assert!((eval_compiled_ref!(&instr, &slab, &mut ns) - 5.0).abs() < f32::EPSILON);
             Ok(())
         })()
         .unwrap();
-        assert!((eval_compiled!(instr, &slab, &mut ns) - 5.0).abs() < f64::EPSILON);
+        assert!((eval_compiled!(instr, &slab, &mut ns) - 5.0).abs() < f32::EPSILON);
 
         #[cfg(feature = "unsafe-vars")]
         {

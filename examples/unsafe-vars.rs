@@ -19,7 +19,7 @@ fn main() -> Result<(), fasteval3::Error> {
         // The Unsafe Variable will use a pointer to read this memory location:
         // You must make sure that this variable stays in-scope as long as the
         // expression is in-use.
-        let mut deg : f64 = 0.0;
+        let mut deg : f32 = 0.0;
 
         // Unsafe Variables must be registered before 'parse()'.
         // (Normal Variables only need definitions during the 'eval' phase.)
@@ -32,7 +32,7 @@ fn main() -> Result<(), fasteval3::Error> {
                                                 // so EmptyNamespace is fine.
 
         for d in 0..360 {
-            deg = d as f64;
+            deg = d as f32;
             let val = fasteval3::eval_compiled!(compiled, &slab, &mut ns);
             eprintln!("sin({}°) = {}", deg, val);
         }

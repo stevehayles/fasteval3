@@ -1,8 +1,8 @@
 // usage:  cargo run --release --example advanced-vars
 
 fn main() -> Result<(), fasteval3::Error> {
-    let mut cb = |name: &str, args: Vec<f64>| -> Option<f64> {
-        let mydata: [f64; 3] = [11.1, 22.2, 33.3];
+    let mut cb = |name: &str, args: Vec<f32>| -> Option<f32> {
+        let mydata: [f32; 3] = [11.1, 22.2, 33.3];
         match name {
             // Custom constants/variables:
             "x" => Some(3.0),
@@ -15,9 +15,7 @@ fn main() -> Result<(), fasteval3::Error> {
             // The `args.get...` code is the same as:
             //     mydata[args[0] as usize]
             // ...but it won't panic if either index is out-of-bounds.
-            "data" => {
-                args.first().and_then(|f| mydata.get(*f as usize).copied())
-            },
+            "data" => args.first().and_then(|f| mydata.get(*f as usize).copied()),
 
             // A wildcard to handle all undefined names:
             _ => None,
@@ -30,7 +28,7 @@ fn main() -> Result<(), fasteval3::Error> {
     //                           |   variables are like custom functions with zero args
     //                           custom function
 
-    assert!((val - 16.1).abs() < f64::EPSILON);
+    assert!((val - 16.1).abs() < f32::EPSILON);
 
     // Let's explore some of the hidden complexities of variables:
     //

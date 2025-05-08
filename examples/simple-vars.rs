@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 fn main() -> Result<(), fasteval3::Error> {
-    let mut map: BTreeMap<String, f64> = BTreeMap::new();
+    let mut map: BTreeMap<String, f32> = BTreeMap::new();
     map.insert(String::from("x"), 1.0);
     map.insert(String::from("y"), 2.0);
     map.insert(String::from("z"), 3.0);
@@ -11,7 +11,7 @@ fn main() -> Result<(), fasteval3::Error> {
     //                                 |
     //                                 prints "y: 2" to stderr and then evaluates to 2.0
 
-    assert!((val - 6.0).abs() < f64::EPSILON);
+    assert!((val - 6.0).abs() < f32::EPSILON);
 
     Ok(())
 }

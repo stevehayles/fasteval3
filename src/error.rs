@@ -58,10 +58,10 @@ pub enum Error {
     /// A value was expected, but invalid input data was found.
     InvalidValue,
 
-    /// An error occurred during the parsing of a f64 number.
+    /// An error occurred during the parsing of a f32 number.
     ///
     /// The `String` field contains the data that caused the error.
-    ParseF64(String),
+    ParseF32(String),
 
     /// The expected input data was not found.
     ///

@@ -3,7 +3,7 @@
 fn main() -> Result<(), fasteval3::Error> {
     let mut num_lookups = 0;
     let val = {
-        let cb = |name: &str, _args: Vec<f64>| -> Option<f64> {
+        let cb = |name: &str, _args: Vec<f32>| -> Option<f32> {
             num_lookups += 1;
             match name {
                 "x" => {
@@ -19,7 +19,7 @@ fn main() -> Result<(), fasteval3::Error> {
 
         fasteval3::ez_eval("x * (x + 1)", &mut ns)?
     };
-    assert!((val - 6.0).abs() < f64::EPSILON);
+    assert!((val - 6.0).abs() < f32::EPSILON);
     assert_eq!(num_lookups, 1); // Notice that only 1 lookup occurred.
                                 // The second 'x' value was cached.
 

@@ -57,7 +57,7 @@ fn repl() {
     let mut ns_stack = vec![BTreeMap::new()];
 
     let stdin = io::stdin();
-    
+
     loop {
         eprint!(">>> ");
         io::stderr().flush().unwrap();
@@ -67,7 +67,7 @@ fn repl() {
         let mut line: String = if let Some(Ok(string)) = stdin.lock().lines().next() {
             string.trim().to_owned()
         } else {
-            break
+            break;
         };
 
         if line.is_empty() {
@@ -87,7 +87,7 @@ fn repl() {
             eprintln!("Entered scope[{}]", ns_stack.len() - 1);
             continue;
         } else if pieces[0] == "pop" {
-            let mut return_value = std::f64::NAN;
+            let mut return_value = std::f32::NAN;
             let mut has_return_value = false;
             if let Some(v) = ns_stack.last().unwrap().get(&ans_key) {
                 return_value = *v;
