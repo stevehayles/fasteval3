@@ -266,7 +266,7 @@ impl<'s> ExprSlice<'s> {
         let mut ops = Vec::<&BinaryOp>::with_capacity(4);
         let mut xss = Vec::<ExprSlice>::with_capacity(ops.len() + 1);
         self.split_multi(&[EEQ, ENE, ELT, EGT, ELTE, EGTE], &mut xss, &mut ops);
-        let mut out: Instruction = xss.first().map_or(IConst(std::f32::NAN), |xs| {
+        let mut out: Instruction = xss.first().map_or(IConst(f32::NAN), |xs| {
             xs.compile(parsed_slab, compiled_slab, namespace)
         });
 
@@ -284,7 +284,7 @@ impl<'s> ExprSlice<'s> {
                         EGT => IConst(bool_to_f32!(l > r)),
                         ELTE => IConst(bool_to_f32!(l <= r)),
                         EGTE => IConst(bool_to_f32!(l >= r)),
-                        _ => IConst(std::f32::NAN), // unreachable
+                        _ => IConst(f32::NAN), // unreachable
                     };
                     continue;
                 }
@@ -314,7 +314,7 @@ impl<'s> ExprSlice<'s> {
                     instr_to_ic!(compiled_slab, out),
                     instr_to_ic!(compiled_slab, instruction),
                 ),
-                _ => IConst(std::f32::NAN), // unreachable
+                _ => IConst(f32::NAN), // unreachable
             };
         }
         out
@@ -834,7 +834,7 @@ impl Compiler for ExprSlice<'_> {
             //              }
             //              IExp{base:cslab.push_instr(base), power:cslab.push_instr(power)}
             //          }
-            ENE | EEQ | EGTE | ELTE | EGT | ELT => IConst(std::f32::NAN), // unreachable
+            ENE | EEQ | EGTE | ELTE | EGT | ELT => IConst(f32::NAN), // unreachable
         }
     }
 }

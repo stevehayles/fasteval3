@@ -22,13 +22,12 @@ fn main() -> Result<(), fasteval3::Error> {
         }
     };
 
-    let val = fasteval3::ez_eval("sum(x^2, y^2)^0.5 + data[0]", &mut cb)?;
+    let val = fasteval3::ez_eval("sum(x^2, y^2)^0.5 + data[2]", &mut cb)?;
     //                           |   |                   |
     //                           |   |                   square-brackets act like parenthesis
     //                           |   variables are like custom functions with zero args
     //                           custom function
-
-    assert!((val - 16.1).abs() < f32::EPSILON);
+    assert!((val - 38.3).abs() < f32::EPSILON);
 
     // Let's explore some of the hidden complexities of variables:
     //
